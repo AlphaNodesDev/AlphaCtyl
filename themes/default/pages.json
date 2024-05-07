@@ -1,0 +1,8 @@
+{
+    "pages": {
+        "/": "index.ejs",
+        "dashboard": "dashboard.ejs",
+        "register": "register.ejs"
+
+    }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "Alphactyl",
+  "version": "1.0.0",
+  "description": "A Custom Dashboard For Pterodactyl Panel",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "keywords": [],
+  "author": "Abhiram",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
+    "sqlite3": "^5.1.7",
+    "figlet": "^1.5.1"
+}
+
+}

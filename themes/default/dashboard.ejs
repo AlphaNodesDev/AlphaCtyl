@@ -1,0 +1,94 @@
+
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/line-awesome/css/line-awesome.min.css'><link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://kit.fontawesome.com/062f52da9a.js" crossorigin="anonymous"></script>
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<input type="checkbox" name="" id="menu-toggle">
+<div class="overlay"><label for="menu-toggle">
+  </label></div>
+<div class="sidebar">
+  <div class="sidebar-container">
+    <div class="brand">
+        <h4 class="logo">
+            <span class="lab img"><img width="60px" height="60px" src="<%= AppLogo %>" alt="<%= AppName %>"></span>
+            <span class="app-name"><%= AppName %></span>
+        </h4>
+    </div>
+    <div class="sidebar-avatar">
+    </div>
+
+    <div class="sidebar-menu">
+      <ul>
+        <li><a href="#" class="active"><span class="fa-solid fa-house"></span><span>Dashboard</span></a></li>
+        <li><a href="#"><span class="fa-solid fa-cart-shopping"></span><span>By Resources</span></a></li>
+        <li><a href="#"><span class="fa-solid fa-gift"></span><span>Afk Page</span></a></li>
+        <li><a href="#"><span class="fa-solid fa-sliders"></span><span>Manage Servers</span></a></li>
+        <li><a href="#"><span class="fa-solid fa-gear"></span><span>Settings</span></a></li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="main-content">
+  <header>
+    <div class="header-wrapper">
+      <label for="menu-toggle">
+        <span class="las la-bars"></span>
+      </label>
+      <div class="header-title">
+        <h1><%= AppName %></h1>
+      </div>
+    </div>
+    <div class="header-action">
+        <%= user.username %>
+        <h1>
+    </div>
+  </header>
+  <main>
+    <section>
+      <h3 class="section-head">Overview</h3>
+      <div class="analytics">
+        <div class="analytic">
+          <div class="analytic-icon"><i class="fa-solid fa-server"></i></span></div>
+          <div class="analytic-info">
+            <h4>Servers</h4>
+            <h1>0/10</h1>
+          </div>
+        </div>
+        <div class="analytic">
+          <div class="analytic-icon"> <i class="fa-solid fa-microchip"></i></div>
+          <div class="analytic-info">
+            <h4>Ram</h4>
+            <h1>1/2GB</h1>
+          </div>
+        </div>
+        <div class="analytic">
+          <div class="analytic-icon"><i class="fa-solid fa-floppy-disk"></i></div>
+          <div class="analytic-info">
+            <h4>Disc</h4>
+            <h1>1/2GB</h1>
+          </div>
+        </div>
+        <div class="analytic">
+          <div class="analytic-icon"><i class="fa-solid fa-route"></i></div>
+          <div class="analytic-info">
+            <h4>Ports</h4>
+            <h1>0/2</h1>
+          </div>
+        </div>
+      </div>
+    </section>
+     <footer></footer>
+</div>
+<!-- partial -->
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.bundle.js'></script><script  src="./script.js"></script>
+
+</body>
+</html>
