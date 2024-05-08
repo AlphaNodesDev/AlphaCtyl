@@ -20,8 +20,8 @@ const figletOptions = {
     whitespaceBreak: true
 };
 const appNameAscii = figlet.textSync('AlphaCtyl', figletOptions);
-const AppName = "AlphaCtyl";
-const AppImg = "https://i.ibb.co/1TQbcJ9/a-high-resolution-logo-transparent.png";
+const AppName = settings.website.name;
+const AppImg = settings.website.logo;
 const authorNameAscii = figlet.textSync('By: AbhiRam', figletOptions);
 const db = new sqlite3.Database(DB_FILE_PATH, (err) => {
     if (err) {
@@ -58,7 +58,7 @@ app.set('views', path.join(__dirname, `./themes/${theme}`));
 
 
 db.serialize(() => {
-    db.run("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT, password TEXT)");
+    db.run("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT, password TEXT, email TEXT, first_name TEXT, last_name TEXT)");
 });
 
 
@@ -73,31 +73,36 @@ function requireLogin(req, res, next) {
     }
 }
 
+const { registerPteroUser } = require('./api/getPteroUser.js');
+router.post('/register', async (req, res) => {
+    const { username, email, password, firstName, lastName } = req.body;
 
-router.post('/register', (req, res) => {
-    const { username, password } = req.body;
-    
-    db.get('SELECT * FROM users WHERE username = ?', [username], (err, row) => {
-        if (err) {
-            console.error(err);
-            res.send('Error checking user existence.');
-        } else if (row) {
-            
-            res.render('register', { error: 'Username already exists' });
-        } else {
-            
-            db.run('INSERT INTO users (username, password) VALUES (?, ?)', [username, password], (err) => {
-                if (err) {
-                    console.error(err);
-                    res.send('Error registering user.');
-                } else {
-                    req.session.user = { username }; 
-                    res.redirect('/dashboard');
-                }
-            });
-        }
-    });
+    try {
+        // Check if the username already exists in your database
+        db.get('SELECT * FROM users WHERE email = ?', [email], async (err, row) => {
+            if (err) {
+                console.error(err);
+                return res.send('Error checking user existence.');
+            }
+
+            if (row) {
+                return res.render('register', { error: 'Email already exists' });
+            }
+
+            // Register the user in the Pterodactyl panel
+            const pteroUser = await registerPteroUser(username, email, password, firstName, lastName);
+
+            // If registration in Pterodactyl is successful, proceed to register the user in your database
+            await db.run('INSERT INTO users (username, email, password, first_name, last_name) VALUES (?, ?, ?, ?, ?)', [username, email, password, firstName, lastName]);
+            req.session.user = { username }; // Set the user information in the session
+            res.redirect('/dashboard');
+        });
+    } catch (error) {
+        console.error('Error registering user:', error);
+        res.send('Error registering user.');
+    }
 });
+
 
 
 router.post('/login', (req, res) => {
