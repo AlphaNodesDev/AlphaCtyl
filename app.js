@@ -13,7 +13,7 @@ const PORT = process.env.PORT || settings.website.port;
 const theme = settings.defaulttheme;
 const figlet = require('figlet');
 const figletOptions = {
-    font: 'Standard', // Choose the font you want
+    font: 'Standard', 
     horizontalLayout: 'default',
     verticalLayout: 'default',
     width: 80,
@@ -58,7 +58,7 @@ app.set('views', path.join(__dirname, `./themes/${theme}`));
 
 
 db.serialize(() => {
-    db.run("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT, password TEXT, email TEXT, first_name TEXT, last_name TEXT)");
+    db.run("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT, password TEXT, email TEXT, first_name TEXT, last_name TEXT, pterodactyl_id TEXT)");
 });
 
 
@@ -66,19 +66,48 @@ const pages = JSON.parse(fs.readFileSync(`./themes/${theme}/pages.json`)).pages;
 
 
 function requireLogin(req, res, next) {
+    
+    const nonLoginRoutes = ['/', '/register'];
+
+    
+    if (nonLoginRoutes.includes(req.path)) {
+        
+        return next();
+    }
+
+    
     if (req.session && req.session.user) {
+        
         return next();
     } else {
+        
         res.redirect('/');
     }
 }
 
+
+Object.keys(pages).forEach(page => {
+    
+    if (page !== '/' && page !== 'register') {
+        app.get(`/${page}`, requireLogin, (req, res) => {
+            res.render(pages[page]);
+        });
+    } else {
+        
+        app.get(`/${page}`, (req, res) => {
+            res.render(pages[page]);
+        });
+    }
+});
+
+
 const { registerPteroUser } = require('./api/getPteroUser.js');
+
 router.post('/register', async (req, res) => {
     const { username, email, password, firstName, lastName } = req.body;
 
     try {
-        // Check if the username already exists in your database
+        
         db.get('SELECT * FROM users WHERE email = ?', [email], async (err, row) => {
             if (err) {
                 console.error(err);
@@ -89,12 +118,18 @@ router.post('/register', async (req, res) => {
                 return res.render('register', { error: 'Email already exists' });
             }
 
-            // Register the user in the Pterodactyl panel
+            
             const pteroUser = await registerPteroUser(username, email, password, firstName, lastName);
 
-            // If registration in Pterodactyl is successful, proceed to register the user in your database
-            await db.run('INSERT INTO users (username, email, password, first_name, last_name) VALUES (?, ?, ?, ?, ?)', [username, email, password, firstName, lastName]);
-            req.session.user = { username }; // Set the user information in the session
+            
+            const userId = pteroUser.attributes.uuid;
+
+            
+            await db.run('INSERT INTO users (username, email, password, first_name, last_name, pterodactyl_id) VALUES (?, ?, ?, ?, ?, ?)', [username, email, password, firstName, lastName, userId]);
+
+            
+            req.session.user = { pterodactyl_id: userId, username }; 
+
             res.redirect('/dashboard');
         });
     } catch (error) {
@@ -105,9 +140,10 @@ router.post('/register', async (req, res) => {
 
 
 
+
 router.post('/login', (req, res) => {
-    const { username, password } = req.body;
-    db.get('SELECT * FROM users WHERE username = ? AND password = ?', [username, password], (err, row) => {
+    const { email, password } = req.body;
+    db.get('SELECT * FROM users WHERE email = ? AND password = ?', [email, password], (err, row) => {
         if (err) {
             console.error(err);
             res.send('Error authenticating user.');
@@ -115,7 +151,7 @@ router.post('/login', (req, res) => {
             req.session.user = row;
             res.redirect('/dashboard');
         } else {
-            res.render('index', { error: 'Invalid username or password' }); 
+            res.render('index', { error: 'Invalid email or password' }); 
         }
     });
 });
@@ -124,9 +160,6 @@ router.post('/login', (req, res) => {
 app.use('/', router);
 
 
-app.get('/dashboard', requireLogin, (req, res) => {
-    res.render('dashboard', { user: req.session.user, AppName: AppName, AppLogo: AppImg }); // Pass the user object and appNameAscii to the template
-});
 
 
 Object.keys(pages).forEach(page => {
@@ -134,6 +167,14 @@ Object.keys(pages).forEach(page => {
         res.render(pages[page]);
     });
 });
+
+function requireLogin(req, res, next) {
+    if (req.session && req.session.user) {
+        return next();
+    } else {
+        res.redirect('/');
+    }
+}
 
 
 app.get('/logout', (req, res) => {
@@ -146,3 +187,27 @@ app.get('/logout', (req, res) => {
     });
 });
 
+
+const { getUserServers } = require('./api/getPteroServers.js');
+
+router.get('/dashboard', async (req, res) => {
+
+    try {
+        
+        const userId = '1';
+        const pterodactyl = await getUserServers(userId);
+
+        
+        if (!pterodactyl) {
+            console.error('Failed to fetch Pterodactyl data.');
+            return res.status(500).send('Failed to fetch Pterodactyl data.');
+        }
+
+        
+        res.render('dashboard', { user: req.session.user, pterodactyl, AppName: AppName, AppLogo: AppImg });
+    } catch (error) {
+        console.error('Error rendering dashboard:', error.message);
+        res.status(500).send('Internal Server Error');
+        res.redirect('/');
+    }
+});
