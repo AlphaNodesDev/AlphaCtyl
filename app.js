@@ -12,6 +12,7 @@ const router = express.Router();
 const settings = JSON.parse(fs.readFileSync('settings.json'));
 const DB_FILE_PATH = settings.database;
 const PORT = process.env.PORT || settings.website.port;
+const DOMAIN = settings.website.domain;
 const theme = settings.defaulttheme;
 const figlet = require('figlet');
 const figletOptions = {
@@ -199,7 +200,7 @@ const randomstring = require('randomstring');
 passport.use(new DiscordStrategy({
     clientID: '1238183875050475540',
     clientSecret: 'FjcrqMvSu4dHwtBH-UaS0EvUrC-DVEKi',
-    callbackURL: 'http://localhost:2024/discord/callback',
+    callbackURL: `${DOMAIN}:${PORT}/discord/callback`,
     scope: ['identify', 'email'],
 }, async (accessToken, refreshToken, profile, done) => {
     try {
