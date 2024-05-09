@@ -1,40 +1,75 @@
 const axios = require('axios');
 const settings = require('../settings.json');
 
-async function getUserServers(userId) {
+async function getUserIdByUUID(uuid) {
     try {
-        // Check if domain and API key are valid
-        if (!settings.pterodactyl.domain || !settings.pterodactyl.key || typeof settings.pterodactyl.domain !== 'string' || typeof settings.pterodactyl.key !== 'string') {
-            console.error('Pterodactyl domain or API key is missing or invalid.');
-            return null; // Return null indicating failed to fetch user servers
-        }
-
-        // Make request to fetch user servers
-        const response = await axios.get(`${settings.pterodactyl.domain}api/application/servers`, {
+        const response = await axios.get(`${settings.pterodactyl.domain}api/application/users?filter%5Buuid%5D=${uuid}`, {
             headers: {
-                'Authorization': `Bearer ${settings.pterodactyl.key}`,
+                'Accept': 'application/json',
                 'Content-Type': 'application/json',
-            },
-            params: {
-                user: userId  // Add query parameter for user ID
+                'Authorization': `Bearer ${settings.pterodactyl.key}`
             }
         });
 
-        // Check if the response is successful
         if (response.status !== 200) {
-            console.error('Failed to fetch user servers. Status:', response.status);
-            return null; // Return null indicating failed to fetch user servers
+            console.error('Failed to fetch user ID:', response.status);
+            return null;
         }
 
-        // Extract user servers from the response
-        const userServers = response.data;
+        const userData = response.data.data[0];
+        if (!userData) {
+            console.error('User not found with UUID:', uuid);
+            return null;
+        }
 
-        // Return the fetched user servers
-        return userServers;
+        return userData.attributes.id;
     } catch (error) {
-        console.error('Error fetching user servers:', error.message);
-        throw error; // Handle the error appropriately
+        console.error('Error fetching user ID:', error.message);
+        throw error;
     }
 }
 
-module.exports = { getUserServers };
+async function getUserServersCount(userIdentifier) {
+    try {
+        const response = await axios.get(`${settings.pterodactyl.domain}api/application/servers`, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${settings.pterodactyl.key}`
+            }
+        });
+
+        if (response.status !== 200) {
+            console.error('Failed to fetch servers:', response.status);
+            return null;
+        }
+
+        const userServers = response.data.data.filter(server => server.attributes.user === userIdentifier);
+        
+        // Calculate total RAM, disk space, ports, and CPU usage
+        let totalRAM = 0;
+        let totalDisk = 0;
+        let totalPorts = 0;
+        let totalCPU = 0;
+
+        userServers.forEach(server => {
+            totalRAM += server.attributes.limits.memory;
+            totalDisk += server.attributes.limits.disk;
+            totalPorts += server.attributes.feature_limits.allocations + server.attributes.allocation;
+            totalCPU += server.attributes.limits.cpu;
+        });
+
+        return {
+            count: userServers.length,
+            totalRAM,
+            totalDisk,
+            totalPorts,
+            totalCPU
+        };
+    } catch (error) {
+        console.error('Error fetching user servers:', error.message);
+        throw error;
+    }
+}
+
+module.exports = { getUserIdByUUID, getUserServersCount };

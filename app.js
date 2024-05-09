@@ -1,5 +1,7 @@
 const express = require('express');
 const session = require('express-session');
+const passport = require('passport');
+const DiscordStrategy = require('passport-discord').Strategy;
 const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
 const fs = require('fs');
@@ -23,6 +25,11 @@ const appNameAscii = figlet.textSync('AlphaCtyl', figletOptions);
 const AppName = settings.website.name;
 const AppImg = settings.website.logo;
 const authorNameAscii = figlet.textSync('By: AbhiRam', figletOptions);
+const packageserver = settings.packages.list.default.servers;
+const packagecpu = settings.packages.list.default.cpu;
+const packageram = settings.packages.list.default.ram;
+const packagedisk = settings.packages.list.default.disk;
+const packageport = settings.packages.list.default.ports;
 const db = new sqlite3.Database(DB_FILE_PATH, (err) => {
     if (err) {
         console.log(chalk.red('Error connecting to SQLite database:', err.message));
@@ -50,6 +57,9 @@ app.use(session({
     saveUninitialized: true
 }));
 
+app.use(passport.initialize());
+app.use(passport.session());
+
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, `./themes/${theme}`));
@@ -58,47 +68,12 @@ app.set('views', path.join(__dirname, `./themes/${theme}`));
 
 
 db.serialize(() => {
-    db.run("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT, password TEXT, email TEXT, first_name TEXT, last_name TEXT, pterodactyl_id TEXT)");
+    db.run("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT, password TEXT, email TEXT, first_name TEXT, last_name TEXT, pterodactyl_id TEXT, servers INTEGER DEFAULT 0, ports INTEGER DEFAULT 0, ram INTEGER DEFAULT 0, disk INTEGER DEFAULT 0, cpu INTEGER DEFAULT 0, coins INTEGER DEFAULT 0)");
 });
 
 
 const pages = JSON.parse(fs.readFileSync(`./themes/${theme}/pages.json`)).pages;
 
-
-function requireLogin(req, res, next) {
-    
-    const nonLoginRoutes = ['/', '/register'];
-
-    
-    if (nonLoginRoutes.includes(req.path)) {
-        
-        return next();
-    }
-
-    
-    if (req.session && req.session.user) {
-        
-        return next();
-    } else {
-        
-        res.redirect('/');
-    }
-}
-
-
-Object.keys(pages).forEach(page => {
-    
-    if (page !== '/' && page !== 'register') {
-        app.get(`/${page}`, requireLogin, (req, res) => {
-            res.render(pages[page]);
-        });
-    } else {
-        
-        app.get(`/${page}`, (req, res) => {
-            res.render(pages[page]);
-        });
-    }
-});
 
 
 const { registerPteroUser } = require('./api/getPteroUser.js');
@@ -107,26 +82,24 @@ router.post('/register', async (req, res) => {
     const { username, email, password, firstName, lastName } = req.body;
 
     try {
-        
-        db.get('SELECT * FROM users WHERE email = ?', [email], async (err, row) => {
+        db.get('SELECT * FROM users WHERE email = ? OR username = ?', [email, username], async (err, row) => {
             if (err) {
                 console.error(err);
                 return res.send('Error checking user existence.');
             }
 
             if (row) {
-                return res.render('register', { error: 'Email already exists' });
+                if (row.email === email) {
+                    return res.render('register', { error: 'Email already exists' });
+                } else if (row.username === username) {
+                    return res.render('register', { error: 'Username already exists' });
+                }
             }
 
-            
             const pteroUser = await registerPteroUser(username, email, password, firstName, lastName);
-
-            
             const userId = pteroUser.attributes.uuid;
 
-            
             await db.run('INSERT INTO users (username, email, password, first_name, last_name, pterodactyl_id) VALUES (?, ?, ?, ?, ?, ?)', [username, email, password, firstName, lastName, userId]);
-
             
             req.session.user = { pterodactyl_id: userId, username }; 
 
@@ -137,6 +110,7 @@ router.post('/register', async (req, res) => {
         res.send('Error registering user.');
     }
 });
+
 
 
 
@@ -168,8 +142,9 @@ Object.keys(pages).forEach(page => {
     });
 });
 
+// Protect routes that require authentication
 function requireLogin(req, res, next) {
-    if (req.session && req.session.user) {
+    if (req.isAuthenticated()) {
         return next();
     } else {
         res.redirect('/');
@@ -188,26 +163,98 @@ app.get('/logout', (req, res) => {
 });
 
 
-const { getUserServers } = require('./api/getPteroServers.js');
+const { getUserIdByUUID, getUserServersCount } = require('./api/getPteroServers.js'); // Import the functions to fetch user identifier and servers count
 
 router.get('/dashboard', async (req, res) => {
-
     try {
-        
-        const userId = '1';
-        const pterodactyl = await getUserServers(userId);
 
-        
-        if (!pterodactyl) {
-            console.error('Failed to fetch Pterodactyl data.');
-            return res.status(500).send('Failed to fetch Pterodactyl data.');
-        }
 
+        // Get the user's Pterodactyl ID from the session
+        const userId = req.session.user.pterodactyl_id;
         
-        res.render('dashboard', { user: req.session.user, pterodactyl, AppName: AppName, AppLogo: AppImg });
+
+        // Fetch user identifier based on UUID
+        const userIdentifier = await getUserIdByUUID(userId);
+
+
+
+        // Fetch user servers count using the user's identifier
+        const userServersCount = await getUserServersCount(userIdentifier);
+
+        // Render the dashboard template with user details and server count
+        res.render('dashboard', { user: req.session.user, userServersCount, AppName: AppName, AppLogo: AppImg, packageserver, packagecpu, packageram, packagedisk, packageport });
     } catch (error) {
-        console.error('Error rendering dashboard:', error.message);
-        res.status(500).send('Internal Server Error');
-        res.redirect('/');
+
+        res.render('index', { error: 'Please Login Again' }); 
+
     }
+});
+
+
+
+// Import a library for generating random passwords
+const randomstring = require('randomstring');
+
+// DiscordLogin 
+passport.use(new DiscordStrategy({
+    clientID: '1238183875050475540',
+    clientSecret: 'FjcrqMvSu4dHwtBH-UaS0EvUrC-DVEKi',
+    callbackURL: 'http://localhost:2024/discord/callback',
+    scope: ['identify', 'email'],
+}, async (accessToken, refreshToken, profile, done) => {
+    try {
+        // Check if the user already exists in the database
+        db.get('SELECT * FROM users WHERE email = ?', [profile.email], async (err, row) => {
+            if (err) {
+                return done(err);
+            }
+            // If the user doesn't exist, generate first name, last name, and password, and add them to the database
+            if (!row) {
+                const firstName = profile.username.split('#')[0]; // Extract first name from Discord username
+                const lastName = profile.username.split('#')[0]; // Extract last name from Discord username
+                // Generate a random password
+                const password = randomstring.generate({
+                    length: 10,
+                    charset: 'alphanumeric'
+                });
+                // Register the user in Pterodactyl and get the user ID
+                const pteroUser = await registerPteroUser(profile.username, profile.email, password, firstName, lastName);
+                const userId = pteroUser.attributes.uuid;
+                // Insert user details into the database
+                await db.run('INSERT INTO users (username, email, password, first_name, last_name, pterodactyl_id) VALUES (?, ?, ?, ?, ?, ?)', [profile.username, profile.email, password, firstName, lastName, userId]);
+                // Pass the user profile to the passport done function
+                return done(null, profile);
+            }
+            // If the user already exists, return their profile
+            return done(null, row);
+        });
+    } catch (error) {
+        return done(error);
+    }
+}));
+
+
+// Serialize and deserialize user
+passport.serializeUser((user, done) => {
+    done(null, user);
+});
+
+passport.deserializeUser((obj, done) => {
+    done(null, obj);
+});
+
+// Define routes for authentication
+app.get('/discord', passport.authenticate('discord'));
+app.get('/discord/callback', passport.authenticate('discord', { failureRedirect: '/' }), (req, res) => {
+    // Retrieve user details from the database using their email obtained from the Discord profile
+    db.get('SELECT * FROM users WHERE email = ?', [req.user.email], (err, row) => {
+        if (err) {
+            console.error('Error retrieving user details:', err);
+            return res.redirect('/');
+        }
+        // Set req.session.user to the user row
+        req.session.user = row;
+        // Redirect to the dashboard
+        res.redirect('/dashboard');
+    });
 });

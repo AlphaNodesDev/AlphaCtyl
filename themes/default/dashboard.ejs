@@ -27,12 +27,14 @@
 
     <div class="sidebar-menu">
       <ul>
-        <li><a href="#" class="active"><span class="fa-solid fa-house"></span><span>Dashboard</span></a></li>
-        <li><a href="#"><span class="fa-solid fa-cart-shopping"></span><span>By Resources</span></a></li>
-        <li><a href="#"><span class="fa-solid fa-gift"></span><span>Afk Page</span></a></li>
-        <li><a href="#"><span class="fa-solid fa-sliders"></span><span>Manage Servers</span></a></li>
-        <li><a href="#"><span class="fa-solid fa-gear"></span><span>Settings</span></a></li>
-      </ul>
+        <li><a href="/dashboard" class="active"><span class="fas fa-home"></span><span>Dashboard</span></a></li>
+        <li><a href="/store"><span class="fas fa-shopping-cart"></span><span>Buy Resources</span></a></li>
+        <li><a href="/afk"><span class="fas fa-gift"></span><span>Afk Page</span></a></li>
+        <li><a href="/manage"><span class="fas fa-server"></span><span>Manage Servers</span></a></li>
+        <li><a href="/settings"><span class="fas fa-cog"></span><span>Settings</span></a></li>
+        <li><a href="/logout"><span class="fas fa-sign-out-alt"></span><span>Logout</span></a></li>
+    </ul>
+    
     </div>
   </div>
 </div>
@@ -53,39 +55,43 @@
   </header>
   <main>
     <section>
+    
       <h3 class="section-head">Overview</h3>
       <div class="analytics">
-        <div class="analytic">
-          <div class="analytic-icon"><i class="fa-solid fa-server"></i></span></div>
-          <div class="analytic-info">
-            <h4>Servers</h4>
-            <h1>1/10</h1>
-          </div>
+
+      <div class="analytic">
+        <div class="analytic-icon"> <i class="fa-solid fa-microchip"></i></div>
+        <div class="analytic-info">
+          <h4>Servers</h4>
+          <h1><%= userServersCount.count %>/<%= packageserver + user.servers %></h1>
         </div>
-        <h2>User Dashboard</h2>
-
-
-
-
+      </div> 
+      <div class="analytic">
+        <div class="analytic-icon"> <i class="fa-solid fa-microchip"></i></div>
+        <div class="analytic-info">
+          <h4>CPU</h4>
+          <h1><%= userServersCount.totalCPU / 1 %>/<%= packagecpu + user.cpu %></h1>
+        </div>
+      </div>
         <div class="analytic">
           <div class="analytic-icon"> <i class="fa-solid fa-microchip"></i></div>
           <div class="analytic-info">
             <h4>Ram</h4>
-            <h1>1/2GB</h1>
+            <h1><%= userServersCount.totalRAM / 1000 %>GB/<%= packageram + user.ram %>GB</h1>
           </div>
         </div>
         <div class="analytic">
           <div class="analytic-icon"><i class="fa-solid fa-floppy-disk"></i></div>
           <div class="analytic-info">
             <h4>Disc</h4>
-            <h1>1/2GB</h1>
+            <h1><%= userServersCount.totalDisk / 1000 %>GB/<%= packagedisk + user.disk %>GB</h1>
           </div>
         </div>
         <div class="analytic">
           <div class="analytic-icon"><i class="fa-solid fa-route"></i></div>
           <div class="analytic-info">
             <h4>Ports</h4>
-            <h1>0/2</h1>
+            <h1><%= userServersCount.totalPorts %>/<%= packageport + user.ports %></h1>
           </div>
         </div>
       </div>
