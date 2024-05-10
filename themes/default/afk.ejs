@@ -1,0 +1,56 @@
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/line-awesome/css/line-awesome.min.css'><link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://kit.fontawesome.com/062f52da9a.js" crossorigin="anonymous"></script>
+</head>
+<body>
+  <%- include('./includes/sidebar') %>
+
+<div class="main-content">
+
+  <%- include('./includes/header') %>
+
+  <main>
+    <section>
+    
+      <h3 class="section-head"> AFK To Earn Coins</h3>
+      <div class="card">
+        <p class="card-title">You Are Earning Coins</p>
+
+        </p>
+        <center>
+          <div id="timer" style="color:white;"></div>
+
+       
+        </center>
+        <p class="card-text">
+          <span>You Are Earning Coins...</span>
+          <svg class="arrow-icon" stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 16 16" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"></path>
+          </svg>
+        </p>
+      </div>
+    </section>
+
+</div>
+<!-- partial -->
+
+<%- include('./includes/footer') %>
+
+</body>
+</html>

@@ -10,74 +10,12 @@
   <script src="https://kit.fontawesome.com/062f52da9a.js" crossorigin="anonymous"></script>
 </head>
 <body>
-<!-- partial:index.partial.html -->
-<input type="checkbox" name="" id="menu-toggle">
-<div class="overlay"><label for="menu-toggle">
-  </label></div>
-<div class="sidebar">
-  <div class="sidebar-container">
-    <div class="brand">
-        <h4 class="logo">
-            <span class="lab img"><img width="60px" height="60px" src="<%= AppLogo %>" alt="<%= AppName %>"></span>
-            <span class="app-name"><%= AppName %></span>
-        </h4>
-    </div>
-    <div class="sidebar-avatar">
-    </div>
+  <%- include('./includes/sidebar') %>
 
-    <div class="sidebar-menu">
-      <ul>
-        <li><a href="/dashboard" class="active"><span class="fas fa-home"></span><span>Dashboard</span></a></li>
-        <li><a href="/store"><span class="fas fa-shopping-cart"></span><span>Buy Resources</span></a></li>
-        <li><a href="/afk"><span class="fas fa-gift"></span><span>Afk Page</span></a></li>
-        <li><a href="/manage"><span class="fas fa-server"></span><span>Manage Servers</span></a></li>
-        <li><a href="/settings"><span class="fas fa-cog"></span><span>Settings</span></a></li>
-        <li><a href="/logout"><span class="fas fa-sign-out-alt"></span><span>Logout</span></a></li>
-    </ul>
-    
-    </div>
-  </div>
-    <div class="switch-container">
-    <label class="switch">
-      <span class="sun"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g fill="#ffd43b"><circle r="5" cy="12" cx="12"></circle><path d="m21 13h-1a1 1 0 0 1 0-2h1a1 1 0 0 1 0 2zm-17 0h-1a1 1 0 0 1 0-2h1a1 1 0 0 1 0 2zm13.66-5.66a1 1 0 0 1 -.66-.29 1 1 0 0 1 0-1.41l.71-.71a1 1 0 1 1 1.41 1.41l-.71.71a1 1 0 0 1 -.75.29zm-12.02 12.02a1 1 0 0 1 -.71-.29 1 1 0 0 1 0-1.41l.71-.66a1 1 0 0 1 1.41 1.41l-.71.71a1 1 0 0 1 -.7.24zm6.36-14.36a1 1 0 0 1 -1-1v-1a1 1 0 0 1 2 0v1a1 1 0 0 1 -1 1zm0 17a1 1 0 0 1 -1-1v-1a1 1 0 0 1 2 0v1a1 1 0 0 1 -1 1zm-5.66-14.66a1 1 0 0 1 -.7-.29l-.71-.71a1 1 0 0 1 1.41-1.41l.71.71a1 1 0 0 1 0 1.41 1 1 0 0 1 -.71.29zm12.02 12.02a1 1 0 0 1 -.7-.29l-.66-.71a1 1 0 0 1 1.36-1.36l.71.71a1 1 0 0 1 0 1.41 1 1 0 0 1 -.71.24z"></path></g></svg></span>
-      <span class="moon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="m223.5 32c-123.5 0-223.5 100.3-223.5 224s100 224 223.5 224c60.6 0 115.5-24.2 155.8-63.4 5-4.9 6.3-12.5 3.1-18.7s-10.1-9.7-17-8.5c-9.8 1.7-19.8 2.6-30.1 2.6-96.9 0-175.5-78.8-175.5-176 0-65.8 36-123.1 89.3-153.3 6.1-3.5 9.2-10.5 7.7-17.3s-7.3-11.9-14.3-12.5c-6.3-.5-12.6-.8-19-.8z"></path></svg></span>   
-      <input type="checkbox" class="input">
-      <span class="slider"></span>
-    </label>
-  </div>
-  
-
-  <footer class="footer">
-    <div class="copyright">Copyright &copy; 2024 Your Company. All rights reserved.</div>
-  </footer>
-</div>
 <div class="main-content">
-  <header>
-    <div class="header-wrapper">
-      <label for="menu-toggle">
-        <span class="las la-bars"></span>
-      </label>
-      <div class="header-title">
-        <h1><%= AppName %></h1>
-      </div>
-    </div>
-    <div class="header-action">
-      <div class="user-profile">
-          <img src="https://i.ibb.co/1TQbcJ9/a-high-resolution-logo-transparent.png" alt="User Image">
-          <div class="dropdown-content">
-              <a href="profile">Profile</a>
-              <a href="settings">Settings</a>
-              <a href="logout">Logout</a>
-          </div>
-      </div>
-      <div class="user-details">
-          <p><%= user.username %></p>
-          <p><i class="fa-solid fa-coins"></i> <%= user.coins %></p>
-      </div>
-  </div>
-  
-  
-  </header>
+
+  <%- include('./includes/header') %>
+
   <main>
     <section>
     
@@ -121,55 +59,17 @@
         </div>
       </div>
     </section>
-     <footer></footer>
+
 </div>
 <!-- partial -->
-  <script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.bundle.js'></script><script  src="./script.js"></script>
 
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-  const switchInput = document.querySelector(".switch input");
-
-  switchInput.addEventListener("change", function() {
-    const stylesheet = this.checked ? "css/style-d.css" : "css/style.css";
-    updateStylesheet(stylesheet);
-    localStorage.setItem("preferredStylesheet", stylesheet);
-  });
-
-  function updateStylesheet(stylesheet) {
-    const links = document.querySelectorAll('link[rel="stylesheet"]');
-    links.forEach(link => {
-      if (link.href.includes("style.css") || link.href.includes("style-d.css")) {
-        link.onload = function() {
-          // Once the stylesheet is loaded, display the content
-          document.body.style.display = "block";
-        };
-        link.href = stylesheet;
-      }
-    });
-  }
-
-  // Check local storage for preferred stylesheet
-  const preferredStylesheet = localStorage.getItem("preferredStylesheet");
-  if (preferredStylesheet) {
-    updateStylesheet(preferredStylesheet);
-    // Check the checkbox if dark mode preference is stored
-    if (preferredStylesheet === "css/style-d.css") {
-      switchInput.checked = true;
-    }
-  } else {
-    // If no preference is found in local storage, check if the browser is in dark mode
-    const isDarkMode = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const defaultStylesheet = isDarkMode ? "css/style-d.css" : "css/style.css";
-    updateStylesheet(defaultStylesheet);
-    localStorage.setItem("preferredStylesheet", defaultStylesheet);
-    // Check the checkbox if default stylesheet is dark mode
-    if (defaultStylesheet === "css/style-d.css") {
-      switchInput.checked = true;
-    }
-  }
-});
-</script>
+<%- include('./includes/footer') %>
 
 </body>
 </html>
+
+
+
+
+
+

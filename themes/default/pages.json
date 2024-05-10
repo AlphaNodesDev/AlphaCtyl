@@ -6,7 +6,10 @@
         "manage": "manage.ejs",
         "settings": "settings.ejs",
         "store": "store.ejs",
-        "afk": "afk.ejs"
+
+        "header": "header.ejs",
+        "footer": "footer.ejs",
+        "sidebar": "sidebar.ejs"
 
     }
 }

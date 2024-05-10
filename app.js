@@ -166,30 +166,28 @@ app.get('/logout', (req, res) => {
 
 const { getUserIdByUUID, getUserServersCount } = require('./api/getPteroServers.js'); // Import the functions to fetch user identifier and servers count
 
-router.get('/dashboard', async (req, res) => {
-    try {
+// Define a route handler for each page defined in pages.json
+Object.keys(pages).forEach(page => {
+    router.get(`/${page}`, async (req, res) => {
+        try {
+            // Get the user's Pterodactyl ID from the session
+            const userId = req.session.user.pterodactyl_id;
 
+            // Fetch user identifier based on UUID
+            const userIdentifier = await getUserIdByUUID(userId);
 
-        // Get the user's Pterodactyl ID from the session
-        const userId = req.session.user.pterodactyl_id;
-        
+            // Fetch user servers count using the user's identifier
+            const userServersCount = await getUserServersCount(userIdentifier);
 
-        // Fetch user identifier based on UUID
-        const userIdentifier = await getUserIdByUUID(userId);
-
-
-
-        // Fetch user servers count using the user's identifier
-        const userServersCount = await getUserServersCount(userIdentifier);
-
-        // Render the dashboard template with user details and server count
-        res.render('dashboard', { user: req.session.user, userServersCount, AppName: AppName, AppLogo: AppImg, packageserver, packagecpu, packageram, packagedisk, packageport });
-    } catch (error) {
-
-        res.render('index', { error: 'Please Login Again' }); 
-
-    }
+            // Render the page with user details and server count
+            res.render(pages[page], { user: req.session.user, userServersCount, AppName: AppName, AppLogo: AppImg, packageserver, packagecpu, packageram, packagedisk, packageport });
+        } catch (error) {
+            // If an error occurs, render the index page with an error message
+            res.render('index', { error: 'Please Login Again' });
+        }
+    });
 });
+
 
 
 
@@ -198,8 +196,8 @@ const randomstring = require('randomstring');
 
 // DiscordLogin 
 passport.use(new DiscordStrategy({
-    clientID: '1238183875050475540',
-    clientSecret: 'FjcrqMvSu4dHwtBH-UaS0EvUrC-DVEKi',
+    clientID: settings.discord.clientID,
+    clientSecret: settings.discord.clientSecret,
     callbackURL: `${DOMAIN}:${PORT}/discord/callback`,
     scope: ['identify', 'email'],
 }, async (accessToken, refreshToken, profile, done) => {
@@ -259,3 +257,4 @@ app.get('/discord/callback', passport.authenticate('discord', { failureRedirect:
         res.redirect('/dashboard');
     });
 });
+

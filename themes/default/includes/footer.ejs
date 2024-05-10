@@ -1,0 +1,50 @@
+<footer class="footer">
+    <div class="copyright">Copyright &copy; 2024 Your Company. All rights reserved.</div>
+  </footer>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.bundle.js'></script><script  src="./script.js"></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+    const switchInput = document.querySelector(".switch input");
+  
+    switchInput.addEventListener("change", function() {
+      const stylesheet = this.checked ? "css/style-d.css" : "css/style.css";
+      updateStylesheet(stylesheet);
+      localStorage.setItem("preferredStylesheet", stylesheet);
+    });
+  
+    function updateStylesheet(stylesheet) {
+      const links = document.querySelectorAll('link[rel="stylesheet"]');
+      links.forEach(link => {
+        if (link.href.includes("style.css") || link.href.includes("style-d.css")) {
+          link.onload = function() {
+            // Once the stylesheet is loaded, display the content
+            document.body.style.display = "block";
+          };
+          link.href = stylesheet;
+        }
+      });
+    }
+  
+    // Check local storage for preferred stylesheet
+    const preferredStylesheet = localStorage.getItem("preferredStylesheet");
+    if (preferredStylesheet) {
+      updateStylesheet(preferredStylesheet);
+      // Check the checkbox if dark mode preference is stored
+      if (preferredStylesheet === "css/style-d.css") {
+        switchInput.checked = true;
+      }
+    } else {
+      // If no preference is found in local storage, check if the browser is in dark mode
+      const isDarkMode = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const defaultStylesheet = isDarkMode ? "css/style-d.css" : "css/style.css";
+      updateStylesheet(defaultStylesheet);
+      localStorage.setItem("preferredStylesheet", defaultStylesheet);
+      // Check the checkbox if default stylesheet is dark mode
+      if (defaultStylesheet === "css/style-d.css") {
+        switchInput.checked = true;
+      }
+    }
+  });
+  </script>
+    
