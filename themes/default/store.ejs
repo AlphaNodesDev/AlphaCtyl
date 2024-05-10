@@ -1,0 +1,116 @@
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/line-awesome/css/line-awesome.min.css'><link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://kit.fontawesome.com/062f52da9a.js" crossorigin="anonymous"></script>
+</head>
+<body>
+  <%- include('./includes/sidebar') %>
+
+<div class="main-content">
+
+  <%- include('./includes/header') %>
+
+  <main>
+    <section>
+        <form action="byresources">
+        <div class="card">
+            <div class="card-img">
+                <div class="img"></div>
+            </div>
+            <div class="card-title">Buy Extra Server</div>
+            <div class="card-subtitle">Select RAM package to buy</div>
+            <hr class="card-divider">
+            <div class="card-body">
+              <input type="text" value="0"   class="store-dropdown">
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-img">
+                <div class="img"></div>
+            </div>
+            <div class="card-title">Buy Extra CPU</div>
+            <div class="card-subtitle">Select RAM package to buy</div>
+            <hr class="card-divider">
+            <div class="card-body">
+                <select class="store-dropdown">
+                    <option value="0">Select Core</option>
+                    <option value="4GB">1 Core</option>
+                    <option value="8GB">2 Cores</option>
+                    <option value="16GB">3 Cores</option>
+                </select>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-img">
+                <div class="img"></div>
+            </div>
+            <div class="card-title">Buy Extra RAM</div>
+            <div class="card-subtitle">Select RAM package to buy</div>
+            <hr class="card-divider">
+            <div class="card-body">
+                <select class="store-dropdown">
+                    <option value="0">Select Ram</option>
+                    <option value="4GB">4GB RAM</option>
+                    <option value="8GB">8GB RAM</option>
+                    <option value="16GB">16GB RAM</option>
+                </select>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-img">
+                <div class="img"></div>
+            </div>
+            <div class="card-title">Buy Extra Disk</div>
+            <div class="card-subtitle">Select RAM package to buy</div>
+            <hr class="card-divider">
+            <div class="card-body">
+                <select class="store-dropdown">
+                    <option value="0">Select Disk</option>
+                    <option value="4GB">4GB Disk</option>
+                    <option value="8GB">8GB Disk</option>
+                    <option value="16GB">16GB Disk</option>
+                </select>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-img">
+                <div class="img"></div>
+            </div>
+            <div class="card-title">Buy Extra Port</div>
+            <div class="card-subtitle">Select RAM package to buy</div>
+            <hr class="card-divider">
+            <div class="card-body">
+                <select class="store-dropdown">
+                    <option value="0">Select Ports</option>
+                    <option value="4GB">1</option>
+                </select>
+            </div>
+        </div>
+     <center >
+        <button class="btn-submit">Sumbit</button>
+     </center>
+    </form>
+    </section>
+
+</div>
+<!-- partial -->
+
+<%- include('./includes/footer') %>
+
+</body>
+</html>

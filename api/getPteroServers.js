@@ -25,9 +25,10 @@ async function getUserIdByUUID(uuid) {
         return userData.attributes.id;
     } catch (error) {
         console.error('Error fetching user ID:', error.message);
-        throw error;
-    }
+        console.error('Error communicating with panel')  ;
+      }
 }
+
 
 async function getUserServersCount(userIdentifier) {
     try {

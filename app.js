@@ -25,6 +25,7 @@ const figletOptions = {
 const appNameAscii = figlet.textSync('AlphaCtyl', figletOptions);
 const AppName = settings.website.name;
 const AppImg = settings.website.logo;
+const ads = settings.ads;
 const authorNameAscii = figlet.textSync('By: AbhiRam', figletOptions);
 const packageserver = settings.packages.list.default.servers;
 const packagecpu = settings.packages.list.default.cpu;
@@ -180,9 +181,9 @@ Object.keys(pages).forEach(page => {
             const userServersCount = await getUserServersCount(userIdentifier);
 
             // Render the page with user details and server count
-            res.render(pages[page], { user: req.session.user, userServersCount, AppName: AppName, AppLogo: AppImg, packageserver, packagecpu, packageram, packagedisk, packageport });
+            res.render(pages[page], { user: req.session.user, userServersCount, AppName: AppName, AppLogo: AppImg, packageserver, packagecpu, packageram, packagedisk, packageport, ads });
         } catch (error) {
-            // If an error occurs, render the index page with an error message
+          
             res.render('index', { error: 'Please Login Again' });
         }
     });
@@ -257,4 +258,16 @@ app.get('/discord/callback', passport.authenticate('discord', { failureRedirect:
         res.redirect('/dashboard');
     });
 });
+
+
+
+
+
+
+
+
+
+
+
+
 

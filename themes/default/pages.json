@@ -6,7 +6,7 @@
         "manage": "manage.ejs",
         "settings": "settings.ejs",
         "store": "store.ejs",
-
+        "status": "status.ejs",
         "header": "header.ejs",
         "footer": "footer.ejs",
         "sidebar": "sidebar.ejs"

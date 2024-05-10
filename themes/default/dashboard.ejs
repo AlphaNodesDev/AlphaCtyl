@@ -17,54 +17,15 @@
   <%- include('./includes/header') %>
 
   <main>
-    <section>
-    
-      <h3 class="section-head">Overview</h3>
-      <div class="analytics">
-
-      <div class="analytic">
-        <div class="analytic-icon"> <i class="fa-solid fa-microchip"></i></div>
-        <div class="analytic-info">
-          <h4>Servers</h4>
-          <h1><%= userServersCount.count %>/<%= packageserver + user.servers %></h1>
-        </div>
-      </div> 
-      <div class="analytic">
-        <div class="analytic-icon"> <i class="fa-solid fa-microchip"></i></div>
-        <div class="analytic-info">
-          <h4>CPU</h4>
-          <h1><%= userServersCount.totalCPU / 1 %>/<%= packagecpu + user.cpu %></h1>
-        </div>
-      </div>
-        <div class="analytic">
-          <div class="analytic-icon"> <i class="fa-solid fa-microchip"></i></div>
-          <div class="analytic-info">
-            <h4>Ram</h4>
-            <h1><%= userServersCount.totalRAM / 1000 %>GB/<%= packageram + user.ram %>GB</h1>
-          </div>
-        </div>
-        <div class="analytic">
-          <div class="analytic-icon"><i class="fa-solid fa-floppy-disk"></i></div>
-          <div class="analytic-info">
-            <h4>Disc</h4>
-            <h1><%= userServersCount.totalDisk / 1000 %>GB/<%= packagedisk + user.disk %>GB</h1>
-          </div>
-        </div>
-        <div class="analytic">
-          <div class="analytic-icon"><i class="fa-solid fa-route"></i></div>
-          <div class="analytic-info">
-            <h4>Ports</h4>
-            <h1><%= userServersCount.totalPorts %>/<%= packageport + user.ports %></h1>
-          </div>
-        </div>
-      </div>
-    </section>
-
+    <%- include('./includes/status') %>
+  
+<%- include('./includes/ads/ad-1') %>
+<%- include('./includes/ads/ad-2') %>
 </div>
 <!-- partial -->
 
 <%- include('./includes/footer') %>
-
+</main>
 </body>
 </html>
 
