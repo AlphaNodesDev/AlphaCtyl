@@ -544,7 +544,23 @@ header {
   margin-bottom: 5px; /* Add some space between username and coins */
 }
 
-
+@media only screen and (max-width: 580px) {
+  .header-wrapper label {
+    font-size: 1.5rem; /* Adjust label size for smaller screens */
+  }
+  
+  .header-title h1 {
+    font-size: 1.4rem; /* Adjust title size for smaller screens */
+  }
+  
+  .user-profile img {
+    width: 30px; /* Adjust profile image size for smaller screens */
+    height: 30px;
+  }
+  .appname{
+    display: none;
+  }
+}
 
 
 .switch {
@@ -656,14 +672,19 @@ header {
 }
 
 
-/* Switch */
 .switch-container {
   position: fixed;
-  bottom: 5px;
-  right: 22px;
+  bottom: 15px; /* Adjusted bottom position */
+  right: 15px; /* Adjusted right position */
   z-index: 999;
 }
 
+@media only screen and (max-width: 580px) {
+  .switch-container {
+    position: static; /* Change to static positioning for smaller screens */
+    margin-top: 10px; /* Add some margin to separate from footer */
+  }
+}
 
 
 .switch {

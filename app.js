@@ -73,8 +73,10 @@ db.serialize(() => {
     db.run("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT, password TEXT, email TEXT, first_name TEXT, last_name TEXT, pterodactyl_id TEXT, servers INTEGER DEFAULT 0, ports INTEGER DEFAULT 0, ram INTEGER DEFAULT 0, disk INTEGER DEFAULT 0, cpu INTEGER DEFAULT 0, coins INTEGER DEFAULT 0)");
 });
 
+const pagesConfig = JSON.parse(fs.readFileSync(`./themes/${theme}/pages.json`));
+const pages = pagesConfig.pages;
+const oauthPages = pagesConfig.oauth;
 
-const pages = JSON.parse(fs.readFileSync(`./themes/${theme}/pages.json`)).pages;
 
 
 
@@ -137,21 +139,20 @@ app.use('/', router);
 
 
 
-
+// Regular pages
 Object.keys(pages).forEach(page => {
     app.get(`/${page}`, (req, res) => {
         res.render(pages[page]);
     });
 });
 
-// Protect routes that require authentication
-function requireLogin(req, res, next) {
-    if (req.isAuthenticated()) {
-        return next();
-    } else {
-        res.redirect('/');
-    }
-}
+
+// OAuth pages
+Object.keys(oauthPages).forEach(page => {
+    app.get(`/${page}`, (req, res) => {
+        res.render(oauthPages[page]);
+    });
+});
 
 
 app.get('/logout', (req, res) => {
@@ -167,10 +168,17 @@ app.get('/logout', (req, res) => {
 
 const { getUserIdByUUID, getUserServersCount } = require('./api/getPteroServers.js'); // Import the functions to fetch user identifier and servers count
 
-// Define a route handler for each page defined in pages.json
-Object.keys(pages).forEach(page => {
+
+
+Object.keys(pages).forEach((page) => {
     router.get(`/${page}`, async (req, res) => {
         try {
+            // Check if req.session.user exists and req.session.user.pterodactyl_id is defined
+            if (!req.session.user || !req.session.user.pterodactyl_id) {
+                // If not, redirect to the login page or display an error message
+                return res.render("index", { error: "Please Login Again" });
+            }
+
             // Get the user's Pterodactyl ID from the session
             const userId = req.session.user.pterodactyl_id;
 
@@ -181,13 +189,25 @@ Object.keys(pages).forEach(page => {
             const userServersCount = await getUserServersCount(userIdentifier);
 
             // Render the page with user details and server count
-            res.render(pages[page], { user: req.session.user, userServersCount, AppName: AppName, AppLogo: AppImg, packageserver, packagecpu, packageram, packagedisk, packageport, ads });
+            res.render(pages[page], {
+                user: req.session.user,
+                userServersCount,
+                AppName: AppName,
+                AppLogo: AppImg,
+                packageserver,
+                packagecpu,
+                packageram,
+                packagedisk,
+                packageport,
+                ads,
+            });
         } catch (error) {
-          
-            res.render('index', { error: 'Please Login Again' });
+            // If an error occurs, render the index page with an error message
+            res.render("index", { error: "Please Login Again" });
         }
     });
 });
+
 
 
 
@@ -199,7 +219,7 @@ const randomstring = require('randomstring');
 passport.use(new DiscordStrategy({
     clientID: settings.discord.clientID,
     clientSecret: settings.discord.clientSecret,
-    callbackURL: `${DOMAIN}:${PORT}/discord/callback`,
+    callbackURL: `${DOMAIN}/discord/callback`,
     scope: ['identify', 'email'],
 }, async (accessToken, refreshToken, profile, done) => {
     try {

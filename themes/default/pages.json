@@ -1,8 +1,6 @@
 {
     "pages": {
-        "/": "index.ejs",
         "dashboard": "dashboard.ejs",
-        "register": "register.ejs",
         "manage": "manage.ejs",
         "settings": "settings.ejs",
         "store": "store.ejs",
@@ -11,5 +9,9 @@
         "footer": "footer.ejs",
         "sidebar": "sidebar.ejs"
 
+    },
+    "oauth":{
+        "/": "index.ejs",
+        "register": "register.ejs"
     }
 }

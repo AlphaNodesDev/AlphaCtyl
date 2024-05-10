@@ -17,11 +17,13 @@ body {
 
 .container {
     position: relative;
-    width: 256px;
-    height: 256px;
+    width: 100%; /* Adjusted width */
+    max-width: 400px; /* Added max-width */
+    height: 100%; /* Adjusted height */
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-direction: column; /* Center elements vertically */
 }
 
 .container span {
@@ -48,10 +50,10 @@ body {
 }
 
 .login-box {
-    position: absolute;
-    width: 400px;
-    /* background: red; */
+    width: 100%; /* Adjusted width */
+    padding: 0 20px; /* Adjusted padding */
 }
+
 
 .login-box form {
     width: 100%;
@@ -154,7 +156,6 @@ p{
   color: #fff;
   font-size: .75rem;
 }
-
 /* Modal styles */
 .modal {
     display: none;
@@ -177,8 +178,9 @@ p{
     border: 1px solid #888;
     border-radius: 10px;
     box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.2); /* Add box-shadow */
-    width: 50%;
-    height: 50%;
+    width: 80%; /* Adjusted width */
+    max-width: 400px; /* Added max-width */
+    height: auto; /* Adjusted height */
     box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.2); /* Add box-shadow */
     color: black;
     
@@ -210,6 +212,7 @@ p{
     text-decoration: none;
     cursor: pointer;
 }
+
 button {
     font-family: inherit;
     font-size: 10px;
