@@ -4,14 +4,13 @@ Basic
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
 
 :root {
-  --color-main: #f3950d;
-  --main-accent: #ffebcc;
-  --bg: #f5eedc;
-  --bg-2: #dce5ff;
-  --main: #292c6d;
-  --shadow: rgba(17, 17, 26, 0.1) 2px 0px 16px;
+  --color-main: #ffa500; /* Change to your desired main color */
+  --main-accent: #292929; /* Darker background color */
+  --bg: #1a1a1a; /* Dark background color */
+  --bg-2: #292929; /* Darker background color */
+  --main: #f5f5f5; /* Lighter text color */
+  --shadow: rgba(255, 255, 255, 0.1) 2px 0px 16px; /* Lighter shadow color */
 }
-
 * {
   padding: 0;
   margin: 0;
@@ -22,8 +21,8 @@ Basic
 }
 body {
   background-color: var(--bg);
+  color: var(--main);
   overflow-x: hidden;
-  
 }
 
 #menu-toggle {
@@ -73,9 +72,9 @@ Sidebar
 .sidebar-container {
   height: 100%;
   width: 100%;
-  background-color: #fff;
-  border-radius: 20px;
+  background-color: var(--bg);
   box-shadow: var(--shadow);
+  border-radius: 20px;
   padding: 1.2rem;
   overflow-y: auto;
 }
@@ -129,7 +128,7 @@ Sidebar
   margin-bottom: 2rem;
 }
 .sidebar-menu a {
-  color: var(--main-text);
+  color: var(--main);
   display: block;
   padding: 0.7rem 0;
 }
@@ -193,11 +192,14 @@ Sidebar
   width: calc(100vw - 345px);
   padding: 1rem 2rem 1.2rem 1.2rem;
   transition: margin-left 300ms;
+  background-color: var(--bg);
+  color: var(--main);
 }
 /* Header */
 header {
   display: flex;
   padding-top: 0.5rem;
+  background-color: var(--bg-2);
   justify-content: space-between;
 }
 .header-wrapper {
@@ -370,6 +372,8 @@ main {
 }
 @media only screen and (max-width: 1224px) {
   .sidebar {
+    background-color: var(--bg-2);
+
     left: -345px;
     z-index: 30;
   }
@@ -420,7 +424,7 @@ header {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
-  background-color: #fff;
+  background-color: var(--bg-2);
   box-shadow: var(--shadow);
 }
 
@@ -640,11 +644,11 @@ header {
 }
 
 .input:checked + .slider {
-  background-color: #183153;
+  background-color: #245497;
 }
 
 .input:focus + .slider {
-  box-shadow: 0 0 1px #183153;
+  box-shadow: 0 0 1px #2a5694;
 }
 
 .input:checked + .slider:before {
@@ -731,11 +735,12 @@ header {
   bottom: 0;
   left: 0;
   width: 100%;
-  background-color: #f5f5f5;
+  background-color: var(--bg-2);
+  color: var(--main);
   padding: 10px 0;
   text-align: center;
   font-size: 14px;
   color: #666;
-  border-top: 1px solid #ddd;
+
 }
 
