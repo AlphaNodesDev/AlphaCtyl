@@ -301,19 +301,20 @@ router.get('/resetptero', async (req, res) => {
 
         await updatePasswordInPanel(userIdentifier, newPassword, req.session.user.email, req.session.user.username, req.session.user.first_name, req.session.user.last_name);
         
- 
-        res.render("settings", { success: newPassword, user: req.session.user,
-
+        // Render the settings view with success message and new password
+        res.render("settings", { 
+            success: 'Password Reset Pterodactyl', // Dynamic success message
+            change: 'Your New Password: ' + newPassword, // New password
+            user: req.session.user,
             AppName: AppName,
             AppLogo: AppImg,
-  
-            ads,});
-
+            ads,
+        });
     } catch (error) {
-    
         res.status(500).send('Error resetting password');
     }
 });
+
 
 
 async function updatePasswordInPanel(userIdentifier, newPassword, email, username, first_name, last_name) {
@@ -324,7 +325,7 @@ async function updatePasswordInPanel(userIdentifier, newPassword, email, usernam
         first_name: first_name,
         last_name: last_name,
         language: "en", 
-        password: newPassword // Set the new password
+        password: newPassword 
     };
     
     try {
@@ -347,3 +348,33 @@ async function updatePasswordInPanel(userIdentifier, newPassword, email, usernam
 
 
 
+
+//Change Dashboard Password
+
+router.get('/changepass', async (req, res) => {
+    try {
+       
+        
+        const userIdentifier = await getUserIdByUUID(uuid);
+        console.log('User Identifier:', userIdentifier);
+        
+        const newPassword = randomstring.generate({
+            length: 10,
+            charset: 'alphanumeric'
+        });
+
+        await updatePasswordInPanel(userIdentifier, newPassword, req.session.user.email, req.session.user.username, req.session.user.first_name, req.session.user.last_name);
+        
+ 
+        res.render("settings", { success: newPassword, user: req.session.user,
+
+            AppName: AppName,
+            AppLogo: AppImg,
+  
+            ads,});
+
+    } catch (error) {
+    
+        res.status(500).send('Error resetting password');
+    }
+});

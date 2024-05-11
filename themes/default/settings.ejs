@@ -13,14 +13,13 @@
 </head>
 <body>
   <div id="successModal" class="modal">
-    <div class="modal-content"> <h1>Password reset</h1>
-      your email:<b></b>
-         <h2><%= user.email %></h2>
+    <div class="modal-content">
+        <h1><%= success %></h1>
+        <p><%= change %></p>
         <span class="close">&times;</span>
-        Your password <h2 id="successMessage"></h2>
-
     </div>
 </div>
+
   <%- include('./includes/sidebar') %>
 
 <div class="main-content">
