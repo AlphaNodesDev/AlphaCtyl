@@ -15,6 +15,7 @@ const PORT = process.env.PORT || settings.website.port;
 const DOMAIN = settings.website.domain;
 const theme = settings.defaulttheme;
 const figlet = require('figlet');
+const axios = require('axios');
 const figletOptions = {
     font: 'Standard', 
     horizontalLayout: 'default',
@@ -32,6 +33,7 @@ const packagecpu = settings.packages.list.default.cpu;
 const packageram = settings.packages.list.default.ram;
 const packagedisk = settings.packages.list.default.disk;
 const packageport = settings.packages.list.default.ports;
+const pterodactyldomain = settings.pterodactyl.domain
 const db = new sqlite3.Database(DB_FILE_PATH, (err) => {
     if (err) {
         console.log(chalk.red('Error connecting to SQLite database:', err.message));
@@ -142,15 +144,15 @@ app.use('/', router);
 
 Object.keys(pages).forEach(page => {
     app.get(`/${page}`, (req, res) => {
-        res.render(pages[page]);
+        res.render(pages[page], { AppName: AppName, AppLogo: AppImg});
     });
 });
 
 
-
+//oauth pages only
 Object.keys(oauthPages).forEach(page => {
     app.get(`/${page}`, (req, res) => {
-        res.render(oauthPages[page]);
+        res.render(oauthPages[page], { AppName: AppName, AppLogo: AppImg});
     });
 });
 
@@ -168,7 +170,7 @@ app.get('/logout', (req, res) => {
 
 const { getUserIdByUUID, getUserServersCount } = require('./api/getPteroServers.js'); 
 
-
+//Pass Values To Pages 
 
 Object.keys(pages).forEach((page) => {
     router.get(`/${page}`, async (req, res) => {
@@ -200,6 +202,7 @@ Object.keys(pages).forEach((page) => {
                 packagedisk,
                 packageport,
                 ads,
+                pterodactyldomain
             });
         } catch (error) {
             
@@ -210,7 +213,7 @@ Object.keys(pages).forEach((page) => {
 
 
 
-
+//Discord Login
 
 
 const randomstring = require('randomstring');
@@ -282,11 +285,64 @@ app.get('/discord/callback', passport.authenticate('discord', { failureRedirect:
 
 
 
+// Pteropassword reset
+router.get('/resetptero', async (req, res) => {
+    try {
+        const uuid = req.session.user.pterodactyl_id;
+        console.log('UUID:', uuid);
+        
+        const userIdentifier = await getUserIdByUUID(uuid);
+        console.log('User Identifier:', userIdentifier);
+        
+        const newPassword = randomstring.generate({
+            length: 10,
+            charset: 'alphanumeric'
+        });
+
+        await updatePasswordInPanel(userIdentifier, newPassword, req.session.user.email, req.session.user.username, req.session.user.first_name, req.session.user.last_name);
+        
+ 
+        res.render("settings", { success: newPassword, user: req.session.user,
+
+            AppName: AppName,
+            AppLogo: AppImg,
+  
+            ads,});
+
+    } catch (error) {
+    
+        res.status(500).send('Error resetting password');
+    }
+});
 
 
-
-
-
+async function updatePasswordInPanel(userIdentifier, newPassword, email, username, first_name, last_name) {
+    const apiUrl = `${settings.pterodactyl.domain}api/application/users/${userIdentifier}`;
+    const requestBody = {
+        email: email,
+        username: username,
+        first_name: first_name,
+        last_name: last_name,
+        language: "en", 
+        password: newPassword // Set the new password
+    };
+    
+    try {
+        await axios.patch(apiUrl, requestBody, {
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${settings.pterodactyl.key}`
+            }
+        });
+    } catch (error) {
+        console.error('Error updating password in panel:', error);
+        if (error.response && error.response.data) {
+            console.error('Response data:', error.response.data);
+        }
+        res.status(500).send('Error updating password');
+    }
+}
 
 
 

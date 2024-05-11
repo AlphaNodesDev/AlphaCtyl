@@ -56,4 +56,22 @@
     }
   });
   </script>
+    <script>
+      
+      window.onload = function() {
+        const success = "<%= typeof(success) !== 'undefined' ? success : '' %>";
+        if (success) {
+          document.getElementById('successMessage').innerText = success;
+          document.getElementById('successModal').style.display = 'block';
+        }
+      }
     
+      
+      const closeModal = document.querySelector('.close');
+      if (closeModal) {
+        closeModal.addEventListener('click', () => {
+          document.getElementById('successModal').style.display = 'none';
+        });
+      }
+      
+</script>

@@ -749,18 +749,36 @@ header {
 
 /* Footer */
 .footer {
+
   position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
-  background-color: #f5f5f5;
+  background-color: var(--bg-2);
+  color: var(--main);
   padding: 10px 0;
   text-align: center;
   font-size: 14px;
   color: #666;
-  border-top: 1px solid #ddd;
 }
 
+@media only screen and (max-width: 580px) {
+  .footer {
+    position: static; /* Change position to static for smaller screens */
+    margin-top: 10px; /* Add margin-top to separate from content */
+    position: relative; /* Change position to relative */
+    width: 100%;
+    background-color: var(--bg-2);
+    color: var(--main);
+    padding: 10px 0;
+    text-align: center;
+    font-size: 14px;
+  
+    bottom: 0;
+    left: 0;
+    width: 100%;
+  }
+}
 
 
 
@@ -875,12 +893,126 @@ header {
   height: 45px;
   transition: .3s;
   margin-top: 19px;
+  margin-bottom: 10%;
 }
 
 .btn-submit:hover {
   background-color: #3b82f6;
   box-shadow: 0 0 0 5px #3b83f65f;
   color: #fff;
+}
+
+
+.settings-container {
+  background-color: var(--bg-2);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.settings-form {
+  margin-bottom: 20px;
+}
+
+.settings-form label {
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+
+.settings-form input {
+  width: 100%;
+  padding: 10px;
+  background-color: var(--main-accent);
+  margin-bottom: 15px;
+  border: 1px solid var(--main-accent);
+  border-radius: 5px;
+}
+
+.settings-buttons {
+  display: flex;
+  justify-content: space-between;
+}
+
+.btn-reset-password,
+.btn-contact-support {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-reset-password {
+  background-color: #76d63e;
+  color: #fff;
+}
+
+.btn-contact-support {
+  background-color: #3498db;
+  color: #fff;
+}
+
+.btn-reset-password:hover,
+.btn-contact-support:hover {
+  background-color: darken(#f39c12, 10%);
+}
+
+
+/* Modal styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.4); /* Black with opacity */
+  backdrop-filter: blur(5px); /* Add blur effect */
+}
+
+/* Modal content */
+.modal-content {
+  background-color: var(--bg-2);
+  margin: 15% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  border-radius: 10px;
+  box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.2); /* Add box-shadow */
+  width: 80%; /* Adjusted width */
+  max-width: 400px; /* Added max-width */
+  height: auto; /* Adjusted height */
+  box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.2); /* Add box-shadow */
+  color: var(--main);
+  
+  position: relative; /* Make position relative for absolute positioning */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+/* Close button */
+.close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  color: #aaa;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+#errorMessage {
+  text-align: center; /* Center align the error message */
+  color:rgb(255, 255, 255);
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
 }
 
 
