@@ -27,9 +27,61 @@
 
         </p>
         <center>
-          <div id="timer" style="color:white;"></div>
 
-       
+          <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.2/socket.io.js"></script>
+          <div id="connectionStatus">WebSocket disconnected</div>
+          <div id="earnedCoins">Earned coins 0</div>
+          
+          <script>
+              const userId = '<%= user.id %>';
+              const page = 'afk'; 
+              const afktimer = '<%= afktimer %>';
+              const socket = new WebSocket(`ws://localhost:8080?userId=${userId}&page=${page}`);
+          
+              // Function to update connection status in the HTML div
+              function updateConnectionStatus(connected) {
+                  const connectionStatusDiv = document.getElementById('connectionStatus');
+                  connectionStatusDiv.innerHTML = connected
+                      ? '<i class="fa-solid fa-circle-check" style="color:green"></i> WebSocket connected'
+                      : '<i class="fa-solid fa-circle-xmark" style="color:red"></i> WebSocket disconnected';
+              }
+          
+              // Function to update earned coins in the HTML div
+              function updateEarnedCoins(coins) {
+                  const earnedCoinsDiv = document.getElementById('earnedCoins');
+                  earnedCoinsDiv.textContent = ` Coins earned: ${coins}`;
+              }
+          
+              // Initialize earned coins
+              let earnedCoins = 0;
+          
+              // Send presence log every 10 seconds
+              setInterval(() => {
+                  if (socket.readyState === WebSocket.OPEN) {
+                      socket.send(userId);
+                      coinupdate()
+                  }
+              }, afktimer);
+          
+              // Update connection status when WebSocket connection is opened
+              socket.addEventListener('open', () => {
+                  updateConnectionStatus(true);
+              });
+          
+              // Update connection status when WebSocket connection is closed
+              socket.addEventListener('close', () => {
+                  updateConnectionStatus(false);
+              });
+          
+              // Listen for messages from the WebSocket server
+              function coinupdate() {
+                  // Increment earned coins when a message is received
+                  earnedCoins++;
+                  updateEarnedCoins(earnedCoins);
+              };
+          </script>
+          
+          
         </center>
         <p class="card-text">
           <span>You Are Earning Coins...</span>

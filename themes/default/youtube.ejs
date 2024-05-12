@@ -1,0 +1,96 @@
+
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/line-awesome/css/line-awesome.min.css'><link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+  <script src="https://kit.fontawesome.com/062f52da9a.js" crossorigin="anonymous"></script>
+</head>
+<body>
+  <%- include('./includes/sidebar') %>
+
+<div class="main-content">
+
+  <%- include('./includes/header') %>
+
+  <main>
+    <section>
+
+      <h3 class="section-head"> Watch Video And Earn</h3>
+
+        <center>Play Video Now
+  <a href="/watchvideo">
+            <button class="button">
+                <svg viewBox="0 0 448 512" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="26px"><path d="M424.4 214.7L72.4 6.6C43.8-10.3 0 6.1 0 47.9V464c0 37.5 40.7 60.1 72.4 41.3l352-208c31.4-18.5 31.5-64.1 0-82.6z" fill="currentColor"></path></svg>
+              </button>
+            </a>
+        </center>
+ 
+        <% if (typeof link !== 'undefined') { %>
+      
+            <div id="player"></div>
+      
+            <% } %>
+          </section>
+      </div>
+      <!-- partial -->
+
+      <script>
+        <% if (typeof link !== 'undefined') { %>
+          var player;
+          function onYouTubeIframeAPIReady() {
+            player = new YT.Player('player', {
+              height: '315',
+              width: '560',
+              videoId: '<%= link %>',
+              playerVars: {
+                'autoplay': 1,
+                'mute': 1
+              },
+              events: {
+                'onStateChange': onPlayerStateChange
+              }
+            });
+          }
+      
+          // The API calls this function when the player's state changes.
+          function onPlayerStateChange(event) {
+            if (event.data == YT.PlayerState.ENDED) {
+              console.log('Video ended');
+              // Send AJAX request to insert link into the database
+              $.ajax({
+                type: 'POST',
+                url: 'insertlink',
+                data: {
+                  userId: '<%= user.pterodactyl_id %>',
+                  link: '<%= link %>'
+                },
+                success: function(response) {
+                  console.log(response);
+                },
+                error: function(xhr, status, error) {
+                  console.error('Failed to insert link into the database:', error);
+                }
+              });
+            }
+          }
+        <% } %>
+      </script>
+      
+    </section>
+
+</div>
+<!-- partial -->
+
+<%- include('./includes/footer') %>
+<script src="https://www.youtube.com/iframe_api"></script>
+
+
+</body>
+</html>

@@ -7,7 +7,10 @@
         "status": "status.ejs",
         "header": "header.ejs",
         "footer": "footer.ejs",
-        "sidebar": "sidebar.ejs"
+        "sidebar": "sidebar.ejs",
+        "afk": "afk",
+        "linkvertise": "linkvertise.ejs",
+        "youtube": "youtube.ejs"
 
     },
     "oauth":{

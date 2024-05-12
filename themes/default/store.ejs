@@ -20,16 +20,16 @@
 
   <main>
     <section>
-        <form action="byresources">
+        <form action="/byresources">
         <div class="card">
             <div class="card-img">
                 <div class="img"></div>
             </div>
             <div class="card-title">Buy Extra Server</div>
-            <div class="card-subtitle">Select RAM package to buy</div>
+            <div class="card-subtitle">Enter a Value</div>
             <hr class="card-divider">
             <div class="card-body">
-              <input type="text" value="0"   class="store-dropdown">
+              <input type="text" value="0" name="server" class="store-dropdown">
             </div>
         </div>
         <div class="card">
@@ -37,14 +37,14 @@
                 <div class="img"></div>
             </div>
             <div class="card-title">Buy Extra CPU</div>
-            <div class="card-subtitle">Select RAM package to buy</div>
+            <div class="card-subtitle">Select CPU package to buy</div>
             <hr class="card-divider">
             <div class="card-body">
                 <select class="store-dropdown">
-                    <option value="0">Select Core</option>
-                    <option value="4GB">1 Core</option>
-                    <option value="8GB">2 Cores</option>
-                    <option value="16GB">3 Cores</option>
+                    <option  value="0">Select Core</option>
+                    <option name="core" name="core" value="1">1 Core</option>
+                    <option name="core" value="2">2 Cores</option>
+                    <option name="core" value="3">3 Cores</option>
                 </select>
             </div>
         </div>
@@ -57,10 +57,10 @@
             <hr class="card-divider">
             <div class="card-body">
                 <select class="store-dropdown">
-                    <option value="0">Select Ram</option>
-                    <option value="4GB">4GB RAM</option>
-                    <option value="8GB">8GB RAM</option>
-                    <option value="16GB">16GB RAM</option>
+                    <option  value="0">Select Ram</option>
+                    <option name="core" value="4">4GB RAM</option>
+                    <option name="core" value="8">8GB RAM</option>
+                    <option name="core" value="16">16GB RAM</option>
                 </select>
             </div>
         </div>
@@ -69,14 +69,14 @@
                 <div class="img"></div>
             </div>
             <div class="card-title">Buy Extra Disk</div>
-            <div class="card-subtitle">Select RAM package to buy</div>
+            <div class="card-subtitle">Select Disk package to buy</div>
             <hr class="card-divider">
             <div class="card-body">
                 <select class="store-dropdown">
                     <option value="0">Select Disk</option>
-                    <option value="4GB">4GB Disk</option>
-                    <option value="8GB">8GB Disk</option>
-                    <option value="16GB">16GB Disk</option>
+                    <option name="disk" value="4">4GB Disk</option>
+                    <option name="disk" value="8">8GB Disk</option>
+                    <option name="disk" value="16">16GB Disk</option>
                 </select>
             </div>
         </div>
@@ -85,17 +85,17 @@
                 <div class="img"></div>
             </div>
             <div class="card-title">Buy Extra Port</div>
-            <div class="card-subtitle">Select RAM package to buy</div>
+            <div class="card-subtitle">Select Port package to buy</div>
             <hr class="card-divider">
             <div class="card-body">
                 <select class="store-dropdown">
                     <option value="0">Select Ports</option>
-                    <option value="4GB">1</option>
+                    <option name="port" value="1">1</option>
                 </select>
             </div>
         </div>
      <center >
-        <button class="btn-submit">Sumbit</button>
+        <button type='submit' class="btn-submit">Sumbit</button>
      </center>
     </form>
     </section>

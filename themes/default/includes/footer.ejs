@@ -55,23 +55,25 @@
       }
     }
   });
+
+  
   </script>
-    <script>
+<script>
       
-      window.onload = function() {
-        const success = "<%= typeof(success) !== 'undefined' ? success : '' %>";
-        if (success) {
-          document.getElementById('successMessage').innerText = success;
-          document.getElementById('successModal').style.display = 'block';
-        }
-      }
-    
-      
-      const closeModal = document.querySelector('.close');
-      if (closeModal) {
-        closeModal.addEventListener('click', () => {
-          document.getElementById('successModal').style.display = 'none';
-        });
-      }
-      
+  window.onload = function() {
+    const error = "<%= typeof(error) !== 'undefined' ? error : '' %>";
+    if (error) {
+      document.getElementById('errorMessage').innerText = error;
+      document.getElementById('errorModal').style.display = 'block';
+    }
+  }
+
+  
+  const closeModal = document.querySelector('.close');
+  if (closeModal) {
+    closeModal.addEventListener('click', () => {
+      document.getElementById('errorModal').style.display = 'none';
+    });
+  }
+  
 </script>

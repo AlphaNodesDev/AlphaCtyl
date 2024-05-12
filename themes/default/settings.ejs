@@ -12,13 +12,16 @@
   <script src="https://kit.fontawesome.com/062f52da9a.js" crossorigin="anonymous"></script>
 </head>
 <body>
-  <div id="successModal" class="modal">
-    <div class="modal-content">
-        <h1><%= success %></h1>
-        <p><%= change %></p>
-        <span class="close">&times;</span>
+  <% if (typeof successMessage !== 'undefined') { %>
+    <div class="modal">
+        <div class="modal-content">
+            <h3><%= successMessage %></h3>
+            <p><%= value %></p>
+            <a href="settings" class="close">&times;</a>
+        </div>
     </div>
-</div>
+    <% } %>
+    
 
   <%- include('./includes/sidebar') %>
 
@@ -27,7 +30,7 @@
   <%- include('./includes/header') %>
 
   <main>
-    <section>
+    <section><form action="changepass">
         <div class="settings-container">
             <h2>Account Settings</h2>
             <div class="settings-form">
@@ -42,7 +45,7 @@
 
                 <button class="btn-submit">Change Password</button>
             </div>
-
+</form>
 
     </section>
     <section>
