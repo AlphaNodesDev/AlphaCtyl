@@ -33,7 +33,7 @@
           <div id="earnedCoins">Earned coins 0</div>
           
           <script>
-              const userId = '<%= user.id %>';
+              const userId = '<%= user.pterodactyl_id %>';
               const page = 'afk'; 
               const afktimer = '<%= afktimer %>';
               const socket = new WebSocket(`ws://localhost:8080?userId=${userId}&page=${page}`);

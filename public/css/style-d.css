@@ -1026,3 +1026,8 @@ header {
   text-decoration: none;
   cursor: pointer;
 }
+
+
+#errorModal{
+  display: none;
+}

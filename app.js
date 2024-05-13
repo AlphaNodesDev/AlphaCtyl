@@ -3,6 +3,7 @@ const session = require('express-session');
 const passport = require('passport');
 const DiscordStrategy = require('passport-discord').Strategy;
 const bodyParser = require('body-parser');
+const figlet = require('figlet');
 const sqlite3 = require('sqlite3').verbose();
 const fs = require('fs');
 const chalk = require('chalk');
@@ -14,10 +15,6 @@ const DB_FILE_PATH = settings.database;
 const PORT = process.env.PORT || settings.website.port;
 const DOMAIN = settings.website.domain;
 const theme = settings.defaulttheme;
-const figlet = require('figlet');
-const axios = require('axios');
-
-
 const figletOptions = {
     font: 'Standard', 
     horizontalLayout: 'default',
@@ -26,17 +23,19 @@ const figletOptions = {
     whitespaceBreak: true
 };
 const appNameAscii = figlet.textSync('AlphaCtyl', figletOptions);
+const authorNameAscii = figlet.textSync('By: AbhiRam', figletOptions);
 const AppName = settings.website.name;
 const AppImg = settings.website.logo;
 const ads = settings.ads;
 const afktimer = settings.afk.timer
-const authorNameAscii = figlet.textSync('By: AbhiRam', figletOptions);
 const packageserver = settings.packages.list.default.servers;
 const packagecpu = settings.packages.list.default.cpu;
 const packageram = settings.packages.list.default.ram;
 const packagedisk = settings.packages.list.default.disk;
 const packageport = settings.packages.list.default.ports;
 const pterodactyldomain = settings.pterodactyl.domain
+
+
 
 const db = new sqlite3.Database(DB_FILE_PATH, (err) => {
     if (err) {
@@ -180,9 +179,9 @@ app.get('/logout', (req, res) => {
 
 
 const { getUserIdByUUID, getUserServersCount } = require('./api/getPteroServers.js'); 
+const { getUserCoins } = require('./api/getuserCoins.js');
 
-//Pass Values To Pages 
-
+// Then use this function inside your route handlers
 Object.keys(pages).forEach((page) => {
     router.get(`/${page}`, async (req, res) => {
         try {
@@ -201,38 +200,34 @@ Object.keys(pages).forEach((page) => {
             // Get user's servers count
             const userServersCount = await getUserServersCount(userIdentifier);
 
-            // Execute SQL query to get user's coins
-            db.get('SELECT coins FROM users WHERE pterodactyl_id = ?', [userId], (err, row) => {
-                if (err) {
-                    console.error(err.message);
-                    return res.render("index", { error: "Database Error. Please Try Again" });
-                }
+            // Get user's coins
+            const coins = await getUserCoins(userId, db);
 
-                const coins = row ? row.coins : 0; 
-
-                res.render(pages[page], {
-                    user: req.session.user,
-                    userServersCount,
-                    AppName: AppName,
-                    AppLogo: AppImg,
-                    packageserver,
-                    packagecpu,
-                    packageram,
-                    packagedisk,
-                    packageport,
-                    ads,
-                    coins,
-                    afktimer,
-                    pterodactyldomain
-                });
+            res.render(pages[page], {
+                user: req.session.user,
+                userServersCount,
+                AppName: AppName,
+                AppLogo: AppImg,
+                packageserver,
+                packagecpu,
+                packageram,
+                packagedisk,
+                packageport,
+                ads,
+                coins,
+                afktimer,
+                pterodactyldomain,
+                settings: settings
             });
+
+            // Close the database connection
+            db.close();
         } catch (error) {
             console.error(error.message);
             res.render("index", { error: "Please Login Again" });
         }
     });
 });
-
 
 
 //Discord Login
@@ -308,6 +303,9 @@ app.get('/discord/callback', passport.authenticate('discord', { failureRedirect:
 
 
 // Pteropassword reset
+
+const { updatePasswordInPanel } = require('./api/updatePasswordInPanel.js'); 
+
 router.get('/resetptero', async (req, res) => {
     try {
         const uuid = req.session.user.pterodactyl_id;
@@ -322,7 +320,10 @@ router.get('/resetptero', async (req, res) => {
         });
 
         await updatePasswordInPanel(userIdentifier, newPassword, req.session.user.email, req.session.user.username, req.session.user.first_name, req.session.user.last_name);
-        
+        const userId = req.session.user.pterodactyl_id;
+
+        const coins = await getUserCoins(userId, db);
+
         // Render the settings view with success message and new password
         res.render("settings", { 
             successMessage: 'Pterodactyl Password Reset', 
@@ -331,7 +332,8 @@ router.get('/resetptero', async (req, res) => {
             AppName: AppName,
             AppLogo: AppImg,
             ads,
-            pterodactyldomain 
+            pterodactyldomain,
+            coins 
         });
         console.log('updating password in panel:');
     } catch (error) {
@@ -339,33 +341,6 @@ router.get('/resetptero', async (req, res) => {
     }
 });
 
-async function updatePasswordInPanel(userIdentifier, newPassword, email, username, first_name, last_name) {
-    const apiUrl = `${settings.pterodactyl.domain}api/application/users/${userIdentifier}`;
-    const requestBody = {
-        email: email,
-        username: username,
-        first_name: first_name,
-        last_name: last_name,
-        language: "en", 
-        password: newPassword 
-    };
-    
-    try {
-        await axios.patch(apiUrl, requestBody, {
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${settings.pterodactyl.key}`
-            }
-        });
-    } catch (error) {
-        console.error('Error updating password in panel:', error);
-        if (error.response && error.response.data) {
-            console.error('Response data:', error.response.data);
-        }
-        res.status(500).send('Error updating password');
-    }
-}
 
 
 
@@ -383,17 +358,15 @@ const activeConnections = new Map();
 
 
 // Function to update user's coins in the database
-function updateUserCoins(userId) {
-    db.run('UPDATE users SET coins = coins + 1 WHERE id = ?', [userId], (err) => {
+function updateUserCoins(userId, reward) {
+    db.run(`UPDATE users SET coins = coins + ${reward} WHERE pterodactyl_id = ?`, [userId], (err) => {
         if (err) {
             console.error('Error updating user coins:', err);
-        } else {
-            console.log('User coins updated successfully');
-        }
+        } 
     });
 }
 
-// WebSocket server event handlers
+
 
 wss.on('connection', function connection(ws, req) {
     // Parse user ID and page from query parameters
@@ -432,8 +405,9 @@ wss.on('connection', function connection(ws, req) {
 
     // Handle WebSocket messages
     ws.on('message', function incoming(message) {
-        // Update user's coins when a message is received
-        updateUserCoins(userId);
+
+        const reward = settings.afk.coins;
+        updateUserCoins(userId, reward);
     });
 
     // Handle WebSocket connection close
@@ -457,7 +431,6 @@ wss.on('connection', function connection(ws, req) {
 
 
 //YouTube Reward 
-// Define route for '/watchvideo'
 router.get('/watchvideo', async (req, res) => {
     try {
         // Retrieve YouTube links from settings
@@ -468,61 +441,41 @@ router.get('/watchvideo', async (req, res) => {
             return res.status(400).send('No YouTube links found in settings.');
         }
 
-        let randomLink;
         const userId = req.session.user.pterodactyl_id;
-        let coins = 0;
+        const coins = await getUserCoins(userId, db);
 
-        // Execute SQL query to check if the link already exists in the database
-        const existingLink = await new Promise((resolve, reject) => {
-            db.get('SELECT yt_link FROM youtube WHERE id = ?', [userId], (err, row) => {
+        // Execute SQL query to check if the user has watched any videos
+        const watchedVideos = await new Promise((resolve, reject) => {
+            db.all('SELECT yt_link FROM youtube WHERE id = ?', [userId], (err, rows) => {
                 if (err) {
                     reject(err);
                     return;
                 }
-                resolve(row ? row.yt_link : null);
+                resolve(rows.map(row => row.yt_link));
             });
         });
-        db.get('SELECT coins FROM users WHERE pterodactyl_id = ?', [userId], (err, row) => {
-        // If the existing link is found, select another random link until it's unique
-        const availableLinks = youtubeLinks.filter(link => link !== existingLink);
+
+        // Filter out watched videos from available links
+        const availableLinks = youtubeLinks.filter(link => !watchedVideos.includes(link));
+
         if (availableLinks.length === 0) {
-            // No available links
-            return res.render("youtube", { error: "No links available" ,user: req.session.user,
+            // No available unwatched links
+            return res.render("youtube", { error: "You have watched all available videos.", user: req.session.user, AppName: AppName, AppLogo: AppImg, coins, ads, pterodactyldomain });
+        }
+
+        // Select a random unwatched link
+        const randomIndex = Math.floor(Math.random() * availableLinks.length);
+        const randomLink = availableLinks[randomIndex];
+
+        // Render the youtube.ejs view with the selected link
+        res.render('youtube', { 
+            link: randomLink,
+            user: req.session.user,
             AppName: AppName,
             AppLogo: AppImg,
             coins,
             ads,
-            pterodactyldomain});
-        }
-
-        do {
-            const randomIndex = Math.floor(Math.random() * availableLinks.length);
-            randomLink = availableLinks[randomIndex];
-        } while (existingLink === randomLink);
-
-        // Execute SQL query to get user's coins
-
-            if (err) {
-                console.error(err.message);
-                return res.render("index", { error: "Database Error. Please Try Again",user: req.session.user,
-                AppName: AppName,
-                AppLogo: AppImg,
-                coins,
-                ads,
-                pterodactyldomain});
-            }
-            coins = row ? row.coins : 0;
-
-            // Render the youtube.ejs view with the selected link and user's coins
-            res.render('youtube', { 
-                link: randomLink,
-                user: req.session.user,
-                AppName: AppName,
-                AppLogo: AppImg,
-                coins,
-                ads,
-                pterodactyldomain
-            });
+            pterodactyldomain
         });
     } catch (error) {
         console.error('Error while processing /watchvideo:', error);
@@ -533,9 +486,7 @@ router.get('/watchvideo', async (req, res) => {
 
 
 
-// Route for inserting YouTube link into the database
-const youtubeLinks = settings?.youtube?.links;
-// Set the Permissions-Policy header in your Express app
+
 app.use((req, res, next) => {
     res.setHeader('Permissions-Policy', 'document-domain "self" https://www.youtube.com');
     next();
@@ -548,9 +499,11 @@ router.post('/insertlink', async (req, res) => {
         // Insert the link into the database with the user's ID
         db.run('INSERT INTO youtube (id, yt_link) VALUES (?, ?)', [userId, youtubeLink], (err) => {
             if (err) {
-                return res.status(500).send('Failed to insert link into the database.');
+                return res.status(500).send('Task Failed');
             }
-            res.status(200).send('Link inserted successfully.');
+            const reward = settings.youtube.coins;
+            updateUserCoins(userId, reward);
+            res.status(200).send('Coins Rewarded');
         });
     } catch (error) {
         console.error(error);
@@ -559,3 +512,74 @@ router.post('/insertlink', async (req, res) => {
 });
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+router.get('/createserver', async (req, res) => {
+    try {
+        const uuid = req.session.user.pterodactyl_id;
+        const userId = await getUserIdByUUID(uuid);
+
+        // Get the egg key posted from the form
+        const eggKey = req.query.eggKey; // Assuming the name attribute in the form is 'eggKey'
+
+        // Retrieve the egg configuration based on the selected egg key
+        const eggConfig = settings.eggs[eggKey];
+
+        // Define the server configuration using the retrieved egg configuration
+        const serverConfig = {
+            name: "Building",
+            user: userId,
+            egg: eggConfig.info.egg,
+            docker_image: eggConfig.info.docker_image,
+            startup: eggConfig.info.startup,
+            environment: eggConfig.info.environment,
+            limits: {
+                memory: eggConfig.minimum.ram,
+                swap: 0, // Assuming swap is always 0
+                disk: eggConfig.minimum.disk,
+                io: eggConfig.minimum.io,
+                cpu: eggConfig.minimum.cpu
+            },
+            feature_limits: eggConfig.info.feature_limits,
+            allocation: {
+                default: eggConfig.info.allocations
+            }
+        };
+
+        // Make the POST request to create the server
+        const response = await fetch(`${settings.pterodactyl.domain}api/application/servers`, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${settings.pterodactyl.key}` // Replace 'apikey' with your actual API key
+            },
+            body: JSON.stringify(serverConfig)
+        });
+
+        // Check if the request was successful
+        if (response.ok) {
+            const serverData = await response.json();
+            console.log('Server created:', serverData);
+            res.status(201).send('Server created successfully.');
+        } else {
+            const errorData = await response.json();
+            console.error('Error creating server:', errorData);
+            res.status(500).send('Error creating server.');
+        }
+    } catch (error) {
+        console.error('Error creating server:', error);
+        res.status(500).send('Internal server error.');
+    }
+});
