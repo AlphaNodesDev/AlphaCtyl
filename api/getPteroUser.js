@@ -9,7 +9,7 @@ async function registerPteroUser(username, email, password, firstName, lastName)
             return null; // Return null indicating registration failed
         }
 
-        const response = await axios.post(`${settings.pterodactyl.domain}api/application/users`, {
+        const response = await axios.post(`${settings.pterodactyl.domain}/api/application/users`, {
             username,
             email,
             password,

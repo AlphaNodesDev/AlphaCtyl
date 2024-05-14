@@ -3,7 +3,7 @@ const settings = require('../settings.json');
 
 async function getUserIdByUUID(uuid) {
     try {
-        const response = await axios.get(`${settings.pterodactyl.domain}api/application/users?filter%5Buuid%5D=${uuid}`, {
+        const response = await axios.get(`${settings.pterodactyl.domain}/api/application/users?filter%5Buuid%5D=${uuid}`, {
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
@@ -32,7 +32,7 @@ async function getUserIdByUUID(uuid) {
 
 async function getUserServersCount(userIdentifier) {
     try {
-        const response = await axios.get(`${settings.pterodactyl.domain}api/application/servers`, {
+        const response = await axios.get(`${settings.pterodactyl.domain}/api/application/servers`, {
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',

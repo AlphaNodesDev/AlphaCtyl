@@ -15,6 +15,7 @@ const DB_FILE_PATH = settings.database;
 const PORT = process.env.PORT || settings.website.port;
 const DOMAIN = settings.website.domain;
 const theme = settings.defaulttheme;
+const randomstring = require('randomstring');
 const figletOptions = {
     font: 'Standard', 
     horizontalLayout: 'default',
@@ -73,32 +74,47 @@ app.set('views', path.join(__dirname, `./themes/${theme}`));
 
 
 
-
+// Database table Create
 db.serialize(() => {
     db.run("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT, password TEXT, email TEXT, first_name TEXT, last_name TEXT, pterodactyl_id TEXT, servers INTEGER DEFAULT 0, ports INTEGER DEFAULT 0, ram INTEGER DEFAULT 0, disk INTEGER DEFAULT 0, cpu INTEGER DEFAULT 0, coins INTEGER DEFAULT 0)");
     db.run("CREATE TABLE IF NOT EXISTS youtube (id INTEGER, yt_link TEXT)");
 
 });
-
+//Load Theme 
 const pagesConfig = JSON.parse(fs.readFileSync(`./themes/${theme}/pages.json`));
+//load normal pages
 const pages = pagesConfig.pages;
+//load oauth pages
 const oauthPages = pagesConfig.oauth;
 
 
 
-
+//includes from other api
 const { registerPteroUser } = require('./api/getPteroUser.js');
+const { getUserIdByUUID, getUserServersCount } = require('./api/getPteroServers.js'); 
+const { getUserCoins } = require('./api/getuserCoins.js');
+const { getUserResources } = require('./api/getuseresources.js');
+const { updatePasswordInPanel } = require('./api/updatePasswordInPanel.js'); 
 
+
+
+
+//render appname and logo to oauth pages only
+Object.keys(oauthPages).forEach(page => {
+    app.get(`/${page}`, (req, res) => {
+        res.render(oauthPages[page], { AppName: AppName, AppLogo: AppImg});
+    });
+});
+
+//register process
 router.post('/register', async (req, res) => {
     const { username, email, password, firstName, lastName } = req.body;
-
     try {
         db.get('SELECT * FROM users WHERE email = ? OR username = ?', [email, username], async (err, row) => {
             if (err) {
                 console.error(err);
                 return res.send('Error checking user existence.');
             }
-
             if (row) {
                 if (row.email === email) {
                     return res.render('register', { error: 'Email already exists' });
@@ -106,15 +122,11 @@ router.post('/register', async (req, res) => {
                     return res.render('register', { error: 'Username already exists' });
                 }
             }
-
             try {
                 const pteroUser = await registerPteroUser(username, email, password, firstName, lastName);
                 const userId = pteroUser.attributes.uuid;
-
                 await db.run('INSERT INTO users (username, email, password, first_name, last_name, pterodactyl_id) VALUES (?, ?, ?, ?, ?, ?)', [username, email, password, firstName, lastName, userId]);
-                
                 req.session.user = { pterodactyl_id: userId, username }; 
-
                 res.redirect('/dashboard');
             } catch (registerError) {
                 console.error('Error registering user in Pterodactyl:', registerError);
@@ -130,7 +142,7 @@ router.post('/register', async (req, res) => {
 
 
 
-
+//login process
 router.post('/login', (req, res) => {
     const { email, password } = req.body;
     db.get('SELECT * FROM users WHERE email = ? AND password = ?', [email, password], (err, row) => {
@@ -149,24 +161,7 @@ router.post('/login', (req, res) => {
 
 app.use('/', router);
 
-
-
-
-Object.keys(pages).forEach(page => {
-    app.get(`/${page}`, (req, res) => {
-        res.render(pages[page], { AppName: AppName, AppLogo: AppImg});
-    });
-});
-
-
-//oauth pages only
-Object.keys(oauthPages).forEach(page => {
-    app.get(`/${page}`, (req, res) => {
-        res.render(oauthPages[page], { AppName: AppName, AppLogo: AppImg});
-    });
-});
-
-
+//logout process
 app.get('/logout', (req, res) => {
     req.session.destroy((err) => {
         if (err) {
@@ -178,10 +173,11 @@ app.get('/logout', (req, res) => {
 });
 
 
-const { getUserIdByUUID, getUserServersCount } = require('./api/getPteroServers.js'); 
-const { getUserCoins } = require('./api/getuserCoins.js');
-const { getUserResources } = require('./api/getuseresources.js');
-// Then use this function inside your route handlers
+
+
+
+
+// render values to all pages
 Object.keys(pages).forEach((page) => {
     router.get(`/${page}`, async (req, res) => {
         try {
@@ -219,9 +215,9 @@ Object.keys(pages).forEach((page) => {
                 afktimer,
                 pterodactyldomain,
                 settings: settings
-            });
 
-            // Close the database connection
+                
+            });
             db.close();
         } catch (error) {
             console.error(error.message);
@@ -232,10 +228,6 @@ Object.keys(pages).forEach((page) => {
 
 
 //Discord Login
-
-
-const randomstring = require('randomstring');
-
 passport.use(new DiscordStrategy({
     clientID: settings.discord.clientID,
     clientSecret: settings.discord.clientSecret,
@@ -243,51 +235,31 @@ passport.use(new DiscordStrategy({
     scope: ['identify', 'email'],
 }, async (accessToken, refreshToken, profile, done) => {
     try {
-        // Check if a user with the given email exists in the database
         db.get('SELECT * FROM users WHERE email = ?', [profile.email], async (err, row) => {
             if (err) {
-                // If there's an error, pass it to the done callback to signal an error
                 return done(err);
             }
-
-            // If the user already exists in the database
             if (row) {
-                // Return the existing user's profile to indicate successful authentication
                 return done(null, row);
             }
-
-            // If the user doesn't exist in the database, proceed with registration
             const firstName = profile.username.split('#')[0];
             const lastName = profile.username.split('#')[0];
-
             const password = randomstring.generate({
                 length: 10,
                 charset: 'alphanumeric'
             });
-
-            // Register the user in Pterodactyl and insert into the database
             const pteroUser = await registerPteroUser(profile.username, profile.email, password, firstName, lastName);
-            
             if (!pteroUser) {
-                // Registration failed, return an error
                 return done(new Error('Failed to register user in panel.'));
             }
-
             const userId = pteroUser.attributes.uuid;
-
             await db.run('INSERT INTO users (username, email, password, first_name, last_name, pterodactyl_id) VALUES (?, ?, ?, ?, ?, ?)', [profile.username, profile.email, password, firstName, lastName, userId]);
-
-            // Return the Discord profile to indicate successful authentication
             return done(null, profile);
         });
     } catch (error) {
-        // If an error occurs in the try block, catch it here
-        return done(error); // Pass the error to the done callback to signal an error
+        return done(error); 
     }
 }));
-
-
-
 
 passport.serializeUser((user, done) => {
     done(null, user);
@@ -298,17 +270,17 @@ passport.deserializeUser((obj, done) => {
 });
 
 
+
+
+//Discord Login process
 app.get('/discord', passport.authenticate('discord'));
 app.get('/discord/callback', passport.authenticate('discord', { failureRedirect: '/' }), (req, res) => {
-    
     db.get('SELECT * FROM users WHERE email = ?', [req.user.email], (err, row) => {
         if (err) {
             console.error('Error retrieving user details:', err);
             return res.redirect('/');
         }
-        
         req.session.user = row;
-        
         res.redirect('/dashboard');
     });
 });
@@ -317,28 +289,18 @@ app.get('/discord/callback', passport.authenticate('discord', { failureRedirect:
 
 
 // Pteropassword reset
-
-const { updatePasswordInPanel } = require('./api/updatePasswordInPanel.js'); 
-
 router.get('/resetptero', async (req, res) => {
     try {
         const userId = req.session.user.pterodactyl_id;
-
-        
         const userIdentifier = await getUserIdByUUID(uuid);
         console.log('User Identifier:', userIdentifier);
-        
         const newPassword = randomstring.generate({
             length: 10,
             charset: 'alphanumeric'
         });
-
         await updatePasswordInPanel(userIdentifier, newPassword, req.session.user.email, req.session.user.username, req.session.user.first_name, req.session.user.last_name);
         const uuid = req.session.user.pterodactyl_id;
-
         const coins = await getUserCoins(userId, db);
-
-        // Render the settings view with success message and new password
         res.render("settings", { 
             successMessage: 'Pterodactyl Password Reset', 
             value: 'Your New Password is <bold>' + newPassword + '</bold>', 
@@ -359,14 +321,11 @@ router.get('/resetptero', async (req, res) => {
 
 
 
-//Afk page 
 
+
+//Websocket Config
 const WebSocket = require('ws');
-
-// Create WebSocket server
 const wss = new WebSocket.Server({ port: 8080 });
-
-// Map to store active connections for each user and page
 const activeConnections = new Map();
 
 
@@ -382,56 +341,39 @@ function updateUserCoins(userId, reward) {
 
 
 
+
+//Functions To check for websocket connections
 wss.on('connection', function connection(ws, req) {
-    // Parse user ID and page from query parameters
     const urlParams = new URLSearchParams(req.url.split('?')[1]);
     const userId = urlParams.get('userId');
     const page = urlParams.get('page');
-
-    // Function to handle new WebSocket connection
     function handleNewConnection(userId, page) {
-        // Check if the user already has active connections
         if (activeConnections.has(userId)) {
             const pageSet = activeConnections.get(userId);
-            // Check if the user's active connections include the current page
             if (pageSet.has(page)) {
-                // Close the WebSocket connection for duplicate page
                 ws.close();
-                return false; // Indicate duplicate connection
+                return false; 
             } else {
-                // Add the current page to the user's active connections
                 pageSet.add(page);
             }
         } else {
-            // Initialize a new set for the user's active connections
             activeConnections.set(userId, new Set([page]));
         }
-        return true; // Indicate successful connection
+        return true;
     }
-
-    // Handle new WebSocket connection
     const isNewConnection = handleNewConnection(userId, page);
-
-    // If it's not a new connection (i.e., duplicate), close the WebSocket connection
     if (!isNewConnection) {
         return;
     }
-
-    // Handle WebSocket messages
     ws.on('message', function incoming(message) {
-
         const reward = settings.afk.coins;
         updateUserCoins(userId, reward);
     });
-
-    // Handle WebSocket connection close
     ws.on('close', function close() {
-        // Remove the closed WebSocket connection from the user's active connections
         const pageSet = activeConnections.get(userId);
         if (pageSet) {
             pageSet.delete(page);
             if (pageSet.size === 0) {
-                // If the user has no active connections left, remove the user entry from the map
                 activeConnections.delete(userId);
             }
         }
@@ -447,18 +389,12 @@ wss.on('connection', function connection(ws, req) {
 //YouTube Reward 
 router.get('/watchvideo', async (req, res) => {
     try {
-        // Retrieve YouTube links from settings
         const youtubeLinks = settings?.youtube?.links;
-        
-        // Check if there are any YouTube links defined in settings
         if (!youtubeLinks || youtubeLinks.length === 0) {
             return res.status(400).send('No YouTube links found in settings.');
         }
-
         const userId = req.session.user.pterodactyl_id;
         const coins = await getUserCoins(userId, db);
-
-        // Execute SQL query to check if the user has watched any videos
         const watchedVideos = await new Promise((resolve, reject) => {
             db.all('SELECT yt_link FROM youtube WHERE id = ?', [userId], (err, rows) => {
                 if (err) {
@@ -468,20 +404,12 @@ router.get('/watchvideo', async (req, res) => {
                 resolve(rows.map(row => row.yt_link));
             });
         });
-
-        // Filter out watched videos from available links
         const availableLinks = youtubeLinks.filter(link => !watchedVideos.includes(link));
-
         if (availableLinks.length === 0) {
-            // No available unwatched links
             return res.render("youtube", { error: "You have watched all available videos.", user: req.session.user, AppName: AppName, AppLogo: AppImg, coins, ads, pterodactyldomain });
         }
-
-        // Select a random unwatched link
         const randomIndex = Math.floor(Math.random() * availableLinks.length);
         const randomLink = availableLinks[randomIndex];
-
-        // Render the youtube.ejs view with the selected link
         res.render('youtube', { 
             link: randomLink,
             user: req.session.user,
@@ -505,12 +433,12 @@ app.use((req, res, next) => {
     res.setHeader('Permissions-Policy', 'document-domain "self" https://www.youtube.com');
     next();
 });
+
+//function to insert link after the user watch the video
 router.post('/insertlink', async (req, res) => {
     try {
         const userId = req.body.userId;
         const youtubeLink = req.body.link;
-
-        // Insert the link into the database with the user's ID
         db.run('INSERT INTO youtube (id, yt_link) VALUES (?, ?)', [userId, youtubeLink], (err) => {
             if (err) {
                 return res.status(500).send('Task Failed');
@@ -535,56 +463,39 @@ router.post('/insertlink', async (req, res) => {
 
 
 
-
-
-
-
+//function to create server
 router.post('/createserver', async (req, res) => {
     try {
         const  userId = req.session.user.pterodactyl_id;
         const uuid = await getUserIdByUUID(userId);
         const userIdentifier = await getUserIdByUUID(userId);
         const userResources = await getUserResources(userId, db);
-        // Get user's servers count
         const userServersCount = await getUserServersCount(userIdentifier);
-
-        // Calculate available resources after considering packages
         const availableServers = (userResources.row.servers + packageserver) - userServersCount.count;
         const availableCpu = (userResources.row.cpu + packagecpu) - (userServersCount.totalCPU ) ;
         const availableRam = (userResources.row.ram + packageram) - (userServersCount.totalRAM );
         const availableDisk = (userResources.row.disk + packagedisk) - (userServersCount.totalDisk ) ;
         const availablePorts = (userResources.row.ports + packageport) - userServersCount.totalPorts ;
-
-        // Get the posted values from the form
-        const { name, cpu, ram, disk, port } = req.body; // Assuming the input fields are named 'cpu', 'ram', 'disk', and 'port'
-
+        const { name, cpu, ram, disk, port } = req.body; 
          if (availableServers <= 0) {
             return res.status(400).send('You don\'t have enough available servers to create the server.');
         }
-        
         if (cpu > availableCpu) {
             return res.status(400).send('You don\'t have enough available CPU to create the server.');
         }
-        
         if (ram >  availableRam) {
             return res.status(400).send('You don\'t have enough available RAM to create the server.');
         }
-        
         if (disk > availableDisk) {
             return res.status(400).send('You don\'t have enough available disk space to create the server.');
         }
-        
         if (port >  availablePorts) {
             return res.status(400).send('You don\'t have enough available ports to create the server.');
         }
-        
-        // Get the egg key posted from the form
-        const eggKey = req.body.egg; // Assuming the name attribute in the form is 'eggKey'
+        const eggKey = req.body.egg; 
         const locationKey = req.body.locations
-        // Retrieve the egg configuration based on the selected egg key
         const eggConfig = settings.eggs[eggKey];
         const locationsConfig = settings.locations[locationKey];
-        // Define the server configuration using the retrieved egg configuration
         const serverConfig = {
             name: name,
             user: uuid,
@@ -608,19 +519,15 @@ router.post('/createserver', async (req, res) => {
                 default: locationsConfig.id
             }
         };
-
-        // Make the POST request to create the server
-        const response = await fetch(`${settings.pterodactyl.domain}api/application/servers`, {
+        const response = await fetch(`${settings.pterodactyl.domain}/api/application/servers`, {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${settings.pterodactyl.key}` // Replace 'apikey' with your actual API key
+                'Authorization': `Bearer ${settings.pterodactyl.key}`
             },
             body: JSON.stringify(serverConfig)
         });
-
-        // Check if the request was successful
         if (response.ok) {
             const serverData = await response.json();
             console.log('Server created:', serverData);
@@ -635,6 +542,11 @@ router.post('/createserver', async (req, res) => {
         res.status(500).send('Internal server error.');
     }
 });
+
+
+
+
+
 
 
 

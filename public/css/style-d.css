@@ -389,7 +389,16 @@ main {
    
     text-align: right;
   }
+  .card{
+    
+  }
 }
+@media only screen and (min-width: 860px) {
+  .card{
+    max-width: 50%;
+  }
+}
+
 @media only screen and (max-width: 860px) {
   .analytics {
     grid-template-columns: repeat(2, 1fr);
@@ -1464,7 +1473,7 @@ Main Content
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 5px;
-  background-color: #fff;
+  background-color: var(--main-accent);
   font-size: 14px;
 }
 

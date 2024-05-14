@@ -133,16 +133,11 @@ Sidebar
   padding: 0.7rem 0;
 }
 .sidebar-menu a.active {
-  background-color: var(--main-accent);
+  background-color: var(--color-main);
   border-radius: 7px;
   padding: 0.8rem;
 }
-.sidebar-menu a span:first-child {
-  display: inline-block;
-  margin-right: 0.8rem;
-  font-size: 1.5rem;
-  color: var(--color-main);
-}
+
 .sidebar-card {
   background-color: var(--main-accent);
   padding: 1rem;
@@ -151,11 +146,7 @@ Sidebar
   text-align: center;
   border-radius: 7px;
 }
-.side-card-icon span {
-  font-size: 8rem;
-  color: var(--color-main);
-  display: inline-block;
-}
+
 .side-card-icon {
   margin-bottom: 0.8rem;
 }
@@ -798,7 +789,6 @@ header {
   width: 100%;
   height: auto;
   box-sizing: border-box;
-  background-color: #212121;
   border: 5px solid #222;
   border-radius: 8px;
   display: flex;
@@ -827,7 +817,6 @@ header {
   font-family: "Lucida Sans", "Lucida Sans Regular", "Lucida Grande",
           "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
   font-weight: 600;
-  color: #fff;
   cursor: default;
 }
 
@@ -837,7 +826,7 @@ header {
   font-family: "Lucida Sans", "Lucida Sans Regular", "Lucida Grande",
           "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
   font-weight: 400;
-  color: #fff;
+  color: var(--main-accent);
   cursor: default;
 }
 
@@ -1326,17 +1315,13 @@ Sidebar
   padding: 0.7rem 0;
 }
 
-.sidebar-menu a.active {
-  background-color: var(--main-accent);
-  border-radius: 7px;
-  padding: 0.8rem;
-}
+
 
 .sidebar-menu a span:first-child {
   display: inline-block;
   margin-right: 0.8rem;
   font-size: 1.5rem;
-  color: var(--color-main);
+  
 }
 
 .sidebar-card {
@@ -1350,7 +1335,7 @@ Sidebar
 
 .side-card-icon span {
   font-size: 8rem;
-  color: var(--color-main);
+  color: var(--main-accent);
   display: inline-block;
 }
 
@@ -1412,7 +1397,6 @@ Main Content
   width: 100%;
   height: auto;
   box-sizing: border-box;
-  background-color: #212121;
   border: 5px solid #222;
   border-radius: 10px;
   display: flex;
@@ -1431,19 +1415,12 @@ Main Content
   border: 5px solid #b671d6;
 }
 
-.card-title {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #fff;
-  cursor: default;
-}
 
 .card-subtitle {
   margin: 0;
   font-size: 14px;
   font-weight: 400;
-  color: #fff;
+  color: var(--main-accent);
   cursor: default;
 }
 
