@@ -56,7 +56,7 @@ async function getUserServersCount(userIdentifier) {
         userServers.forEach(server => {
             totalRAM += server.attributes.limits.memory;
             totalDisk += server.attributes.limits.disk;
-            totalPorts += server.attributes.feature_limits.allocations + server.attributes.allocation;
+            totalPorts += server.attributes.feature_limits.allocations;
             totalCPU += server.attributes.limits.cpu;
         });
 

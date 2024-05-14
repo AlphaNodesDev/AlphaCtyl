@@ -180,7 +180,7 @@ app.get('/logout', (req, res) => {
 
 const { getUserIdByUUID, getUserServersCount } = require('./api/getPteroServers.js'); 
 const { getUserCoins } = require('./api/getuserCoins.js');
-
+const { getUserResources } = require('./api/getuseresources.js');
 // Then use this function inside your route handlers
 Object.keys(pages).forEach((page) => {
     router.get(`/${page}`, async (req, res) => {
@@ -196,7 +196,7 @@ Object.keys(pages).forEach((page) => {
 
             // Get user identifier using pterodactyl ID
             const userIdentifier = await getUserIdByUUID(userId);
-
+            const userresources = await getUserResources(userId, db);
             // Get user's servers count
             const userServersCount = await getUserServersCount(userIdentifier);
 
@@ -205,6 +205,7 @@ Object.keys(pages).forEach((page) => {
 
             res.render(pages[page], {
                 user: req.session.user,
+                userresources,
                 userServersCount,
                 AppName: AppName,
                 AppLogo: AppImg,
@@ -308,8 +309,8 @@ const { updatePasswordInPanel } = require('./api/updatePasswordInPanel.js');
 
 router.get('/resetptero', async (req, res) => {
     try {
-        const uuid = req.session.user.pterodactyl_id;
-        console.log('UUID:', uuid);
+        const userId = req.session.user.pterodactyl_id;
+
         
         const userIdentifier = await getUserIdByUUID(uuid);
         console.log('User Identifier:', userIdentifier);
@@ -320,7 +321,7 @@ router.get('/resetptero', async (req, res) => {
         });
 
         await updatePasswordInPanel(userIdentifier, newPassword, req.session.user.email, req.session.user.username, req.session.user.first_name, req.session.user.last_name);
-        const userId = req.session.user.pterodactyl_id;
+        const uuid = req.session.user.pterodactyl_id;
 
         const coins = await getUserCoins(userId, db);
 
@@ -525,35 +526,73 @@ router.post('/insertlink', async (req, res) => {
 
 
 
-router.get('/createserver', async (req, res) => {
+router.post('/createserver', async (req, res) => {
     try {
-        const uuid = req.session.user.pterodactyl_id;
-        const userId = await getUserIdByUUID(uuid);
+        const  userId = req.session.user.pterodactyl_id;
+        const uuid = await getUserIdByUUID(userId);
+        const userIdentifier = await getUserIdByUUID(userId);
+        const userResources = await getUserResources(userId, db);
+        // Get user's servers count
+        const userServersCount = await getUserServersCount(userIdentifier);
 
+        // Calculate available resources after considering packages
+        const availableServers = (userResources.row.servers + packageserver) - userServersCount.count;
+        const availableCpu = (userResources.row.cpu + packagecpu) - (userServersCount.totalCPU ) ;
+        const availableRam = (userResources.row.ram + packageram) - (userServersCount.totalRAM );
+        const availableDisk = (userResources.row.disk + packagedisk) - (userServersCount.totalDisk ) ;
+        const availablePorts = (userResources.row.ports + packageport) - userServersCount.totalPorts ;
+
+        // Get the posted values from the form
+        const { name, cpu, ram, disk, port } = req.body; // Assuming the input fields are named 'cpu', 'ram', 'disk', and 'port'
+
+         if (availableServers <= 0) {
+            return res.status(400).send('You don\'t have enough available servers to create the server.');
+        }
+        
+        if (cpu > availableCpu) {
+            return res.status(400).send('You don\'t have enough available CPU to create the server.');
+        }
+        
+        if (ram >  availableRam) {
+            return res.status(400).send('You don\'t have enough available RAM to create the server.');
+        }
+        
+        if (disk > availableDisk) {
+            return res.status(400).send('You don\'t have enough available disk space to create the server.');
+        }
+        
+        if (port >  availablePorts) {
+            return res.status(400).send('You don\'t have enough available ports to create the server.');
+        }
+        
         // Get the egg key posted from the form
-        const eggKey = req.query.eggKey; // Assuming the name attribute in the form is 'eggKey'
-
+        const eggKey = req.body.egg; // Assuming the name attribute in the form is 'eggKey'
+        const locationKey = req.body.locations
         // Retrieve the egg configuration based on the selected egg key
         const eggConfig = settings.eggs[eggKey];
-
+        const locationsConfig = settings.locations[locationKey];
         // Define the server configuration using the retrieved egg configuration
         const serverConfig = {
-            name: "Building",
-            user: userId,
+            name: name,
+            user: uuid,
             egg: eggConfig.info.egg,
             docker_image: eggConfig.info.docker_image,
             startup: eggConfig.info.startup,
             environment: eggConfig.info.environment,
             limits: {
-                memory: eggConfig.minimum.ram,
-                swap: 0, // Assuming swap is always 0
-                disk: eggConfig.minimum.disk,
-                io: eggConfig.minimum.io,
-                cpu: eggConfig.minimum.cpu
+                memory: ram,
+                swap: 0, 
+                disk: disk,
+                io: 10,
+                cpu: cpu
             },
-            feature_limits: eggConfig.info.feature_limits,
+            feature_limits: {
+                databases: 4,
+                backups: 4,
+                allocations: port
+            },
             allocation: {
-                default: eggConfig.info.allocations
+                default: locationsConfig.id
             }
         };
 
@@ -583,3 +622,9 @@ router.get('/createserver', async (req, res) => {
         res.status(500).send('Internal server error.');
     }
 });
+
+
+
+
+
+

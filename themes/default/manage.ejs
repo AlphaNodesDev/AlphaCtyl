@@ -22,16 +22,37 @@
     <section>
         <form action="/createserver" method="POST">
           <div>
-            <label for="egg">Select Egg:</label>
-            <select name="egg" id="egg">
-              <% Object.keys(settings.eggs).forEach(eggKey => { %>
-                <option value="<%= eggKey %>"><%= settings.eggs[eggKey].display %></option>
+            <label for="locations">Select location:</label>
+            <select name="locations" id="locations">
+              <% Object.keys(settings.locations).forEach(locationKey => { %>
+                <option value="<%= locationKey %>"><%= settings.locations[locationKey].name %></option>
               <% }); %>
             </select>
+            
+              <label for="egg">Select Egg:</label>
+
+            <select name="egg" id="egg">
+              
+           
+              <% Object.keys(settings.eggs).forEach(eggKey => { %>
+                <option value="<%= eggKey %>"><%= settings.eggs[eggKey].display %></option>
+                <% }); %>
+              </select>
+                <div class="egg-fields">
+                  <input type="text" name="name">
+                  <input type="number" name="cpu">
+                  <input type="number" name="ram">
+                  <input type="number" name="disk">
+                  <input type="number" name="port">
+                </div>
+   
+      
+            
           </div>
           <center>
             <button type="submit" class="btn-submit">Submit</button>
-          </center>
+          </center>  
+
         </form>
       </section>
 
