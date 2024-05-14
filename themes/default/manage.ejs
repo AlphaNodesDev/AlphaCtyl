@@ -19,42 +19,43 @@
   <%- include('./includes/header') %>
 
   <main>
-    <section>
-        <form action="/createserver" method="POST">
-          <div>
-            <label for="locations">Select location:</label>
-            <select name="locations" id="locations">
-              <% Object.keys(settings.locations).forEach(locationKey => { %>
-                <option value="<%= locationKey %>"><%= settings.locations[locationKey].name %></option>
-              <% }); %>
-            </select>
-            
-              <label for="egg">Select Egg:</label>
-
-            <select name="egg" id="egg">
-              
-           
-              <% Object.keys(settings.eggs).forEach(eggKey => { %>
-                <option value="<%= eggKey %>"><%= settings.eggs[eggKey].display %></option>
-                <% }); %>
-              </select>
-                <div class="egg-fields">
-                  <input type="text" name="name">
-                  <input type="number" name="cpu">
-                  <input type="number" name="ram">
-                  <input type="number" name="disk">
-                  <input type="number" name="port">
-                </div>
-   
-      
-            
-          </div>
-          <center>
-            <button type="submit" class="btn-submit">Submit</button>
-          </center>  
-
-        </form>
-      </section>
+    <section class="container">
+      <form action="/createserver" method="POST" class="form">
+        <div class="form-group">
+          <label for="locations">Select Location:</label>
+          <select name="locations" id="locations" class="form-control">
+            <% Object.keys(settings.locations).forEach(locationKey => { %>
+            <option value="<%= locationKey %>"><%= settings.locations[locationKey].name %></option>
+            <% }); %>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="egg">Select Egg:</label>
+          <select name="egg" id="egg" class="form-control">
+            <% Object.keys(settings.eggs).forEach(eggKey => { %>
+            <option value="<%= eggKey %>"><%= settings.eggs[eggKey].display %></option>
+            <% }); %>
+          </select>
+        </div>
+        <div class="form-group egg-fields">
+          <label for="name">Server Name:</label>
+          <input type="text" name="name" id="name" class="form-control" placeholder="Name">
+          <label for="cpu">Server CPU:</label>
+          <input type="number" name="cpu" id="cpu" class="form-control" placeholder="CPU">
+          <label for="ram">Server RAM:</label>
+          <input type="number" name="ram" id="ram" class="form-control" placeholder="RAM">
+          <label for="disk">Server Disk:</label>
+          <input type="number" name="disk" id="disk" class="form-control" placeholder="Disk">
+          <label for="port">Server Port:</label>
+          <input type="number" name="port" id="port" class="form-control" placeholder="Port">
+        </div>
+        <div class="form-group text-center">
+          <button type="submit" class="btn btn-primary">Submit</button>
+        </div>
+      </form>
+    </section>
+    
+    
 
 </div>
 <!-- partial -->

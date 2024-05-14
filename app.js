@@ -236,7 +236,6 @@ Object.keys(pages).forEach((page) => {
 
 const randomstring = require('randomstring');
 
-
 passport.use(new DiscordStrategy({
     clientID: settings.discord.clientID,
     clientSecret: settings.discord.clientSecret,
@@ -244,35 +243,49 @@ passport.use(new DiscordStrategy({
     scope: ['identify', 'email'],
 }, async (accessToken, refreshToken, profile, done) => {
     try {
-        
+        // Check if a user with the given email exists in the database
         db.get('SELECT * FROM users WHERE email = ?', [profile.email], async (err, row) => {
             if (err) {
+                // If there's an error, pass it to the done callback to signal an error
                 return done(err);
             }
-            
-            if (!row) {
-                const firstName = profile.username.split('#')[0]; 
-                const lastName = profile.username.split('#')[0]; 
-                
-                const password = randomstring.generate({
-                    length: 10,
-                    charset: 'alphanumeric'
-                });
-                
-                const pteroUser = await registerPteroUser(profile.username, profile.email, password, firstName, lastName);
-                const userId = pteroUser.attributes.uuid;
-                
-                await db.run('INSERT INTO users (username, email, password, first_name, last_name, pterodactyl_id) VALUES (?, ?, ?, ?, ?, ?)', [profile.username, profile.email, password, firstName, lastName, userId]);
-                
-                return done(null, profile);
+
+            // If the user already exists in the database
+            if (row) {
+                // Return the existing user's profile to indicate successful authentication
+                return done(null, row);
             }
+
+            // If the user doesn't exist in the database, proceed with registration
+            const firstName = profile.username.split('#')[0];
+            const lastName = profile.username.split('#')[0];
+
+            const password = randomstring.generate({
+                length: 10,
+                charset: 'alphanumeric'
+            });
+
+            // Register the user in Pterodactyl and insert into the database
+            const pteroUser = await registerPteroUser(profile.username, profile.email, password, firstName, lastName);
             
-            return done(null, row);
+            if (!pteroUser) {
+                // Registration failed, return an error
+                return done(new Error('Failed to register user in panel.'));
+            }
+
+            const userId = pteroUser.attributes.uuid;
+
+            await db.run('INSERT INTO users (username, email, password, first_name, last_name, pterodactyl_id) VALUES (?, ?, ?, ?, ?, ?)', [profile.username, profile.email, password, firstName, lastName, userId]);
+
+            // Return the Discord profile to indicate successful authentication
+            return done(null, profile);
         });
     } catch (error) {
-        return done(error);
+        // If an error occurs in the try block, catch it here
+        return done(error); // Pass the error to the done callback to signal an error
     }
 }));
+
 
 
 

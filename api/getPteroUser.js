@@ -25,6 +25,14 @@ async function registerPteroUser(username, email, password, firstName, lastName)
     } catch (error) {
         if (error.response) {
             // The request was made and the server responded with a status code
+            if (error.response.status === 422 && error.response.data.errors && error.response.data.errors.length > 0) {
+                // Check if the error is due to duplicate email or username
+                const errorMessage = error.response.data.errors[0].detail;
+                if (errorMessage.includes('email')) {
+                    // Return null to indicate registration failure
+                    return null;
+                }
+            }
             console.error('Error registering user in Pterodactyl:', error.response.status);
             console.error('Error message:', error.response.data);
         } else if (error.request) {
@@ -34,7 +42,7 @@ async function registerPteroUser(username, email, password, firstName, lastName)
             // Something happened in setting up the request that triggered an Error
             console.error('Error setting up the request:', error.message);
         }
-        throw error; // Handle the error appropriately
+        return null; // Return null indicating registration failed
     }
 }
 
