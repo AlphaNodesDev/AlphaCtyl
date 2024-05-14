@@ -34,6 +34,8 @@ const packagecpu = settings.packages.list.default.cpu;
 const packageram = settings.packages.list.default.ram;
 const packagedisk = settings.packages.list.default.disk;
 const packageport = settings.packages.list.default.ports;
+const packagedatabase = settings.packages.list.default.database;
+const packagebackup = settings.packages.list.default.backups;
 const pterodactyldomain = settings.pterodactyl.domain
 
 
@@ -76,7 +78,7 @@ app.set('views', path.join(__dirname, `./themes/${theme}`));
 
 // Database table Create
 db.serialize(() => {
-    db.run("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT, password TEXT, email TEXT, first_name TEXT, last_name TEXT, pterodactyl_id TEXT, servers INTEGER DEFAULT 0, ports INTEGER DEFAULT 0, ram INTEGER DEFAULT 0, disk INTEGER DEFAULT 0, cpu INTEGER DEFAULT 0, coins INTEGER DEFAULT 0)");
+    db.run("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT, password TEXT, email TEXT, first_name TEXT, last_name TEXT, pterodactyl_id TEXT, servers INTEGER DEFAULT 0, ports INTEGER DEFAULT 0, ram INTEGER DEFAULT 0, disk INTEGER DEFAULT 0, cpu INTEGER DEFAULT 0, database INTEGER DEFAULT 0, backup INTEGER DEFAULT 0, coins INTEGER DEFAULT 0)");
     db.run("CREATE TABLE IF NOT EXISTS youtube (id INTEGER, yt_link TEXT)");
 
 });
@@ -91,10 +93,12 @@ const oauthPages = pagesConfig.oauth;
 
 //includes from other api
 const { registerPteroUser } = require('./api/getPteroUser.js');
-const { getUserIdByUUID, getUserServersCount } = require('./api/getPteroServers.js'); 
+const { getUserIdByUUID, getUserServersCount, getUserServers } = require('./api/getPteroServers.js'); 
 const { getUserCoins } = require('./api/getuserCoins.js');
 const { getUserResources } = require('./api/getuseresources.js');
 const { updatePasswordInPanel } = require('./api/updatePasswordInPanel.js'); 
+
+
 
 
 
@@ -117,9 +121,10 @@ router.post('/register', async (req, res) => {
             }
             if (row) {
                 if (row.email === email) {
-                    return res.render('register', { error: 'Email already exists' });
+                    return res.redirect('/register?error=Email already exists.');
+
                 } else if (row.username === username) {
-                    return res.render('register', { error: 'Username already exists' });
+                    return res.redirect('/register?error=Username already exists.');
                 }
             }
             try {
@@ -130,12 +135,14 @@ router.post('/register', async (req, res) => {
                 res.redirect('/dashboard');
             } catch (registerError) {
                 console.error('Error registering user in Pterodactyl:', registerError);
-                res.render('register', { error: 'Error registering user.' });
+                return res.redirect('/register?error=Error registering user.');
+
             }
         });
     } catch (error) {
         console.error('Error in registration route:', error);
-        res.render('register', { error: 'Error registering user.' });
+        return res.redirect('/register?error=Error registering user.');
+
     }
 });
 
@@ -153,11 +160,12 @@ router.post('/login', (req, res) => {
             req.session.user = row;
             res.redirect('/dashboard');
         } else {
-            res.render('index', { error: 'Invalid email or password' }); 
+            return res.redirect('/?error=Invalid email or passwordr.');
+
         }
     });
 });
-
+//pending
 
 app.use('/', router);
 
@@ -182,7 +190,9 @@ Object.keys(pages).forEach((page) => {
     router.get(`/${page}`, async (req, res) => {
         try {
             if (!req.session.user || !req.session.user.pterodactyl_id) {
-                return res.render("index", { error: "Please Login Again" });
+     
+                return res.redirect('/?error=Please Login Again.');
+
             }
 
             const userId = req.session.user.pterodactyl_id;
@@ -195,6 +205,7 @@ Object.keys(pages).forEach((page) => {
             const userresources = await getUserResources(userId, db);
             // Get user's servers count
             const userServersCount = await getUserServersCount(userIdentifier);
+            const userServers = await getUserServers(userIdentifier);
 
             // Get user's coins
             const coins = await getUserCoins(userId, db);
@@ -203,6 +214,7 @@ Object.keys(pages).forEach((page) => {
                 user: req.session.user,
                 userresources,
                 userServersCount,
+                userServers,
                 AppName: AppName,
                 AppLogo: AppImg,
                 packageserver,
@@ -210,6 +222,8 @@ Object.keys(pages).forEach((page) => {
                 packageram,
                 packagedisk,
                 packageport,
+                packagedatabase,
+                packagebackup,
                 ads,
                 coins,
                 afktimer,
@@ -221,7 +235,7 @@ Object.keys(pages).forEach((page) => {
             db.close();
         } catch (error) {
             console.error(error.message);
-            res.render("index", { error: "Please Login Again" });
+            return res.redirect('/?error=Please Login Again.');
         }
     });
 });
@@ -391,7 +405,7 @@ router.get('/watchvideo', async (req, res) => {
     try {
         const youtubeLinks = settings?.youtube?.links;
         if (!youtubeLinks || youtubeLinks.length === 0) {
-            return res.status(400).send('No YouTube links found in settings.');
+            return res.redirect('/youtube?error=No YouTube links found in settings.');
         }
         const userId = req.session.user.pterodactyl_id;
         const coins = await getUserCoins(userId, db);
@@ -406,7 +420,7 @@ router.get('/watchvideo', async (req, res) => {
         });
         const availableLinks = youtubeLinks.filter(link => !watchedVideos.includes(link));
         if (availableLinks.length === 0) {
-            return res.render("youtube", { error: "You have watched all available videos.", user: req.session.user, AppName: AppName, AppLogo: AppImg, coins, ads, pterodactyldomain });
+            return res.redirect('/youtube?error=You have watched all available videos.');
         }
         const randomIndex = Math.floor(Math.random() * availableLinks.length);
         const randomLink = availableLinks[randomIndex];
@@ -475,22 +489,39 @@ router.post('/createserver', async (req, res) => {
         const availableCpu = (userResources.row.cpu + packagecpu) - (userServersCount.totalCPU ) ;
         const availableRam = (userResources.row.ram + packageram) - (userServersCount.totalRAM );
         const availableDisk = (userResources.row.disk + packagedisk) - (userServersCount.totalDisk ) ;
-        const availablePorts = (userResources.row.ports + packageport) - userServersCount.totalPorts ;
-        const { name, cpu, ram, disk, port } = req.body; 
+        const availableDatabase = (userResources.row.database + packagedatabase) - (userServersCount.totalDatabase ) ;
+        const availablebackup = (userResources.row.backup + packagebackup) - (userServersCount.totalBackup ) ;
+        const availablePorts = (userResources.row.ports + packageport) - (userServersCount.totalPorts) ;
+        const { name, cpu, ram, disk, port, database, backup } = req.body; 
          if (availableServers <= 0) {
-            return res.status(400).send('You don\'t have enough available servers to create the server.');
+            return res.redirect('/manage?info=You don\'t have enough available servers to create the server.');
+
         }
         if (cpu > availableCpu) {
-            return res.status(400).send('You don\'t have enough available CPU to create the server.');
+            return res.redirect('/manage?info=You don\'t have enough available CPU to create the server.');
+
         }
         if (ram >  availableRam) {
-            return res.status(400).send('You don\'t have enough available RAM to create the server.');
+            return res.redirect('/manage?info=You don\'t have enough available RAM to create the server.');
+
         }
         if (disk > availableDisk) {
-            return res.status(400).send('You don\'t have enough available disk space to create the server.');
+            return res.redirect('/manage?info=You don\'t have enough available disk space to create the server.');
+
+        }
+        
+        if (database >  availableDatabase) {
+            return res.redirect('/manage?info=You don\'t have enough available database to create the server.');
+
+        }
+                
+        if (backup >  availablebackup) {
+            return res.redirect('/manage?info=You don\'t have enough available backup to create the server.');
+
         }
         if (port >  availablePorts) {
-            return res.status(400).send('You don\'t have enough available ports to create the server.');
+            return res.redirect('/manage?info=You don\'t have enough available ports to create the server.');
+
         }
         const eggKey = req.body.egg; 
         const locationKey = req.body.locations
@@ -511,8 +542,8 @@ router.post('/createserver', async (req, res) => {
                 cpu: cpu
             },
             feature_limits: {
-                databases: 4,
-                backups: 4,
+                databases: database,
+                backups: backup,
                 allocations: port
             },
             allocation: {
@@ -529,17 +560,16 @@ router.post('/createserver', async (req, res) => {
             body: JSON.stringify(serverConfig)
         });
         if (response.ok) {
-            const serverData = await response.json();
-            console.log('Server created:', serverData);
-            res.status(201).send('Server created successfully.');
+    
+            return res.redirect('/manage?success=Server created successfully.');
+            
         } else {
-            const errorData = await response.json();
-            console.error('Error creating server:', errorData);
-            res.status(500).send('Error creating server.');
+   
+            return res.redirect('/manage?error=Error creating server.');
         }
     } catch (error) {
-        console.error('Error creating server:', error);
-        res.status(500).send('Internal server error.');
+
+        return res.redirect('/manage?error=Internal server error.');
     }
 });
 

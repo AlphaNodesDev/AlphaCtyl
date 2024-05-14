@@ -7,16 +7,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
     <link rel="stylesheet" href="css/auth.css">
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/line-awesome/css/line-awesome.min.css'><link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://kit.fontawesome.com/062f52da9a.js" crossorigin="anonymous"></script>
 </head>
 
 <body>
+    <%- include('./includes/alert') %>
 
-<div id="errorModal" class="modal">
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <h2 id="errorMessage"></h2>
-    </div>
-</div>
+
     <div class="container">
         <h1>AlphaCtyl</h1>
         <img src="https://i.ibb.co/1TQbcJ9/a-high-resolution-logo-transparent.png" alt="AlphaCtyl" srcset="" width="40px">
@@ -61,25 +60,7 @@
     </div>
 
 </body>
-<script>
-      
-      window.onload = function() {
-        const error = "<%= typeof(error) !== 'undefined' ? error : '' %>";
-        if (error) {
-          document.getElementById('errorMessage').innerText = error;
-          document.getElementById('errorModal').style.display = 'block';
-        }
-      }
-    
-      
-      const closeModal = document.querySelector('.close');
-      if (closeModal) {
-        closeModal.addEventListener('click', () => {
-          document.getElementById('errorModal').style.display = 'none';
-        });
-      }
-      
-</script>
+
 <footer class="footer">
     <center>    <div class="copyright">Copyright &copy; 2024 <a style="color: greenyellow;" href="https://alphactyl.gitbook.io/alphactyl">AlphaCtyl</a>. All rights reserved.</div>
     </center>

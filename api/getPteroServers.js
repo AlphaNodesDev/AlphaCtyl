@@ -52,12 +52,16 @@ async function getUserServersCount(userIdentifier) {
         let totalDisk = 0;
         let totalPorts = 0;
         let totalCPU = 0;
+        let totalDatabase = 0;
+        let totalBackup = 0;
 
         userServers.forEach(server => {
             totalRAM += server.attributes.limits.memory;
             totalDisk += server.attributes.limits.disk;
             totalPorts += server.attributes.feature_limits.allocations;
             totalCPU += server.attributes.limits.cpu;
+            totalDatabase += server.attributes.feature_limits.databases;
+            totalBackup += server.attributes.feature_limits.backups;
         });
 
         return {
@@ -65,7 +69,9 @@ async function getUserServersCount(userIdentifier) {
             totalRAM,
             totalDisk,
             totalPorts,
-            totalCPU
+            totalCPU,
+            totalDatabase,
+            totalBackup
         };
     } catch (error) {
         console.error('Error fetching user servers:', error.message);
@@ -73,4 +79,43 @@ async function getUserServersCount(userIdentifier) {
     }
 }
 
-module.exports = { getUserIdByUUID, getUserServersCount };
+async function getUserServers(userIdentifier) {
+    try {
+        const response = await axios.get(`${settings.pterodactyl.domain}/api/application/servers`, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${settings.pterodactyl.key}`
+            }
+        });
+
+        if (response.status !== 200) {
+            console.error('Failed to fetch servers:', response.status);
+            return null;
+        }
+
+        const userServers = response.data.data.filter(server => server.attributes.user === userIdentifier);
+        
+        // Map each server to its details
+        const serverDetails = userServers.map(server => ({
+            id: server.attributes.id,
+            name: server.attributes.name,
+            description: server.attributes.description,
+            suspended: server.attributes.suspended,
+            ram: server.attributes.limits.memory,
+            disk: server.attributes.limits.disk,
+            ports: server.attributes.feature_limits.allocations,
+            cpu: server.attributes.limits.cpu,
+            database: server.attributes.feature_limits.databases
+            
+        }));
+
+        return serverDetails;
+    } catch (error) {
+        console.error('Error fetching user servers:', error.message);
+        throw error;
+    }
+}
+
+
+module.exports = { getUserIdByUUID, getUserServersCount, getUserServers };

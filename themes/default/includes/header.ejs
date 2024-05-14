@@ -1,28 +1,4 @@
-<div id="errorModal" class="modal">
-  <div class="modal-content">
-      <span class="close">&times;</span>
-      <h2 id="errorMessage"></h2>
-  </div>
-</div>
-<script>
-      
-  window.onload = function() {
-    const error = "<%= typeof(error) !== 'undefined' ? error : '' %>";
-    if (error) {
-      document.getElementById('errorMessage').innerText = error;
-      document.getElementById('errorModal').style.display = 'block';
-    }
-  }
-
-  
-  const closeModal = document.querySelector('.close');
-  if (closeModal) {
-    closeModal.addEventListener('click', () => {
-      document.getElementById('errorModal').style.display = 'none';
-    });
-  }
-  
-</script>
+<%- include('./alert') %>
 <header>
     <div class="header-wrapper">
       <label for="menu-toggle">

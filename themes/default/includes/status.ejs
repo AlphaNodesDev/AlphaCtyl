@@ -38,5 +38,19 @@
           <h1><%= userServersCount.totalPorts %>/<%= packageport + userresources.row.ports %></h1>
         </div>
       </div>
+      <div class="analytic">
+        <div class="analytic-icon"><i class="fa-solid fa-route"></i></div>
+        <div class="analytic-info">
+          <h4>Database</h4>
+          <h1><%= userServersCount.totalDatabase %>/<%= packagedatabase + userresources.row.database %></h1>
+        </div>
+      </div>
+      <div class="analytic">
+        <div class="analytic-icon"><i class="fa-solid fa-route"></i></div>
+        <div class="analytic-info">
+          <h4>Backups</h4>
+          <h1><%= userServersCount.totalBackup %>/<%= packagebackup + userresources.row.backup %></h1>
+        </div>
+      </div>
     </div>
   </section>

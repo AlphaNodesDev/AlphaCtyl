@@ -12,6 +12,7 @@
   <script src="https://kit.fontawesome.com/062f52da9a.js" crossorigin="anonymous"></script>
 </head>
 <body>
+  
   <%- include('./includes/sidebar') %>
 
 <div class="main-content">
@@ -48,15 +49,64 @@
           <input type="number" name="disk" id="disk" class="form-control" placeholder="Disk">
           <label for="port">Server Port:</label>
           <input type="number" name="port" id="port" class="form-control" placeholder="Port">
+          <label for="database">Server databases:</label>
+          <input type="number" name="database" id="database" class="form-control" placeholder="database">
+          <label for="backup">Server backups:</label>
+          <input type="number" name="backup" id="backup" class="form-control" placeholder="backup">
         </div>
         <div class="form-group text-center">
           <button type="submit" class="btn btn-primary">Submit</button>
         </div>
       </form>
     </section>
-    
-    
+    <main>
+      <section class="container">
+          <h2>User Servers</h2>
+<!-- Inside your page template -->
+<div class="server-list">
+  <% userServers.forEach(server => { %>
+      <div class="server-card">
+          <p>Server Name: <%= server.name %></p>
+          <p>Description: <%= server.description %></p>
+         <p>Ram: <%= server.ram %></p>
+         <p>Disk: <%= server.disk %></p>
+         <p>Cpu: <%= server.cpu %></p>
+         <p>Ports: <%= server.ports %></p>
+         <p>Databases: <%= server.database %></p>
+         <p>Status: <%= server.suspended ? 'Suspended' : 'Active' %></p>
 
+     
+      </div>
+      <button onclick="window.location.href='./delete?<%= server.id %>'">Delete</button>
+      <% }); %>
+</div>
+
+      </section>
+  </main>
+  
+    
+ 
+    <style>
+      .server-card {
+  background-color: #f0f0f0;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.server-card h3 {
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.server-card p {
+  margin-bottom: 5px;
+  color: #666;
+}
+
+
+    </style>
 </div>
 <!-- partial -->
 </main>
