@@ -18,32 +18,45 @@
         <div id="player"></div>
   
         <% } %>
-
-    <script>
-        <% if (typeof link !== 'undefined') { %>
-          var player;
-          function onYouTubeIframeAPIReady() {
-            player = new YT.Player('player', {
-              height: '315',
-              width: '560',
-              videoId: '<%= link %>',
-              playerVars: {
-                'autoplay': 1,
-                'mute': 1,
-                'controls': 0, // Hide player controls
-        'disablekb': 1 // Disable keyboard control
-              },
-              events: {
-                'onStateChange': onPlayerStateChange
-              }
-            });
-          }
+        <style>
+          html, body {
+          height: 100%;
+          margin: 0;
+          overflow: hidden;
+        }
+        
+        #player {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+        }
+        
+        </style>
+              <script>
+                <% if (typeof link !== 'undefined') { %>
+                  var player;
+        function onYouTubeIframeAPIReady() {
+          player = new YT.Player('player', {
+            height: '100%',
+            width: '100%',
+            videoId: '<%= link %>',
+            playerVars: {
+              'autoplay': 1,
+              'mute': 1,
+              'controls': 0, // Hide player controls
+              'disablekb': 1 // Disable keyboard control
+            },
+            events: {
+              'onStateChange': onPlayerStateChange
+            }
+          });
+        }
       
-          // The API calls this function when the player's state changes.
           function onPlayerStateChange(event) {
             if (event.data == YT.PlayerState.ENDED) {
               console.log('Video ended');
-              // Send AJAX request to insert link into the database
               $.ajax({
                 type: 'POST',
                 url: 'insertlink',

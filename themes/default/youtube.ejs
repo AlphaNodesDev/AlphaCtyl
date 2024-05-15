@@ -31,59 +31,10 @@
               </button>
             </a>
         </center>
- 
-        <% if (typeof link !== 'undefined') { %>
-      
-            <div id="player"></div>
-      
-            <% } %>
+
           </section>
       </div>
-      <!-- partial -->
 
-      <script>
-        <% if (typeof link !== 'undefined') { %>
-          var player;
-          function onYouTubeIframeAPIReady() {
-            player = new YT.Player('player', {
-              height: '315',
-              width: '560',
-              videoId: '<%= link %>',
-              playerVars: {
-                'autoplay': 1,
-                'mute': 1,
-                'controls': 0, // Hide player controls
-        'disablekb': 1 // Disable keyboard control
-              },
-              events: {
-                'onStateChange': onPlayerStateChange
-              }
-            });
-          }
-      
-          // The API calls this function when the player's state changes.
-          function onPlayerStateChange(event) {
-            if (event.data == YT.PlayerState.ENDED) {
-              console.log('Video ended');
-              // Send AJAX request to insert link into the database
-              $.ajax({
-                type: 'POST',
-                url: 'insertlink',
-                data: {
-                  userId: '<%= user.pterodactyl_id %>',
-                  link: '<%= link %>'
-                },
-                success: function(response) {
-                  console.log(response);
-                },
-                error: function(xhr, status, error) {
-                  console.error('Failed to insert link into the database:', error);
-                }
-              });
-            }
-          }
-        <% } %>
-      </script>
       
     </section>
 
