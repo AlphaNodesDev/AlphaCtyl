@@ -576,6 +576,36 @@ router.post('/createserver', async (req, res) => {
 
 
 
+//delete ptero server
+// Route to handle server deletion
+router.get('/delete', async (req, res) => {
+    const serverId = req.query.id; // Retrieve the server ID from the query string
+    if (!serverId) {
+        return res.redirect('/manage?error=No server ID provided.');
+    }
+
+    try {
+        const response = await fetch(`${settings.pterodactyl.domain}/api/application/servers/${serverId}`, {
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${settings.pterodactyl.key}`
+            }
+        });
+
+        if (response.status === 204) {
+            // Server deleted successfully
+            return res.redirect('/manage?success=Server deleted successfully.');
+        } else {
+            // Error deleting server
+            return res.redirect('/manage?error=Error deleting server.');
+        }
+    } catch (error) {
+        console.error('Error deleting server:', error);
+        return res.redirect('/manage?error=Internal server error.');
+    }
+});
 
 
 
@@ -583,3 +613,14 @@ router.post('/createserver', async (req, res) => {
 
 
 
+app.post('/updateserver', (req, res) => {
+    const serverId = parseInt(req.body.id);
+    const serverIndex = servers.findIndex(s => s.id === serverId);
+    if (serverIndex !== -1) {
+      servers[serverIndex] = { ...servers[serverIndex], ...req.body };
+      res.redirect('/');
+    } else {
+      res.status(404).send('Server not found');
+    }
+  });
+  

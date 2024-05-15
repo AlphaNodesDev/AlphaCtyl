@@ -1,14 +1,12 @@
-
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Create Server</title>
-  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/line-awesome/css/line-awesome.min.css'><link rel="stylesheet" href="./style.css">
+  <title>Create or Update Server</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/line-awesome/css/line-awesome.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <link rel="stylesheet" href="css/style.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <script src="https://kit.fontawesome.com/062f52da9a.js" crossorigin="anonymous"></script>
 </head>
 <body>
@@ -21,7 +19,8 @@
 
   <main>
     <section class="container">
-      <form action="/createserver" method="POST" class="form">
+      <form action="/createserver" method="POST" class="form" id="server-form">
+        <input type="hidden" name="id" id="server-id">
         <div class="form-group">
           <label for="locations">Select Location:</label>
           <select name="locations" id="locations" class="form-control">
@@ -50,67 +49,89 @@
           <label for="port">Server Port:</label>
           <input type="number" name="port" id="port" class="form-control" placeholder="Port">
           <label for="database">Server databases:</label>
-          <input type="number" name="database" id="database" class="form-control" placeholder="database">
+          <input type="number" name="database" id="database" class="form-control" placeholder="Database">
           <label for="backup">Server backups:</label>
-          <input type="number" name="backup" id="backup" class="form-control" placeholder="backup">
+          <input type="number" name="backup" id="backup" class="form-control" placeholder="Backup">
         </div>
         <div class="form-group text-center">
           <button type="submit" class="btn btn-primary">Submit</button>
         </div>
       </form>
     </section>
-    <main>
-      <section class="container">
-          <h2>User Servers</h2>
-<!-- Inside your page template -->
-<div class="server-list">
-  <% userServers.forEach(server => { %>
-      <div class="server-card">
+
+    <section class="container">
+      <h2>User Servers</h2>
+      <div class="server-list">
+        <% userServers.forEach(server => { %>
+        <div class="server-card">
           <p>Server Name: <%= server.name %></p>
           <p>Description: <%= server.description %></p>
-         <p>Ram: <%= server.ram %></p>
-         <p>Disk: <%= server.disk %></p>
-         <p>Cpu: <%= server.cpu %></p>
-         <p>Ports: <%= server.ports %></p>
-         <p>Databases: <%= server.database %></p>
-         <p>Status: <%= server.suspended ? 'Suspended' : 'Active' %></p>
-
-     
+          <p>Ram: <%= server.ram %></p>
+          <p>Disk: <%= server.disk %></p>
+          <p>Cpu: <%= server.cpu %></p>
+          <p>Ports: <%= server.ports %></p>
+          <p>Databases: <%= server.database %></p>
+          <p>Status: <%= server.suspended ? 'Suspended' : 'Active' %></p>
+          <button onclick="populateForm(<%= server.id %>)">Update</button>
+          <button onclick="window.location.href='./delete?id=<%= server.id %>'">Delete</button>
+        </div>
+        <% }); %>
       </div>
-      <button onclick="window.location.href='./delete?<%= server.id %>'">Delete</button>
-      <% }); %>
-</div>
-
-      </section>
+    </section>
   </main>
-  
-    
- 
-    <style>
-      .server-card {
-  background-color: #f0f0f0;
-  padding: 20px;
-  margin-bottom: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
 
-.server-card h3 {
-  margin-bottom: 10px;
-  color: #333;
-}
+  <style>
+    .server-card {
+      background-color: #f0f0f0;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
 
-.server-card p {
-  margin-bottom: 5px;
-  color: #666;
-}
+    .server-card h3 {
+      margin-bottom: 10px;
+      color: #333;
+    }
 
+    .server-card p {
+      margin-bottom: 5px;
+      color: #666;
+    }
+  </style>
 
-    </style>
 </div>
-<!-- partial -->
-</main>
+
 <%- include('./includes/footer') %>
+
+<script>
+  function populateForm(serverId) {
+    fetch(`/serverdetails?id=${serverId}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        document.getElementById('server-id').value = data.id;
+        document.getElementById('name').value = data.name;
+        document.getElementById('cpu').value = data.cpu;
+        document.getElementById('ram').value = data.ram;
+        document.getElementById('disk').value = data.disk;
+        document.getElementById('port').value = data.port;
+        document.getElementById('database').value = data.database;
+        document.getElementById('backup').value = data.backup;
+        document.getElementById('locations').value = data.location;
+        document.getElementById('egg').value = data.egg;
+        document.getElementById('server-form').action = '/updateserver';
+      })
+      .catch(error => {
+        console.error('There was a problem with the fetch operation:', error);
+      });
+  }
+</script>
+
 
 </body>
 </html>

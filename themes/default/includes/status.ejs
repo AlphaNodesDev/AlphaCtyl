@@ -4,7 +4,7 @@
     <div class="analytics">
 
     <div class="analytic">
-      <div class="analytic-icon"> <i class="fa-solid fa-microchip"></i></div>
+      <div class="analytic-icon"> <i class="fa-solid fa-server"></i></div>
       <div class="analytic-info">
         <h4>Servers</h4>
         <h1><%= userServersCount.count %>/<%= packageserver + userresources.row.servers %></h1>
@@ -18,7 +18,7 @@
       </div>
     </div>
       <div class="analytic">
-        <div class="analytic-icon"> <i class="fa-solid fa-microchip"></i></div>
+        <div class="analytic-icon"> <i class="fa-solid fa-memory"></i></div>
         <div class="analytic-info">
           <h4>Ram</h4>
           <h1><%= userServersCount.totalRAM  %>MB/<%= packageram + userresources.row.ram %>MB</h1>
@@ -39,14 +39,14 @@
         </div>
       </div>
       <div class="analytic">
-        <div class="analytic-icon"><i class="fa-solid fa-route"></i></div>
+        <div class="analytic-icon"><i class="fa-solid fa-database"></i></div>
         <div class="analytic-info">
           <h4>Database</h4>
           <h1><%= userServersCount.totalDatabase %>/<%= packagedatabase + userresources.row.database %></h1>
         </div>
       </div>
       <div class="analytic">
-        <div class="analytic-icon"><i class="fa-solid fa-route"></i></div>
+        <div class="analytic-icon"><i class="fa-solid fa-box-open"></i></div>
         <div class="analytic-info">
           <h4>Backups</h4>
           <h1><%= userServersCount.totalBackup %>/<%= packagebackup + userresources.row.backup %></h1>
