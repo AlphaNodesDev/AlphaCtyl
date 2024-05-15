@@ -4,7 +4,7 @@ Basic
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
 
 :root {
-  --color-main: #ffa500; /* Change to your desired main color */
+  --color-main: #0400e0; /* Change to your desired main color */
   --main-accent: #292929; /* Darker background color */
   --bg: #1a1a1a; /* Dark background color */
   --bg-2: #292929; /* Darker background color */
@@ -1617,7 +1617,7 @@ Main Content
 }
 
 .server-card {
-  background-color: #fff;
+  background-color: var(--main-accent);
   border-radius: 10px;
   padding: 20px;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
@@ -1631,7 +1631,7 @@ Main Content
 .server-card p {
   margin-bottom: 10px;
   font-size: 16px;
-  color: #333;
+  color: var(--main);
 }
 
 .server-card button {

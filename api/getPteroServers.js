@@ -21,8 +21,14 @@ async function getUserIdByUUID(uuid) {
             console.error('User not found with UUID:', uuid);
             return null;
         }
-
-        return userData.attributes.id;
+        return {
+            id: userData.attributes.id,
+            uuid: userData.attributes.uuid,
+            email: userData.attributes.email,
+            username: userData.attributes.username,
+            admin: userData.attributes.root_admin,
+            createdAt: userData.attributes.created_at,};
+            
     } catch (error) {
         console.error('Error fetching user ID:', error.message);
         console.error('Error communicating with panel')  ;

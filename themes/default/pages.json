@@ -10,7 +10,8 @@
         "sidebar": "sidebar.ejs",
         "afk": "afk",
         "linkvertise": "linkvertise.ejs",
-        "youtube": "youtube.ejs"
+        "youtube": "youtube.ejs",
+        "player": "player.ejs"
 
     },
     "oauth":{

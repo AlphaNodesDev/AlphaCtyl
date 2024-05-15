@@ -21,6 +21,10 @@
         <li><a href="/youtube"><span class="fa-brands fa-youtube"></span><span>Watch and Earn</span></a></li>
         <li><a href="/manage"><span class="fas fa-server"></span><span>Manage Servers</span></a></li>
         <li><a href="/settings"><span class="fas fa-cog"></span><span>Settings</span></a></li>
+        <% if (userIdentifier.admin == true) { %>
+          <li><a href="/admin"><span class="fas fa-server"></span><span>Admin</span></a></li>
+
+        <% } %>
         <li><a href="/logout"><span class="fas fa-sign-out-alt"></span><span>Logout</span></a></li>
       <!-- <li>
           <a href="<%= pterodactyldomain %>">

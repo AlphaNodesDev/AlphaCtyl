@@ -204,8 +204,8 @@ Object.keys(pages).forEach((page) => {
             const userIdentifier = await getUserIdByUUID(userId);
             const userresources = await getUserResources(userId, db);
             // Get user's servers count
-            const userServersCount = await getUserServersCount(userIdentifier);
-            const userServers = await getUserServers(userIdentifier);
+            const userServersCount = await getUserServersCount(userIdentifier.id);
+            const userServers = await getUserServers(userIdentifier.id);
 
             // Get user's coins
             const coins = await getUserCoins(userId, db);
@@ -223,6 +223,7 @@ Object.keys(pages).forEach((page) => {
                 packagedisk,
                 packageport,
                 packagedatabase,
+                userIdentifier,
                 packagebackup,
                 ads,
                 coins,
@@ -307,12 +308,12 @@ router.get('/resetptero', async (req, res) => {
     try {
         const userId = req.session.user.pterodactyl_id;
         const userIdentifier = await getUserIdByUUID(uuid);
-        console.log('User Identifier:', userIdentifier);
+        console.log('User Identifier:', userIdentifier.id);
         const newPassword = randomstring.generate({
             length: 10,
             charset: 'alphanumeric'
         });
-        await updatePasswordInPanel(userIdentifier, newPassword, req.session.user.email, req.session.user.username, req.session.user.first_name, req.session.user.last_name);
+        await updatePasswordInPanel(userIdentifier.id, newPassword, req.session.user.email, req.session.user.username, req.session.user.first_name, req.session.user.last_name);
         const uuid = req.session.user.pterodactyl_id;
         const coins = await getUserCoins(userId, db);
         res.render("settings", { 
@@ -424,7 +425,7 @@ router.get('/watchvideo', async (req, res) => {
         }
         const randomIndex = Math.floor(Math.random() * availableLinks.length);
         const randomLink = availableLinks[randomIndex];
-        res.render('youtube', { 
+        res.render('player', { 
             link: randomLink,
             user: req.session.user,
             AppName: AppName,
@@ -484,7 +485,7 @@ router.post('/createserver', async (req, res) => {
         const uuid = await getUserIdByUUID(userId);
         const userIdentifier = await getUserIdByUUID(userId);
         const userResources = await getUserResources(userId, db);
-        const userServersCount = await getUserServersCount(userIdentifier);
+        const userServersCount = await getUserServersCount(userIdentifier.id);
         const availableServers = (userResources.row.servers + packageserver) - userServersCount.count;
         const availableCpu = (userResources.row.cpu + packagecpu) - (userServersCount.totalCPU ) ;
         const availableRam = (userResources.row.ram + packageram) - (userServersCount.totalRAM );

@@ -21,7 +21,24 @@
 
   <main>
     <%- include('./includes/status') %>
-  
+    <section class="container">
+      <h2>User Servers</h2>
+      <div class="server-list">
+        <% userServers.forEach(server => { %>
+        <div class="server-card">
+          <p>Server Name: <%= server.name %></p>
+          <p>Description: <%= server.description %></p>
+          <p>Ram: <%= server.ram %></p>
+          <p>Disk: <%= server.disk %></p>
+          <p>Cpu: <%= server.cpu %></p>
+          <p>Ports: <%= server.ports %></p>
+          <p>Databases: <%= server.database %></p>
+          <p>Status: <%= server.suspended ? 'Suspended' : 'Active' %></p>
+          <button onclick="window.location.href='./delete?id=<%= server.id %>'">Delete</button>
+        </div>
+        <% }); %>
+      </div>
+    </section>
 <%- include('./includes/ads/ad-1') %>
 <%- include('./includes/ads/ad-2') %>
 </div>
