@@ -1,5 +1,5 @@
 
-![Logo ](https://i.ibb.co/1TQbcJ9/a-high-resolution-logo-transparent.png)
+<img src="https://i.ibb.co/1TQbcJ9/a-high-resolution-logo-transparent.png">
 
 
 # AlphaCtyl
@@ -16,7 +16,7 @@ AlphaCtyl is an innovative and user-friendly web panel designed to streamline an
 
 
 ## Demo
-
+<img sr>
 
 
 
