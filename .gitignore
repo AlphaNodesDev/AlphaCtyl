@@ -2,4 +2,4 @@
 /package-lock.json
 /settings.json
 database.db
-/themes/default/admin.ejs
+/themes/default/admin

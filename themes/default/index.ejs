@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -33,8 +35,9 @@
                 </div>
                 <div class="forgot-pass">
                 </div>
+                <% if (settings.webserver.account_creation == true) { %>
                 <button type="submit" class="btn">Login</button>
-        
+
                 <div class="signup-link">
                     <p>Have no account yet? <a href="./register">Signup</a></p>
                 </div>
@@ -54,6 +57,10 @@
             </button>
             
                 </center>
+                <% } %>
+                <% if (settings.webserver.account_creation == false) { %>
+                 <center> <h3>Account Creation Not Enabled</h3></center> 
+                    <% } %>
         </div>
 
      

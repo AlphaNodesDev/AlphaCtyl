@@ -1,6 +1,7 @@
 const express = require('express');
 const session = require('express-session');
 const passport = require('passport');
+const version = "1.0.0";
 const DiscordStrategy = require('passport-discord').Strategy;
 const bodyParser = require('body-parser');
 const figlet = require('figlet');
@@ -53,6 +54,11 @@ app.listen(PORT, () => {
     console.log(chalk.green(appNameAscii));
     console.log(chalk.yellow(authorNameAscii));
     console.log(chalk.red("================================================================"));
+    console.log(chalk.red("-------------------------------"));
+    console.log(chalk.cyan("Software Version:", version));    
+    console.log(chalk.cyan("Config Version:", settings.version,));
+    console.log(chalk.red("-------------------------------"));
+
     console.log(chalk.red(' ',"-------------------------------"));
     console.log(chalk.green('|',`Server is running on port ${PORT}`,'|'));
     console.log(chalk.red(' ',"-------------------------------"));
@@ -88,7 +94,8 @@ const pagesConfig = JSON.parse(fs.readFileSync(`./themes/${theme}/pages.json`));
 const pages = pagesConfig.pages;
 //load oauth pages
 const oauthPages = pagesConfig.oauth;
-
+//load admin pages
+const adminPages = pagesConfig.admin;
 
 
 //includes from other api
@@ -102,13 +109,6 @@ const { updatePasswordInPanel } = require('./api/updatePasswordInPanel.js');
 
 
 
-
-//render appname and logo to oauth pages only
-Object.keys(oauthPages).forEach(page => {
-    app.get(`/${page}`, (req, res) => {
-        res.render(oauthPages[page], { AppName: AppName, AppLogo: AppImg});
-    });
-});
 
 //register process
 router.post('/register', async (req, res) => {
@@ -183,6 +183,57 @@ app.get('/logout', (req, res) => {
 
 
 
+
+
+    //render appname and logo to oauth pages only
+Object.keys(oauthPages).forEach(page => {
+    app.get(`/${page}`, (req, res) => {
+        if (settings.webserver.Maintainance === true) {
+            res.send('Sorry, the site is currently under maintenance. Please try again later.');
+        }else{
+
+        res.render(oauthPages[page], { 
+            AppName: AppName, 
+            AppLogo: AppImg, 
+            settings: settings
+        });
+ } });
+});
+
+// Load admin pages and values
+Object.keys(adminPages).forEach(page => {
+    app.get(`/${page}`, (req, res) => {
+        try {
+            if (!req.session.user || !req.session.user.pterodactyl_id) {
+                return res.redirect('/?error=Please Login Again.');
+            }
+            const userId = req.session.user.pterodactyl_id;
+            // Connect to the SQLite database
+            const db = new sqlite3.Database(DB_FILE_PATH, (err) => {
+                if (err) {
+                    console.error('Error opening database:', err.message);
+                    return res.status(500).send('Database connection error');
+                }
+                // Render the admin page
+                res.render(adminPages[page], { 
+                    user: req.session.user,
+                    AppName: AppName, 
+                    AppLogo: AppImg,
+                    settings: settings,
+
+                });
+                db.close((err) => {
+                    if (err) {
+                        console.error('Error closing database:', err.message);
+                    }
+                });
+            });
+        } catch (error) {
+            console.error('Error:', error.message);
+            res.status(500).send('Internal server error');
+        }
+    });
+});
 
 
 // render values to all pages
@@ -480,6 +531,10 @@ router.post('/insertlink', async (req, res) => {
 
 //function to create server
 router.post('/createserver', async (req, res) => {
+    if (settings.webserver.server_creation === false) {
+        return res.redirect('/manage?alert=Sorry, Server Creation Not Enabled');
+
+    }else{
     try {
         const  userId = req.session.user.pterodactyl_id;
         const uuid = await getUserIdByUUID(userId);
@@ -572,6 +627,7 @@ router.post('/createserver', async (req, res) => {
 
         return res.redirect('/manage?error=Internal server error.');
     }
+}
 });
 
 
@@ -625,3 +681,10 @@ app.post('/updateserver', (req, res) => {
     }
   });
   
+  
+
+  
+
+
+
+

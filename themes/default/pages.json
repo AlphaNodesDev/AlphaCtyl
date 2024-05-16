@@ -1,4 +1,9 @@
 {
+
+    "oauth":{
+        "/": "index.ejs",
+        "register": "register.ejs"
+    },
     "pages": {
         "dashboard": "dashboard.ejs",
         "manage": "manage.ejs",
@@ -9,13 +14,26 @@
         "footer": "footer.ejs",
         "sidebar": "sidebar.ejs",
         "afk": "afk",
-        "linkvertise": "linkvertise.ejs",
+        "extra": "extra.ejs",
         "youtube": "youtube.ejs",
         "player": "player.ejs"
 
     },
-    "oauth":{
-        "/": "index.ejs",
-        "register": "register.ejs"
+
+    "admin":{
+        "admin": "./admin/admin.ejs",
+        "admin-sidebar": "./admin/admin-sidebar.ejs",
+        "errors": "./admin/errors.ejs",
+        "logs": "./admin/logs.ejs",
+        "payments": "./admin/payments.ejs",
+        "resources": "./admin/resources.ejs",
+        "server": "./admin/server.ejs",
+        "users": "./admin/users.ejs",
+        "admin-header": "./admin/includes/admin-header.ejs",
+        "admin-footer": "./admin/includes/admin-footer.ejs",
+        "alert": "./admin/includes/admin-alert.ejs"
+
+
     }
+
 }
