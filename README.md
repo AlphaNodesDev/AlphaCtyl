@@ -1,4 +1,4 @@
-<img width="60px" height="60px" src="https://i.ibb.co/1TQbcJ9/a-high-resolution-logo-transparent.png">
+![image](https://github.com/AlphaNodesDev/AlphaCtyl/assets/89145034/438ac71a-abd0-4b9b-abb9-3df5f5d41777)<img width="60px" height="60px" src="https://i.ibb.co/1TQbcJ9/a-high-resolution-logo-transparent.png">
 
 # AlphaCtyl
 
@@ -11,12 +11,14 @@ AlphaCtyl is an innovative and user-friendly web panel designed to streamline an
 - [@Abhiram](https://www.github.com/AlphaNodesDev)
 
 ## Demo
+![image](https://github.com/AlphaNodesDev/AlphaCtyl/assets/89145034/70393b00-7048-4eac-ba77-870dcc8a835e)
 
 <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
   <div style="flex: 1 1 200px; max-width: 200px; text-align: center;">
-    <img src="https://via.placeholder.com/200" alt="Demo Image 1" style="width: 20%; height: auto;">
-        <img src="https://via.placeholder.com/200" alt="Demo Image 1" style="width: 20%; height: auto;">
-   <p>Login Page</p>
+    <img src="![Uploading image.png…]()
+" alt="Login" style="width: 20%; height: auto;">
+        <img src="https://via.placeholder.com/200" alt="Register" style="width: 20%; height: auto;">
+   <p>Auth Page</p>
   </div>
   <div style="flex: 1 1 200px; max-width: 200px; text-align: center;">
     <img src="https://via.placeholder.com/200" alt="Demo Image 2" style="width: 20%; height: auto;">
