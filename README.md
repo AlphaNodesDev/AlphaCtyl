@@ -15,6 +15,8 @@ AlphaCtyl is an innovative and user-friendly web panel designed to streamline an
 <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
   <div style="flex: 1 1 200px; max-width: 200px; text-align: center;">
     <img src="https://via.placeholder.com/200" alt="Demo Image 1" style="width: 20%; height: auto;">
+        <img src="https://via.placeholder.com/200" alt="Demo Image 1" style="width: 20%; height: auto;">
+
     <p>Demo Image 1</p>
   </div>
   <div style="flex: 1 1 200px; max-width: 200px; text-align: center;">
