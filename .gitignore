@@ -3,3 +3,5 @@
 /settings.json
 database.db
 /themes/default/admin
+/error.log
+/normal.log 

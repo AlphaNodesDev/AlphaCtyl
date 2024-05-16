@@ -38,7 +38,8 @@ const packageport = settings.packages.list.default.ports;
 const packagedatabase = settings.packages.list.default.database;
 const packagebackup = settings.packages.list.default.backups;
 const pterodactyldomain = settings.pterodactyl.domain
-
+const LOG_FILE_PATH = path.join(__dirname, 'error.log');
+const NORMAL_LOG_FILE_PATH = path.join(__dirname, 'normal.log');
 
 
 const db = new sqlite3.Database(DB_FILE_PATH, (err) => {
@@ -108,6 +109,57 @@ const { updatePasswordInPanel } = require('./api/updatePasswordInPanel.js');
 
 
 
+//Log Erro
+function logErrorToFile(message) {
+    const logMessage = `${new Date().toISOString()} - ${message}\n`;
+    fs.appendFile(LOG_FILE_PATH, logMessage, (err) => {
+        if (err) {
+            console.error('Error writing to log file:', err.message);
+        }
+    });
+}
+
+function logNormalToFile(message) {
+    const logMessage = `${new Date().toISOString()} - ${message}\n`;
+    fs.appendFile(NORMAL_LOG_FILE_PATH, logMessage, (err) => {
+        if (err) {
+            console.error('Error writing to normal log file:', err.message);
+        }
+    });
+}
+
+
+function parseLogs(data) {
+    const logsByDate = {};
+    const logLines = data.split('\n');
+    logLines.forEach(line => {
+        const match = line.match(/^(.*?) - (.*)$/);
+        if (match) {
+            const date = match[1].split('T')[0]; // Extract date part
+            if (!logsByDate[date]) {
+                logsByDate[date] = [];
+            }
+            logsByDate[date].push(match[2]);
+        }
+    });
+    return logsByDate;
+}
+function parseNormalLogs(data) {
+    const logsByDate = {};
+    const logLines = data.split('\n');
+    logLines.forEach(line => {
+        const match = line.match(/^(.*?) - (.*)$/);
+        if (match) {
+            const date = match[1].split('T')[0]; // Extract date part
+            if (!logsByDate[date]) {
+                logsByDate[date] = [];
+            }
+            logsByDate[date].push(match[2]);
+        }
+    });
+    return logsByDate;
+}
+
 
 
 //register process
@@ -117,6 +169,7 @@ router.post('/register', async (req, res) => {
         db.get('SELECT * FROM users WHERE email = ? OR username = ?', [email, username], async (err, row) => {
             if (err) {
                 console.error(err);
+                logErrorToFile(`Error Registering  User: ${err.message}`);
                 return res.send('Error checking user existence.');
             }
             if (row) {
@@ -134,13 +187,13 @@ router.post('/register', async (req, res) => {
                 req.session.user = { pterodactyl_id: userId, username }; 
                 res.redirect('/dashboard');
             } catch (registerError) {
-                console.error('Error registering user in Pterodactyl:', registerError);
+                logErrorToFile(`Error opening database: ${registerError}`);
                 return res.redirect('/register?error=Error registering user.');
 
             }
         });
     } catch (error) {
-        console.error('Error in registration route:', error);
+        logErrorToFile(`Error in registration route: ${error}`);
         return res.redirect('/register?error=Error registering user.');
 
     }
@@ -165,7 +218,7 @@ router.post('/login', (req, res) => {
         }
     });
 });
-//pending
+//  
 
 app.use('/', router);
 
@@ -173,7 +226,7 @@ app.use('/', router);
 app.get('/logout', (req, res) => {
     req.session.destroy((err) => {
         if (err) {
-            console.error('Error destroying session:', err);
+            logErrorToFile('Error destroying session:', err);
         } else {
             res.redirect('/');
         }
@@ -200,40 +253,76 @@ Object.keys(oauthPages).forEach(page => {
  } });
 });
 
+
+
+
 // Load admin pages and values
 Object.keys(adminPages).forEach(page => {
-    app.get(`/${page}`, (req, res) => {
+    app.get(`/${page}`, async (req, res) => {
         try {
             if (!req.session.user || !req.session.user.pterodactyl_id) {
                 return res.redirect('/?error=Please Login Again.');
             }
             const userId = req.session.user.pterodactyl_id;
-            // Connect to the SQLite database
-            const db = new sqlite3.Database(DB_FILE_PATH, (err) => {
-                if (err) {
-                    console.error('Error opening database:', err.message);
-                    return res.status(500).send('Database connection error');
-                }
-                // Render the admin page
-                res.render(adminPages[page], { 
-                    user: req.session.user,
-                    AppName: AppName, 
-                    AppLogo: AppImg,
-                    settings: settings,
-
-                });
-                db.close((err) => {
+            const userIdentifier = await getUserIdByUUID(userId);
+            if(userIdentifier.admin === true){
+                const db = new sqlite3.Database(DB_FILE_PATH, (err) => {
                     if (err) {
-                        console.error('Error closing database:', err.message);
+                        logErrorToFile(`Error opening database: ${err.message}`);
+                        return res.status(500).send('Database connection error');
                     }
+    
+                    fs.readFile(LOG_FILE_PATH, 'utf8', (err, errorLogsData) => {
+                        if (err) {
+                            errorLogsData = 'Could not load error logs.';
+                        }
+    
+                        const errorLogsByDate = parseLogs(errorLogsData);
+    
+                        fs.readFile(NORMAL_LOG_FILE_PATH, 'utf8', (err, normalLogsData) => {
+                            if (err) {
+                                normalLogsData = 'Could not load normal logs.';
+                            }
+    
+                            const normalLogsByDate = parseNormalLogs(normalLogsData);
+    
+                            // Query the database to fetch the list of users
+                            db.all('SELECT * FROM Users', (err, users) => {
+                                if (err) {
+                                    logErrorToFile(`Error fetching users from database: ${err.message}`);
+                                    users = [];
+                                }
+    
+                                res.render(adminPages[page], { 
+                                    user: req.session.user,
+                                    AppName: AppName, 
+                                    AppLogo: AppImg,
+                                    settings: settings,
+                                    errorLogs: errorLogsByDate,
+                                    normalLogs: normalLogsByDate,
+                                    users: users 
+                                });
+    
+                                db.close((err) => {
+                                    if (err) {
+                                        logErrorToFile(`Error closing database: ${err.message}`);
+                                    }
+                                });
+                            });
+                        });
+                    });
                 });
-            });
+            } else {
+                return res.redirect('dashboard?alert=Accesss denied!');
+            }
         } catch (error) {
-            console.error('Error:', error.message);
+            logErrorToFile(`Error: ${error.message}`);
             res.status(500).send('Internal server error');
         }
     });
 });
+
+
 
 
 // render values to all pages
@@ -286,7 +375,6 @@ Object.keys(pages).forEach((page) => {
             });
             db.close();
         } catch (error) {
-            console.error(error.message);
             return res.redirect('/?error=Please Login Again.');
         }
     });
@@ -316,6 +404,8 @@ passport.use(new DiscordStrategy({
             });
             const pteroUser = await registerPteroUser(profile.username, profile.email, password, firstName, lastName);
             if (!pteroUser) {
+                logErrorToFile(`Error: Failed to register user in panel. Connection Error`);
+
                 return done(new Error('Failed to register user in panel.'));
             }
             const userId = pteroUser.attributes.uuid;
@@ -343,7 +433,7 @@ app.get('/discord', passport.authenticate('discord'));
 app.get('/discord/callback', passport.authenticate('discord', { failureRedirect: '/' }), (req, res) => {
     db.get('SELECT * FROM users WHERE email = ?', [req.user.email], (err, row) => {
         if (err) {
-            console.error('Error retrieving user details:', err);
+            logErrorToFile('Error retrieving user details:', err);
             return res.redirect('/');
         }
         req.session.user = row;
@@ -369,7 +459,7 @@ router.get('/resetptero', async (req, res) => {
         const coins = await getUserCoins(userId, db);
         res.render("settings", { 
             successMessage: 'Pterodactyl Password Reset', 
-            value: 'Your New Password is <bold>' + newPassword + '</bold>', 
+            value: 'Your New Password is ' + newPassword + '', 
             user: req.session.user,
             AppName: AppName,
             AppLogo: AppImg,
@@ -378,8 +468,10 @@ router.get('/resetptero', async (req, res) => {
             coins 
         });
         console.log('updating password in panel:');
-    } catch (error) {
-        res.status(500).send('Error resetting password');
+    } catch (error) {  
+    logErrorToFile(`Error resetting password in Pterodactyl panel for user:${userId} `);
+         return res.redirect('settings?error=Error resetting password.');
+
     }
 });
 
@@ -400,7 +492,7 @@ const activeConnections = new Map();
 function updateUserCoins(userId, reward) {
     db.run(`UPDATE users SET coins = coins + ${reward} WHERE pterodactyl_id = ?`, [userId], (err) => {
         if (err) {
-            console.error('Error updating user coins:', err);
+            logErrorToFile(`Error updating coins for user ${userId}: ${err.message}`);
         } 
     });
 }
@@ -486,8 +578,9 @@ router.get('/watchvideo', async (req, res) => {
             pterodactyldomain
         });
     } catch (error) {
-        console.error('Error while processing /watchvideo:', error);
-        res.status(500).send('Internal server error.');
+        logErrorToFile('Error while processing /watchvideo:', error);
+        return res.redirect('/youtube?error=Internal server error.');
+
     }
 });
 
@@ -507,15 +600,19 @@ router.post('/insertlink', async (req, res) => {
         const youtubeLink = req.body.link;
         db.run('INSERT INTO youtube (id, yt_link) VALUES (?, ?)', [userId, youtubeLink], (err) => {
             if (err) {
-                return res.status(500).send('Task Failed');
+                return res.redirect('/youtube?error=Task Failed.');
+
             }
             const reward = settings.youtube.coins;
             updateUserCoins(userId, reward);
             res.status(200).send('Coins Rewarded');
+            return res.redirect('/youtube?success=Coins Rewarded');
+
         });
     } catch (error) {
         console.error(error);
-        res.status(500).send('Internal server error.');
+        return res.redirect('/youtube?error=Internal server error.');
+
     }
 });
 
@@ -533,6 +630,7 @@ router.post('/insertlink', async (req, res) => {
 router.post('/createserver', async (req, res) => {
     if (settings.webserver.server_creation === false) {
         return res.redirect('/manage?alert=Sorry, Server Creation Not Enabled');
+
 
     }else{
     try {
@@ -668,7 +766,7 @@ router.get('/delete', async (req, res) => {
 
 
 
-
+//pending
 
 app.post('/updateserver', (req, res) => {
     const serverId = parseInt(req.body.id);
