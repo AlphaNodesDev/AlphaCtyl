@@ -1,5 +1,5 @@
 
-<img src="https://i.ibb.co/1TQbcJ9/a-high-resolution-logo-transparent.png">
+<img width="60px" height="60px" src="https://i.ibb.co/1TQbcJ9/a-high-resolution-logo-transparent.png">
 
 
 # AlphaCtyl
