@@ -1,4 +1,3 @@
-![image](https://github.com/AlphaNodesDev/AlphaCtyl/assets/89145034/438ac71a-abd0-4b9b-abb9-3df5f5d41777)<img width="60px" height="60px" src="https://i.ibb.co/1TQbcJ9/a-high-resolution-logo-transparent.png">
 
 # AlphaCtyl
 
