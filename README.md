@@ -10,7 +10,7 @@ AlphaCtyl is an innovative and user-friendly web panel designed to streamline an
 - [@Abhiram](https://www.github.com/AlphaNodesDev)
 
 ## Demo
-##Auth
+## Auth
 ![image](https://github.com/AlphaNodesDev/AlphaCtyl/assets/89145034/70393b00-7048-4eac-ba77-870dcc8a835e)
 ![image](https://github.com/AlphaNodesDev/AlphaCtyl/assets/89145034/5880d443-3cf1-41d1-aadf-46b577c65a72)
 
