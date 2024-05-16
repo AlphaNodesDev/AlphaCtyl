@@ -4,7 +4,7 @@
 
 ## Created by Abhiram
 
-AlphaCtyl is an innovative and user-friendly web panel designed to streamline and enhance the management of Pterodactyl servers. Inspired by the popular Dashactyl, AlphaCtyl offers a range of powerful features and tools tailored to meet the needs of both novice and advanced users. Whether you're running a small server for personal use or managing multiple servers for a large community, AlphaCtyl provides the functionality and flexibility you need to succeed.
+AlphaCtyl is a powerful and user-friendly web panel designed to streamline the management of Pterodactyl servers. It serves as a comprehensive dashboard that allows users to buy and manage servers effortlessly. With AlphaCtyl, users can purchase servers through an intuitive payment interface or earn coins by watching ads and promotional videos, which they can then use to acquire servers for free.
 
 ## Authors
 
