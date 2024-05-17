@@ -184,6 +184,37 @@
            }
          }
        },
+      "bedrock": {
+          "display": "Minecraft Bedrock | Vanilla",
+          "note": "Please upload the Vanilla egg from the parkervcp egg repo to the panel, then change the egg ID to the ID of the uploaded egg.",
+          "minimum": {
+            "ram": 512,
+            "disk": 512,
+            "cpu": 75
+          },
+          "maximum": {
+            "ram": null,
+            "disk": null,
+            "cpu": null
+          },
+          "info": {
+            "egg": 18,
+            "docker_image": "quay.io/parkervcp/pterodactyl-images:base_debian",
+            "startup": "./bedrock_server",
+            "environment": {
+              "BEDROCK_VERSION": "latest",
+              "LD_LIBRARY_PATH": ".",
+              "SERVERNAME": "Bedrock Dedicated Server",
+              "GAMEMODE": "survival",
+              "DIFFICULTY": "easy",
+              "CHEATS": "false"
+            },
+            "feature_limits": {
+              "databases": 4,
+              "backups": 4
+            }
+          }
+        },
        "bungeecord": {
          "display": "Minecraft Java | BungeeCord",
          "minimum": {
