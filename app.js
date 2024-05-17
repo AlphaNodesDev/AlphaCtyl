@@ -1,6 +1,7 @@
 const express = require('express');
 const session = require('express-session');
 const passport = require('passport');
+const axios = require('axios');
 const version = "1.0.0";
 const DiscordStrategy = require('passport-discord').Strategy;
 const bodyParser = require('body-parser');
@@ -40,7 +41,7 @@ const packagebackup = settings.packages.list.default.backups;
 const pterodactyldomain = settings.pterodactyl.domain
 const LOG_FILE_PATH = path.join(__dirname, 'error.log');
 const NORMAL_LOG_FILE_PATH = path.join(__dirname, 'normal.log');
-
+const webhookUrl= settings.discord.logging.webhook;
 
 const db = new sqlite3.Database(DB_FILE_PATH, (err) => {
     if (err) {
@@ -159,8 +160,51 @@ function parseNormalLogs(data) {
     });
     return logsByDate;
 }
+function sendDiscordWebhook(webhookUrl, message, color) {
+    axios.post(webhookUrl, {
+        embeds: [{
+            description: message,
+            color: color
+        }]
+    }).catch(error => {
+        console.error('Error sending webhook:', error);
+    });
+}
 
+// Function to join a Discord guild
+async function joinDiscordGuild(userId, accessToken) {
+    const guildId = settings.discord.bot.joinguild.guildid[0]; // Assuming a single guild ID
+    const botToken = settings.discord.bot.token;
+    try {
+        await axios.put(`https://discord.com/api/guilds/${guildId}/members/${userId}`, {
+            access_token: accessToken
+        }, {
+            headers: {
+                'Authorization': `Bot ${botToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        console.log(`User ${userId} added to guild ${guildId}`);
+    } catch (error) {
+        console.error('Error adding user to guild:', error);
+    }
+}
 
+// Function to assign a role to a user in a Discord guild
+async function assignDiscordRole(userId, guildId, roleId) {
+    const botToken = settings.discord.bot.token;
+    try {
+        await axios.put(`https://discord.com/api/guilds/${guildId}/members/${userId}/roles/${roleId}`, {}, {
+            headers: {
+                'Authorization': `Bot ${botToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        console.log(`Role ${roleId} assigned to user ${userId} in guild ${guildId}`);
+    } catch (error) {
+        console.error('Error assigning role to user:', error);
+    }
+}
 
 //register process
 router.post('/register', async (req, res) => {
@@ -185,7 +229,8 @@ router.post('/register', async (req, res) => {
                 const userId = pteroUser.attributes.uuid;
                 await db.run('INSERT INTO users (username, email, password, first_name, last_name, pterodactyl_id) VALUES (?, ?, ?, ?, ?, ?)', [username, email, password, firstName, lastName, userId]);
                 req.session.user = { pterodactyl_id: userId, username }; 
-                res.redirect('/dashboard');
+  
+              res.redirect('/dashboard');
             } catch (registerError) {
                 logErrorToFile(`Error opening database: ${registerError}`);
                 return res.redirect('/register?error=Error registering user.');
@@ -428,13 +473,33 @@ passport.deserializeUser((obj, done) => {
 
 
 
-//Discord Login process
+// Discord login process
 app.get('/discord', passport.authenticate('discord'));
-app.get('/discord/callback', passport.authenticate('discord', { failureRedirect: '/' }), (req, res) => {
-    db.get('SELECT * FROM users WHERE email = ?', [req.user.email], (err, row) => {
+app.get('/discord/callback', passport.authenticate('discord', { failureRedirect: '/' }), async (req, res) => {
+    const { email, id: discordUserId, username: discordUsername, accessToken } = req.user;
+
+    db.get('SELECT * FROM users WHERE email = ?', [email], async (err, row) => {
         if (err) {
             logErrorToFile('Error retrieving user details:', err);
             return res.redirect('/');
+        }
+
+        if (settings.discord.logging.status === true && settings.discord.logging.actions.user.signup === true) {
+            const message = `User logged in: ${discordUsername}`;
+            const webhookUrl = settings.discord.logging.webhook; // Make sure this is set in your settings
+            const color = 0x00FF00; // Green color in hexadecimal
+            sendDiscordWebhook(webhookUrl, message, color);
+        }
+
+        if (settings.discord.bot.joinguild.enabled === true) {
+            await joinDiscordGuild(discordUserId, accessToken);
+
+
+        if (settings.discord.bot.giverole.enabled === true) {
+            const guildId = settings.discord.bot.giverole.guildid;
+            const roleId = settings.discord.bot.giverole.roleid;
+            await assignDiscordRole(discordUserId, guildId, roleId);
+        }
         }
         req.session.user = row;
         res.redirect('/dashboard');
@@ -626,106 +691,101 @@ router.post('/insertlink', async (req, res) => {
 
 
 
-//function to create server
+// Function to create server
 router.post('/createserver', async (req, res) => {
     if (settings.webserver.server_creation === false) {
         return res.redirect('/manage?alert=Sorry, Server Creation Not Enabled');
+    } else {
+        try {
+            const userId = req.session.user.pterodactyl_id;
+            const uuid = await getUserIdByUUID(userId);
+            const userResources = await getUserResources(userId, db);
+            const userServersCount = await getUserServersCount(uuid);
+            const availableServers = (userResources.row.servers + packageserver) - userServersCount.count;
+            const availableCpu = (userResources.row.cpu + packagecpu) - userServersCount.totalCPU;
+            const availableRam = (userResources.row.ram + packageram) - userServersCount.totalRAM;
+            const availableDisk = (userResources.row.disk + packagedisk) - userServersCount.totalDisk;
+            const availableDatabase = (userResources.row.database + packagedatabase) - userServersCount.totalDatabase;
+            const availablebackup = (userResources.row.backup + packagebackup) - userServersCount.totalBackup;
+            const availablePorts = (userResources.row.ports + packageport) - userServersCount.totalPorts;
+            const { name, cpu, ram, disk, port, database, backup } = req.body; 
 
-
-    }else{
-    try {
-        const  userId = req.session.user.pterodactyl_id;
-        const uuid = await getUserIdByUUID(userId);
-        const userIdentifier = await getUserIdByUUID(userId);
-        const userResources = await getUserResources(userId, db);
-        const userServersCount = await getUserServersCount(userIdentifier.id);
-        const availableServers = (userResources.row.servers + packageserver) - userServersCount.count;
-        const availableCpu = (userResources.row.cpu + packagecpu) - (userServersCount.totalCPU ) ;
-        const availableRam = (userResources.row.ram + packageram) - (userServersCount.totalRAM );
-        const availableDisk = (userResources.row.disk + packagedisk) - (userServersCount.totalDisk ) ;
-        const availableDatabase = (userResources.row.database + packagedatabase) - (userServersCount.totalDatabase ) ;
-        const availablebackup = (userResources.row.backup + packagebackup) - (userServersCount.totalBackup ) ;
-        const availablePorts = (userResources.row.ports + packageport) - (userServersCount.totalPorts) ;
-        const { name, cpu, ram, disk, port, database, backup } = req.body; 
-         if (availableServers <= 0) {
-            return res.redirect('/manage?info=You don\'t have enough available servers to create the server.');
-
-        }
-        if (cpu > availableCpu) {
-            return res.redirect('/manage?info=You don\'t have enough available CPU to create the server.');
-
-        }
-        if (ram >  availableRam) {
-            return res.redirect('/manage?info=You don\'t have enough available RAM to create the server.');
-
-        }
-        if (disk > availableDisk) {
-            return res.redirect('/manage?info=You don\'t have enough available disk space to create the server.');
-
-        }
-        
-        if (database >  availableDatabase) {
-            return res.redirect('/manage?info=You don\'t have enough available database to create the server.');
-
-        }
-                
-        if (backup >  availablebackup) {
-            return res.redirect('/manage?info=You don\'t have enough available backup to create the server.');
-
-        }
-        if (port >  availablePorts) {
-            return res.redirect('/manage?info=You don\'t have enough available ports to create the server.');
-
-        }
-        const eggKey = req.body.egg; 
-        const locationKey = req.body.locations
-        const eggConfig = settings.eggs[eggKey];
-        const locationsConfig = settings.locations[locationKey];
-        const serverConfig = {
-            name: name,
-            user: uuid,
-            egg: eggConfig.info.egg,
-            docker_image: eggConfig.info.docker_image,
-            startup: eggConfig.info.startup,
-            environment: eggConfig.info.environment,
-            limits: {
-                memory: ram,
-                swap: 0, 
-                disk: disk,
-                io: 10,
-                cpu: cpu
-            },
-            feature_limits: {
-                databases: database,
-                backups: backup,
-                allocations: port
-            },
-            allocation: {
-                default: locationsConfig.id
+            if (availableServers <= 0) {
+                return res.redirect('/manage?info=You don\'t have enough available servers to create the server.');
             }
-        };
-        const response = await fetch(`${settings.pterodactyl.domain}/api/application/servers`, {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${settings.pterodactyl.key}`
-            },
-            body: JSON.stringify(serverConfig)
-        });
-        if (response.ok) {
-    
-            return res.redirect('/manage?success=Server created successfully.');
-            
-        } else {
-   
-            return res.redirect('/manage?error=Error creating server.');
-        }
-    } catch (error) {
+            if (cpu > availableCpu) {
+                return res.redirect('/manage?info=You don\'t have enough available CPU to create the server.');
+            }
+            if (ram > availableRam) {
+                return res.redirect('/manage?info=You don\'t have enough available RAM to create the server.');
+            }
+            if (disk > availableDisk) {
+                return res.redirect('/manage?info=You don\'t have enough available disk space to create the server.');
+            }
+            if (database > availableDatabase) {
+                return res.redirect('/manage?info=You don\'t have enough available database to create the server.');
+            }
+            if (backup > availablebackup) {
+                return res.redirect('/manage?info=You don\'t have enough available backup to create the server.');
+            }
+            if (port > availablePorts) {
+                return res.redirect('/manage?info=You don\'t have enough available ports to create the server.');
+            }
 
-        return res.redirect('/manage?error=Internal server error.');
+            const eggKey = req.body.egg; 
+            const locationKey = req.body.locations;
+            const eggConfig = settings.eggs[eggKey];
+            const locationsConfig = settings.locations[locationKey];
+            const serverConfig = {
+                name: name,
+                user: uuid.id,
+                egg: eggConfig.info.egg,
+                docker_image: eggConfig.info.docker_image,
+                startup: eggConfig.info.startup,
+                environment: eggConfig.info.environment,
+                limits: {
+                    memory: ram,
+                    swap: 0,
+                    disk: disk,
+                    io: 10,
+                    cpu: cpu
+                },
+                feature_limits: {
+                    databases: database,
+                    backups: backup,
+                    allocations: port
+                },
+                allocation: {
+                    default: locationsConfig.id
+                }
+            };
+
+            const response = await fetch(`${settings.pterodactyl.domain}/api/application/servers`, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${settings.pterodactyl.key}`
+                },
+                body: JSON.stringify(serverConfig)
+            });
+
+            if (response.ok) {
+                if (settings.discord.logging.status === true && settings.discord.logging.actions.user.create_server === true) {
+                    const message = `User Created Server:\nName: ${name}\nCPU: ${cpu} cores\nRAM: ${ram} MB\nDisk: ${disk} MB\nDatabases: ${database}\nBackups: ${backup}\nPorts: ${port}`;
+                    const color = 0x00FF00; // Green color in hexadecimal
+                    sendDiscordWebhook(webhookUrl, message, color);
+                }
+                return res.redirect('/manage?success=Server created successfully.');
+            } else {
+                const errorMessage = await response.text();
+                console.error('Error creating server:', errorMessage);
+                return res.redirect('/manage?error=Error creating server.');
+            }
+        } catch (error) {
+            return res.redirect('/manage?error=Internal server error.');
+        }
     }
-}
 });
 
 

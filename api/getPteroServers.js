@@ -1,9 +1,9 @@
 const axios = require('axios');
 const settings = require('../settings.json');
 
-async function getUserIdByUUID(uuid) {
+async function getUserIdByUUID(userId) {
     try {
-        const response = await axios.get(`${settings.pterodactyl.domain}/api/application/users?filter%5Buuid%5D=${uuid}`, {
+        const response = await axios.get(`${settings.pterodactyl.domain}/api/application/users?filter%5Buuid%5D=${userId}`, {
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
@@ -18,7 +18,7 @@ async function getUserIdByUUID(uuid) {
 
         const userData = response.data.data[0];
         if (!userData) {
-            console.error('User not found with UUID:', uuid);
+            console.error('User not found with userId:', userId);
             return null;
         }
         return {

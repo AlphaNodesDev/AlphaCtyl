@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Errors</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href='https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/line-awesome/css/line-awesome.min.css'>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <script src="https://kit.fontawesome.com/062f52da9a.js" crossorigin="anonymous"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <%- include('./includes/admin-sidebar') %>
+
+  <div class="main-content">
+    <%- include('./includes/admin-header') %>
+
+    <main>
+      <section class="container">
+        <h2>Logs</h2>
+
+        <label for="date-filter">Select Date:</label>
+        <select id="date-filter">
+          <% Object.keys(normalLogs).forEach(date => { %>
+            <option value="<%= date %>"><%= date %></option>
+          <% }) %>
+        </select>
+
+        <div id="logs-container">
+          <% Object.keys(normalLogs).forEach(date => { %>
+            <div class="log-date" data-date="<%= date %>">
+              <h3><%= date %></h3>
+              <pre><%= normalLogs[date].join('\n') %></pre>
+            </div>
+          <% }) %>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <%- include('./includes/admin-footer') %>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const logContainers = document.querySelectorAll('.log-date');
+      const dateFilter = document.getElementById('date-filter');
+
+      function filterLogs() {
+        const selectedDate = dateFilter.value;
+        logContainers.forEach(container => {
+          if (container.getAttribute('data-date') === selectedDate) {
+            container.style.display = 'block';
+          } else {
+            container.style.display = 'none';
+          }
+        });
+      }
+
+      dateFilter.addEventListener('change', filterLogs);
+
+      // Initialize with the first date selected
+      if (dateFilter.value) {
+        filterLogs();
+      }
+    });
+  </script>
+</body>
+</html>
