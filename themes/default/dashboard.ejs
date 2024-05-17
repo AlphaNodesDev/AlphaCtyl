@@ -34,7 +34,10 @@
           <p>Ports: <%= server.ports %></p>
           <p>Databases: <%= server.database %></p>
           <p>Status: <%= server.suspended ? 'Suspended' : 'Active' %></p>
-          <button onclick="window.location.href='./delete?id=<%= server.id %>'">Delete</button>
+          <button onclick="window.location.href='./manage?id=<%= server.identifier %>'">Manage</button>
+
+
+
         </div>
         <% }); %>
       </div>
@@ -48,9 +51,3 @@
 </main>
 </body>
 </html>
-
-
-
-
-
-

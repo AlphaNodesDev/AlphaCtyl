@@ -72,7 +72,7 @@
           <p>Ports: <%= server.ports %></p>
           <p>Databases: <%= server.database %></p>
           <p>Status: <%= server.suspended ? 'Suspended' : 'Active' %></p>
-          <button onclick="populateForm(<%= server.id %>)">Update</button>
+          <button onclick="window.location.href='./update?id=<%= server.identifier %>'">Update</button>
           <button onclick="window.location.href='./delete?id=<%= server.id %>'">Delete</button>
         </div>
         <% }); %>
@@ -104,33 +104,7 @@
 
 <%- include('./includes/footer') %>
 
-<script>
-  function populateForm(serverId) {
-    fetch(`/serverdetails?id=${serverId}`)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then(data => {
-        document.getElementById('server-id').value = data.id;
-        document.getElementById('name').value = data.name;
-        document.getElementById('cpu').value = data.cpu;
-        document.getElementById('ram').value = data.ram;
-        document.getElementById('disk').value = data.disk;
-        document.getElementById('port').value = data.port;
-        document.getElementById('database').value = data.database;
-        document.getElementById('backup').value = data.backup;
-        document.getElementById('locations').value = data.location;
-        document.getElementById('egg').value = data.egg;
-        document.getElementById('server-form').action = '/updateserver';
-      })
-      .catch(error => {
-        console.error('There was a problem with the fetch operation:', error);
-      });
-  }
-</script>
+
 
 
 </body>

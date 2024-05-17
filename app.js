@@ -43,15 +43,15 @@ const LOG_FILE_PATH = path.join(__dirname, 'error.log');
 const NORMAL_LOG_FILE_PATH = path.join(__dirname, 'normal.log');
 const webhookUrl= settings.discord.logging.webhook;
 
-const db = new sqlite3.Database(DB_FILE_PATH, (err) => {
-    if (err) {
-        console.log(chalk.red('Error connecting to SQLite database:', err.message));
-    } else {
-        console.log(chalk.cyan('-->','Database Connection ok'));
-    }
-});
 
-app.listen(PORT, () => {
+
+async function fetchImport() {
+    return (await import('node-fetch')).default;
+}
+
+
+app.listen(PORT, async () => {
+    const fetch = await fetchImport();
     console.log(chalk.red("================================================================"));
     console.log(chalk.green(appNameAscii));
     console.log(chalk.yellow(authorNameAscii));
@@ -65,6 +65,16 @@ app.listen(PORT, () => {
     console.log(chalk.green('|',`Server is running on port ${PORT}`,'|'));
     console.log(chalk.red(' ',"-------------------------------"));
 });
+
+const db = new sqlite3.Database(DB_FILE_PATH, (err) => {
+    
+    if (err) {
+        console.log(chalk.red('Error connecting to SQLite database:', err.message));
+    } else {
+        console.log(chalk.cyan('-->','Database Connection ok'));
+    }
+});
+
 
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -691,6 +701,71 @@ router.post('/insertlink', async (req, res) => {
 
 
 
+
+
+
+
+async function fetchAllocations(locationId) {
+    try {
+        // Fetch nodes
+        const response = await fetch(`${settings.pterodactyl.domain}/api/application/nodes`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${settings.pterodactyl.key}`
+            }
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Failed to fetch nodes: ${errorText}`);
+        }
+
+        const nodesData = await response.json();
+        const nodes = nodesData.data;
+
+        // Find the node matching the location ID
+        const node = nodes.find(node => node.attributes.location_id === locationId);
+
+        if (!node) {
+            throw new Error('Node not found for the given location ID');
+        }
+
+        // Fetch allocations for the node
+        const allocationsResponse = await fetch(`${settings.pterodactyl.domain}/api/application/nodes/${node.attributes.id}/allocations`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${settings.pterodactyl.key}`
+            }
+        });
+
+        if (!allocationsResponse.ok) {
+            const errorText = await allocationsResponse.text();
+            throw new Error(`Failed to fetch allocations for the node: ${errorText}`);
+        }
+
+        const allocationsData = await allocationsResponse.json();
+        const allocations = allocationsData.data;
+
+        // Find the first allocation that is not assigned
+        const notAssignedAllocation = allocations.find(allocation => !allocation.attributes.assigned);
+
+        if (!notAssignedAllocation) {
+            throw new Error('No unassigned allocation found for the node');
+        }
+
+        return notAssignedAllocation.attributes.id;
+    } catch (error) {
+        console.error('Error fetching allocations:', error);
+        throw error;
+    }
+}
+
+
+
 // Function to create server
 router.post('/createserver', async (req, res) => {
     if (settings.webserver.server_creation === false) {
@@ -699,8 +774,9 @@ router.post('/createserver', async (req, res) => {
         try {
             const userId = req.session.user.pterodactyl_id;
             const uuid = await getUserIdByUUID(userId);
+            const userIdentifier = uuid.id;
             const userResources = await getUserResources(userId, db);
-            const userServersCount = await getUserServersCount(uuid);
+            const userServersCount = await getUserServersCount(userIdentifier);
             const availableServers = (userResources.row.servers + packageserver) - userServersCount.count;
             const availableCpu = (userResources.row.cpu + packagecpu) - userServersCount.totalCPU;
             const availableRam = (userResources.row.ram + packageram) - userServersCount.totalRAM;
@@ -708,7 +784,7 @@ router.post('/createserver', async (req, res) => {
             const availableDatabase = (userResources.row.database + packagedatabase) - userServersCount.totalDatabase;
             const availablebackup = (userResources.row.backup + packagebackup) - userServersCount.totalBackup;
             const availablePorts = (userResources.row.ports + packageport) - userServersCount.totalPorts;
-            const { name, cpu, ram, disk, port, database, backup } = req.body; 
+            const { name, cpu, ram, disk, port, database, backup } = req.body;
 
             if (availableServers <= 0) {
                 return res.redirect('/manage?info=You don\'t have enough available servers to create the server.');
@@ -732,10 +808,25 @@ router.post('/createserver', async (req, res) => {
                 return res.redirect('/manage?info=You don\'t have enough available ports to create the server.');
             }
 
-            const eggKey = req.body.egg; 
+            const eggKey = req.body.egg;
             const locationKey = req.body.locations;
             const eggConfig = settings.eggs[eggKey];
             const locationsConfig = settings.locations[locationKey];
+            const locationId = locationsConfig.id;
+            let allocationId;
+
+            try {
+                allocationId = await fetchAllocations(locationId);
+            } catch (error) {
+                if (error.message.includes('Node not found')) {
+                    return res.redirect('/manage?error=No nodes found for the given location.');
+                }
+                if (error.message.includes('No unassigned allocation found')) {
+                    return res.redirect('/manage?error=All nodes are full for the given location.');
+                }
+                return res.redirect('/manage?error=Error fetching allocations.');
+            }
+
             const serverConfig = {
                 name: name,
                 user: uuid.id,
@@ -756,7 +847,7 @@ router.post('/createserver', async (req, res) => {
                     allocations: port
                 },
                 allocation: {
-                    default: locationsConfig.id
+                    default: allocationId
                 }
             };
 
@@ -783,10 +874,13 @@ router.post('/createserver', async (req, res) => {
                 return res.redirect('/manage?error=Error creating server.');
             }
         } catch (error) {
+            console.error('Internal server error:', error);
             return res.redirect('/manage?error=Internal server error.');
         }
     }
 });
+
+
 
 
 
@@ -826,6 +920,7 @@ router.get('/delete', async (req, res) => {
 
 
 
+
 //pending
 
 app.post('/updateserver', (req, res) => {
@@ -841,7 +936,82 @@ app.post('/updateserver', (req, res) => {
   
   
 
+
+
   
+
+
+
+// Buy Resources  
+router.post('/byresources', (req, res) => {
+    const { servers, cpu, ram, disk, ports, database, backup } = req.body;
+
+    db.get('SELECT * FROM users WHERE pterodactyl_id = ?', [req.session.user.pterodactyl_id], (err, row) => {
+        if (err) {
+            console.error(err);
+            res.send('Error authenticating user.');
+            return;
+        }
+        
+        if (!row) {
+            return res.redirect('store?error=Invalid User.');
+        }
+
+        // Calculate the costs based on the request
+        const costs = {
+            servers: servers * settings.store.servers.cost,
+            cpu: cpu * settings.store.cpu.cost,
+            ram: ram * settings.store.ram.cost,
+            disk: disk * settings.store.disk.cost,
+            ports: ports * settings.store.ports.cost,
+            database: database * settings.store.database.cost,
+            backup: backup * settings.store.backup.cost
+        };
+
+        // Determine which resource is being purchased
+        const selectedResource = Object.keys(req.body).find(key => req.body[key] && req.body[key] !== '0');
+
+        // Check if the selected resource is valid
+        if (!selectedResource || !settings.store[selectedResource]) {
+            return res.redirect('store?error=Invalid selection.');
+        }
+
+        const totalCost = costs[selectedResource];
+
+        if (row.coins < totalCost) {
+            return res.redirect('store?error=Not enough coins.');
+        }
+
+        // Update the user's coins and resources
+        const updates = {
+            coins: row.coins - totalCost,
+            [`${selectedResource}`]: (row[`${selectedResource}`] || 0) + parseInt(req.body[selectedResource]) * settings.store[selectedResource].per
+        };
+
+        db.run(
+            'UPDATE users SET coins = ?, ' + `${selectedResource}` + ' = ? WHERE pterodactyl_id = ?', 
+            [updates.coins, updates[`${selectedResource}`], req.session.user.pterodactyl_id], 
+            (updateErr) => {
+                if (updateErr) {
+                    console.error(updateErr);
+                    res.send('Error updating resources.');
+                } else {
+                    req.session.user = { ...row, ...updates };
+                    res.redirect('/store?success=Successfully purchased.');
+                }
+            }
+        );
+    });
+});
+
+
+
+
+
+
+
+
+
 
 
 

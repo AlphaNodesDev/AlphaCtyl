@@ -106,6 +106,7 @@ async function getUserServers(userIdentifier) {
         const serverDetails = userServers.map(server => ({
             id: server.attributes.id,
             name: server.attributes.name,
+            identifier: server.attributes.identifier,
             description: server.attributes.description,
             suspended: server.attributes.suspended,
             ram: server.attributes.limits.memory,
