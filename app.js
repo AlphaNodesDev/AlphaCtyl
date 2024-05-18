@@ -42,41 +42,43 @@ const pterodactyldomain = settings.pterodactyl.domain
 const LOG_FILE_PATH = path.join(__dirname, 'error.log');
 const NORMAL_LOG_FILE_PATH = path.join(__dirname, 'normal.log');
 const webhookUrl= settings.discord.logging.webhook;
-
-
-
-async function fetchImport() {
-    return (await import('node-fetch')).default;
-}
-
-
+const { Client, GatewayIntentBits } = require('discord.js');
+const db = new sqlite3.Database(DB_FILE_PATH);
+//Websocket Config
+const WebSocket = require('ws');
+const wss = new WebSocket.Server({ port: 8080 });
+const activeConnections = new Map();
+const client = new Client({
+    intents: [
+        GatewayIntentBits.Guilds,
+    ]
+});
+client.login(settings.discord.bot.token)
+    .catch(console.error);
+client.on('ready', () => {
+    console.log(chalk.red('  ',"-----------------------------"));
+    console.log(chalk.red('|',`Logged in as ${client.user.tag}`, '|'));
+    console.log(chalk.red('  ', "-----------------------------"));
+});
 app.listen(PORT, async () => {
-    const fetch = await fetchImport();
     console.log(chalk.red("================================================================"));
     console.log(chalk.green(appNameAscii));
     console.log(chalk.yellow(authorNameAscii));
     console.log(chalk.red("================================================================"));
-    console.log(chalk.red("-------------------------------"));
-    console.log(chalk.cyan("Software Version:", version));    
-    console.log(chalk.cyan("Config Version:", settings.version,));
-    console.log(chalk.red("-------------------------------"));
+    console.log(chalk.bgCyanBright('-->', "Software Version:", version));    
+    console.log(chalk.bgCyanBright('-->', "Config Version:", settings.version));
 
+    const db = new sqlite3.Database(DB_FILE_PATH, (err) => {
+        if (err) {
+            console.log(chalk.red('Error connecting to SQLite database:'));
+        } else {
+            console.log(chalk.blue.bgYellow('-->', 'Database Connection ok'));
+        }
+    });
     console.log(chalk.red(' ',"-------------------------------"));
-    console.log(chalk.green('|',`Server is running on port ${PORT}`,'|'));
+    console.log(chalk.green('|', `Server is running on port ${PORT}`, '|'));
     console.log(chalk.red(' ',"-------------------------------"));
 });
-
-const db = new sqlite3.Database(DB_FILE_PATH, (err) => {
-    
-    if (err) {
-        console.log(chalk.red('Error connecting to SQLite database:', err.message));
-    } else {
-        console.log(chalk.cyan('-->','Database Connection ok'));
-    }
-});
-
-
-
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 app.use(session({
@@ -84,21 +86,14 @@ app.use(session({
     resave: false,
     saveUninitialized: true
 }));
-
 app.use(passport.initialize());
 app.use(passport.session());
-
-
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, `./themes/${theme}`));
-
-
-
 // Database table Create
 db.serialize(() => {
     db.run("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT, password TEXT, email TEXT, first_name TEXT, last_name TEXT, pterodactyl_id TEXT, servers INTEGER DEFAULT 0, ports INTEGER DEFAULT 0, ram INTEGER DEFAULT 0, disk INTEGER DEFAULT 0, cpu INTEGER DEFAULT 0, database INTEGER DEFAULT 0, backup INTEGER DEFAULT 0, coins INTEGER DEFAULT 0)");
     db.run("CREATE TABLE IF NOT EXISTS youtube (id INTEGER, yt_link TEXT)");
-
 });
 //Load Theme 
 const pagesConfig = JSON.parse(fs.readFileSync(`./themes/${theme}/pages.json`));
@@ -108,113 +103,17 @@ const pages = pagesConfig.pages;
 const oauthPages = pagesConfig.oauth;
 //load admin pages
 const adminPages = pagesConfig.admin;
-
-
 //includes from other api
 const { registerPteroUser } = require('./api/getPteroUser.js');
 const { getUserIdByUUID, getUserServersCount, getUserServers } = require('./api/getPteroServers.js'); 
 const { getUserCoins } = require('./api/getuserCoins.js');
 const { getUserResources } = require('./api/getuseresources.js');
 const { updatePasswordInPanel } = require('./api/updatePasswordInPanel.js'); 
+const { logErrorToFile, logNormalToFile, parseLogs, parseNormalLogs } = require('./functions/saveLogs.js'); 
+const { joinDiscordGuild, sendDiscordWebhook, assignDiscordRole } = require('./functions/discordFunctions.js'); 
+const { updateUserCoins } = require('./functions/updateUserCoins.js'); 
+const { fetchAllocations } = require('./functions/fetchAllocations.js'); 
 
-
-
-
-//Log Erro
-function logErrorToFile(message) {
-    const logMessage = `${new Date().toISOString()} - ${message}\n`;
-    fs.appendFile(LOG_FILE_PATH, logMessage, (err) => {
-        if (err) {
-            console.error('Error writing to log file:', err.message);
-        }
-    });
-}
-
-function logNormalToFile(message) {
-    const logMessage = `${new Date().toISOString()} - ${message}\n`;
-    fs.appendFile(NORMAL_LOG_FILE_PATH, logMessage, (err) => {
-        if (err) {
-            console.error('Error writing to normal log file:', err.message);
-        }
-    });
-}
-
-
-function parseLogs(data) {
-    const logsByDate = {};
-    const logLines = data.split('\n');
-    logLines.forEach(line => {
-        const match = line.match(/^(.*?) - (.*)$/);
-        if (match) {
-            const date = match[1].split('T')[0]; // Extract date part
-            if (!logsByDate[date]) {
-                logsByDate[date] = [];
-            }
-            logsByDate[date].push(match[2]);
-        }
-    });
-    return logsByDate;
-}
-function parseNormalLogs(data) {
-    const logsByDate = {};
-    const logLines = data.split('\n');
-    logLines.forEach(line => {
-        const match = line.match(/^(.*?) - (.*)$/);
-        if (match) {
-            const date = match[1].split('T')[0]; // Extract date part
-            if (!logsByDate[date]) {
-                logsByDate[date] = [];
-            }
-            logsByDate[date].push(match[2]);
-        }
-    });
-    return logsByDate;
-}
-function sendDiscordWebhook(webhookUrl, message, color) {
-    axios.post(webhookUrl, {
-        embeds: [{
-            description: message,
-            color: color
-        }]
-    }).catch(error => {
-        console.error('Error sending webhook:', error);
-    });
-}
-
-// Function to join a Discord guild
-async function joinDiscordGuild(userId, accessToken) {
-    const guildId = settings.discord.bot.joinguild.guildid[0]; // Assuming a single guild ID
-    const botToken = settings.discord.bot.token;
-    try {
-        await axios.put(`https://discord.com/api/guilds/${guildId}/members/${userId}`, {
-            access_token: accessToken
-        }, {
-            headers: {
-                'Authorization': `Bot ${botToken}`,
-                'Content-Type': 'application/json'
-            }
-        });
-        console.log(`User ${userId} added to guild ${guildId}`);
-    } catch (error) {
-        console.error('Error adding user to guild:', error);
-    }
-}
-
-// Function to assign a role to a user in a Discord guild
-async function assignDiscordRole(userId, guildId, roleId) {
-    const botToken = settings.discord.bot.token;
-    try {
-        await axios.put(`https://discord.com/api/guilds/${guildId}/members/${userId}/roles/${roleId}`, {}, {
-            headers: {
-                'Authorization': `Bot ${botToken}`,
-                'Content-Type': 'application/json'
-            }
-        });
-        console.log(`Role ${roleId} assigned to user ${userId} in guild ${guildId}`);
-    } catch (error) {
-        console.error('Error assigning role to user:', error);
-    }
-}
 
 //register process
 router.post('/register', async (req, res) => {
@@ -239,24 +138,16 @@ router.post('/register', async (req, res) => {
                 const userId = pteroUser.attributes.uuid;
                 await db.run('INSERT INTO users (username, email, password, first_name, last_name, pterodactyl_id) VALUES (?, ?, ?, ?, ?, ?)', [username, email, password, firstName, lastName, userId]);
                 req.session.user = { pterodactyl_id: userId, username }; 
-  
               res.redirect('/dashboard');
             } catch (registerError) {
                 logErrorToFile(`Error opening database: ${registerError}`);
                 return res.redirect('/register?error=Error registering user.');
-
-            }
-        });
+            }});
     } catch (error) {
         logErrorToFile(`Error in registration route: ${error}`);
         return res.redirect('/register?error=Error registering user.');
-
     }
 });
-
-
-
-
 //login process
 router.post('/login', (req, res) => {
     const { email, password } = req.body;
@@ -269,37 +160,22 @@ router.post('/login', (req, res) => {
             res.redirect('/dashboard');
         } else {
             return res.redirect('/?error=Invalid email or passwordr.');
-
-        }
-    });
-});
-//  
-
+ }});});
 app.use('/', router);
-
 //logout process
 app.get('/logout', (req, res) => {
     req.session.destroy((err) => {
         if (err) {
             logErrorToFile('Error destroying session:', err);
         } else {
-            res.redirect('/');
-        }
-    });
-});
-
-
-
-
-
-
-    //render appname and logo to oauth pages only
+            res.redirect('/'); 
+        }});});
+ //render appname and logo to oauth pages only
 Object.keys(oauthPages).forEach(page => {
     app.get(`/${page}`, (req, res) => {
         if (settings.webserver.Maintainance === true) {
             res.send('Sorry, the site is currently under maintenance. Please try again later.');
         }else{
-
         res.render(oauthPages[page], { 
             AppName: AppName, 
             AppLogo: AppImg, 
@@ -307,10 +183,6 @@ Object.keys(oauthPages).forEach(page => {
         });
  } });
 });
-
-
-
-
 // Load admin pages and values
 Object.keys(adminPages).forEach(page => {
     app.get(`/${page}`, async (req, res) => {
@@ -326,28 +198,21 @@ Object.keys(adminPages).forEach(page => {
                         logErrorToFile(`Error opening database: ${err.message}`);
                         return res.status(500).send('Database connection error');
                     }
-    
                     fs.readFile(LOG_FILE_PATH, 'utf8', (err, errorLogsData) => {
                         if (err) {
                             errorLogsData = 'Could not load error logs.';
                         }
-    
                         const errorLogsByDate = parseLogs(errorLogsData);
-    
                         fs.readFile(NORMAL_LOG_FILE_PATH, 'utf8', (err, normalLogsData) => {
                             if (err) {
                                 normalLogsData = 'Could not load normal logs.';
                             }
-    
                             const normalLogsByDate = parseNormalLogs(normalLogsData);
-    
-                            // Query the database to fetch the list of users
-                            db.all('SELECT * FROM Users', (err, users) => {
+                                db.all('SELECT * FROM Users', (err, users) => {
                                 if (err) {
                                     logErrorToFile(`Error fetching users from database: ${err.message}`);
                                     users = [];
                                 }
-    
                                 res.render(adminPages[page], { 
                                     user: req.session.user,
                                     AppName: AppName, 
@@ -357,7 +222,6 @@ Object.keys(adminPages).forEach(page => {
                                     normalLogs: normalLogsByDate,
                                     users: users 
                                 });
-    
                                 db.close((err) => {
                                     if (err) {
                                         logErrorToFile(`Error closing database: ${err.message}`);
@@ -376,10 +240,6 @@ Object.keys(adminPages).forEach(page => {
         }
     });
 });
-
-
-
-
 // render values to all pages
 Object.keys(pages).forEach((page) => {
     router.get(`/${page}`, async (req, res) => {
@@ -387,24 +247,14 @@ Object.keys(pages).forEach((page) => {
             if (!req.session.user || !req.session.user.pterodactyl_id) {
      
                 return res.redirect('/?error=Please Login Again.');
-
             }
-
             const userId = req.session.user.pterodactyl_id;
-
-            // Connect to the SQLite database
             const db = new sqlite3.Database(DB_FILE_PATH);
-
-            // Get user identifier using pterodactyl ID
             const userIdentifier = await getUserIdByUUID(userId);
             const userresources = await getUserResources(userId, db);
-            // Get user's servers count
             const userServersCount = await getUserServersCount(userIdentifier.id);
             const userServers = await getUserServers(userIdentifier.id);
-
-            // Get user's coins
             const coins = await getUserCoins(userId, db);
-
             res.render(pages[page], {
                 user: req.session.user,
                 userresources,
@@ -424,9 +274,7 @@ Object.keys(pages).forEach((page) => {
                 coins,
                 afktimer,
                 pterodactyldomain,
-                settings: settings
-
-                
+                settings: settings   
             });
             db.close();
         } catch (error) {
@@ -434,8 +282,6 @@ Object.keys(pages).forEach((page) => {
         }
     });
 });
-
-
 //Discord Login
 passport.use(new DiscordStrategy({
     clientID: settings.discord.clientID,
@@ -460,10 +306,15 @@ passport.use(new DiscordStrategy({
             const pteroUser = await registerPteroUser(profile.username, profile.email, password, firstName, lastName);
             if (!pteroUser) {
                 logErrorToFile(`Error: Failed to register user in panel. Connection Error`);
-
                 return done(new Error('Failed to register user in panel.'));
             }
-            const userId = pteroUser.attributes.uuid;
+            const userId = pteroUser.attributes ? pteroUser.attributes.uuid : pteroUser.uuid;
+            if (settings.discord.logging.status === true && settings.discord.logging.actions.user.signup === true) {
+                const message = `User logged in: ${profile.username}`;
+                const webhookUrl = settings.discord.logging.webhook; 
+                const color = 0x00FF00; 
+                sendDiscordWebhook(webhookUrl, message, color);
+            }
             await db.run('INSERT INTO users (username, email, password, first_name, last_name, pterodactyl_id) VALUES (?, ?, ?, ?, ?, ?)', [profile.username, profile.email, password, firstName, lastName, userId]);
             return done(null, profile);
         });
@@ -471,54 +322,29 @@ passport.use(new DiscordStrategy({
         return done(error); 
     }
 }));
-
 passport.serializeUser((user, done) => {
     done(null, user);
 });
-
 passport.deserializeUser((obj, done) => {
     done(null, obj);
 });
-
-
-
-
 // Discord login process
 app.get('/discord', passport.authenticate('discord'));
 app.get('/discord/callback', passport.authenticate('discord', { failureRedirect: '/' }), async (req, res) => {
     const { email, id: discordUserId, username: discordUsername, accessToken } = req.user;
-
     db.get('SELECT * FROM users WHERE email = ?', [email], async (err, row) => {
         if (err) {
             logErrorToFile('Error retrieving user details:', err);
-            return res.redirect('/');
-        }
-
-        if (settings.discord.logging.status === true && settings.discord.logging.actions.user.signup === true) {
-            const message = `User logged in: ${discordUsername}`;
-            const webhookUrl = settings.discord.logging.webhook; // Make sure this is set in your settings
-            const color = 0x00FF00; // Green color in hexadecimal
-            sendDiscordWebhook(webhookUrl, message, color);
-        }
-
+            return res.redirect('/'); }
         if (settings.discord.bot.joinguild.enabled === true) {
             await joinDiscordGuild(discordUserId, accessToken);
-
-
         if (settings.discord.bot.giverole.enabled === true) {
             const guildId = settings.discord.bot.giverole.guildid;
             const roleId = settings.discord.bot.giverole.roleid;
-            await assignDiscordRole(discordUserId, guildId, roleId);
-        }
-        }
+            await assignDiscordRole(discordUserId, guildId, roleId);  } }
         req.session.user = row;
         res.redirect('/dashboard');
-    });
-});
-
-
-
-
+    });});
 // Pteropassword reset
 router.get('/resetptero', async (req, res) => {
     try {
@@ -545,32 +371,7 @@ router.get('/resetptero', async (req, res) => {
         console.log('updating password in panel:');
     } catch (error) {  
     logErrorToFile(`Error resetting password in Pterodactyl panel for user:${userId} `);
-         return res.redirect('settings?error=Error resetting password.');
-
-    }
-});
-
-
-
-
-
-
-
-//Websocket Config
-const WebSocket = require('ws');
-const wss = new WebSocket.Server({ port: 8080 });
-const activeConnections = new Map();
-
-
-
-// Function to update user's coins in the database
-function updateUserCoins(userId, reward) {
-    db.run(`UPDATE users SET coins = coins + ${reward} WHERE pterodactyl_id = ?`, [userId], (err) => {
-        if (err) {
-            logErrorToFile(`Error updating coins for user ${userId}: ${err.message}`);
-        } 
-    });
-}
+         return res.redirect('settings?error=Error resetting password.');}});
 
 
 
@@ -600,7 +401,7 @@ wss.on('connection', function connection(ws, req) {
     }
     ws.on('message', function incoming(message) {
         const reward = settings.afk.coins;
-        updateUserCoins(userId, reward);
+        updateUserCoins(userId, reward, db);
     });
     ws.on('close', function close() {
         const pageSet = activeConnections.get(userId);
@@ -612,12 +413,6 @@ wss.on('connection', function connection(ws, req) {
         }
     });
 });
-
-
-
-
-
-
 
 //YouTube Reward 
 router.get('/watchvideo', async (req, res) => {
@@ -659,15 +454,10 @@ router.get('/watchvideo', async (req, res) => {
     }
 });
 
-
-
-
-
 app.use((req, res, next) => {
     res.setHeader('Permissions-Policy', 'document-domain "self" https://www.youtube.com');
     next();
 });
-
 //function to insert link after the user watch the video
 router.post('/insertlink', async (req, res) => {
     try {
@@ -679,7 +469,7 @@ router.post('/insertlink', async (req, res) => {
 
             }
             const reward = settings.youtube.coins;
-            updateUserCoins(userId, reward);
+            updateUserCoins(userId, reward, db);
             res.status(200).send('Coins Rewarded');
             return res.redirect('/youtube?success=Coins Rewarded');
 
@@ -692,81 +482,8 @@ router.post('/insertlink', async (req, res) => {
 });
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-async function fetchAllocations(locationId) {
-    try {
-        // Fetch nodes
-        const response = await fetch(`${settings.pterodactyl.domain}/api/application/nodes`, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${settings.pterodactyl.key}`
-            }
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Failed to fetch nodes: ${errorText}`);
-        }
-
-        const nodesData = await response.json();
-        const nodes = nodesData.data;
-
-        // Find the node matching the location ID
-        const node = nodes.find(node => node.attributes.location_id === locationId);
-
-        if (!node) {
-            throw new Error('Node not found for the given location ID');
-        }
-
-        // Fetch allocations for the node
-        const allocationsResponse = await fetch(`${settings.pterodactyl.domain}/api/application/nodes/${node.attributes.id}/allocations`, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${settings.pterodactyl.key}`
-            }
-        });
-
-        if (!allocationsResponse.ok) {
-            const errorText = await allocationsResponse.text();
-            throw new Error(`Failed to fetch allocations for the node: ${errorText}`);
-        }
-
-        const allocationsData = await allocationsResponse.json();
-        const allocations = allocationsData.data;
-
-        // Find the first allocation that is not assigned
-        const notAssignedAllocation = allocations.find(allocation => !allocation.attributes.assigned);
-
-        if (!notAssignedAllocation) {
-            throw new Error('No unassigned allocation found for the node');
-        }
-
-        return notAssignedAllocation.attributes.id;
-    } catch (error) {
-        console.error('Error fetching allocations:', error);
-        throw error;
-    }
-}
-
-
-
 // Function to create server
+
 router.post('/createserver', async (req, res) => {
     if (settings.webserver.server_creation === false) {
         return res.redirect('/manage?alert=Sorry, Server Creation Not Enabled');
@@ -807,14 +524,12 @@ router.post('/createserver', async (req, res) => {
             if (port > availablePorts) {
                 return res.redirect('/manage?info=You don\'t have enough available ports to create the server.');
             }
-
             const eggKey = req.body.egg;
             const locationKey = req.body.locations;
             const eggConfig = settings.eggs[eggKey];
             const locationsConfig = settings.locations[locationKey];
             const locationId = locationsConfig.id;
             let allocationId;
-
             try {
                 allocationId = await fetchAllocations(locationId);
             } catch (error) {
@@ -826,7 +541,6 @@ router.post('/createserver', async (req, res) => {
                 }
                 return res.redirect('/manage?error=Error fetching allocations.');
             }
-
             const serverConfig = {
                 name: name,
                 user: uuid.id,
@@ -850,7 +564,6 @@ router.post('/createserver', async (req, res) => {
                     default: allocationId
                 }
             };
-
             const response = await fetch(`${settings.pterodactyl.domain}/api/application/servers`, {
                 method: 'POST',
                 headers: {
@@ -860,7 +573,6 @@ router.post('/createserver', async (req, res) => {
                 },
                 body: JSON.stringify(serverConfig)
             });
-
             if (response.ok) {
                 if (settings.discord.logging.status === true && settings.discord.logging.actions.user.create_server === true) {
                     const message = `User Created Server:\nName: ${name}\nCPU: ${cpu} cores\nRAM: ${ram} MB\nDisk: ${disk} MB\nDatabases: ${database}\nBackups: ${backup}\nPorts: ${port}`;
@@ -879,20 +591,12 @@ router.post('/createserver', async (req, res) => {
         }
     }
 });
-
-
-
-
-
-
 //delete ptero server
-// Route to handle server deletion
 router.get('/delete', async (req, res) => {
     const serverId = req.query.id; // Retrieve the server ID from the query string
     if (!serverId) {
         return res.redirect('/manage?error=No server ID provided.');
     }
-
     try {
         const response = await fetch(`${settings.pterodactyl.domain}/api/application/servers/${serverId}`, {
             method: 'DELETE',
@@ -902,7 +606,6 @@ router.get('/delete', async (req, res) => {
                 'Authorization': `Bearer ${settings.pterodactyl.key}`
             }
         });
-
         if (response.status === 204) {
             // Server deleted successfully
             return res.redirect('/manage?success=Server deleted successfully.');
@@ -916,13 +619,7 @@ router.get('/delete', async (req, res) => {
     }
 });
 
-
-
-
-
-
-//pending
-
+//Update user servers
 app.post('/updateserver', (req, res) => {
     const serverId = parseInt(req.body.id);
     const serverIndex = servers.findIndex(s => s.id === serverId);
@@ -934,13 +631,6 @@ app.post('/updateserver', (req, res) => {
     }
   });
   
-  
-
-
-
-  
-
-
 
 // Buy Resources  
 router.post('/byresources', (req, res) => {
@@ -952,12 +642,9 @@ router.post('/byresources', (req, res) => {
             res.send('Error authenticating user.');
             return;
         }
-        
         if (!row) {
             return res.redirect('store?error=Invalid User.');
         }
-
-        // Calculate the costs based on the request
         const costs = {
             servers: servers * settings.store.servers.cost,
             cpu: cpu * settings.store.cpu.cost,
@@ -967,27 +654,18 @@ router.post('/byresources', (req, res) => {
             database: database * settings.store.database.cost,
             backup: backup * settings.store.backup.cost
         };
-
-        // Determine which resource is being purchased
         const selectedResource = Object.keys(req.body).find(key => req.body[key] && req.body[key] !== '0');
-
-        // Check if the selected resource is valid
         if (!selectedResource || !settings.store[selectedResource]) {
             return res.redirect('store?error=Invalid selection.');
         }
-
         const totalCost = costs[selectedResource];
-
         if (row.coins < totalCost) {
             return res.redirect('store?error=Not enough coins.');
         }
-
-        // Update the user's coins and resources
         const updates = {
             coins: row.coins - totalCost,
             [`${selectedResource}`]: (row[`${selectedResource}`] || 0) + parseInt(req.body[selectedResource]) * settings.store[selectedResource].per
         };
-
         db.run(
             'UPDATE users SET coins = ?, ' + `${selectedResource}` + ' = ? WHERE pterodactyl_id = ?', 
             [updates.coins, updates[`${selectedResource}`], req.session.user.pterodactyl_id], 
@@ -1004,15 +682,29 @@ router.post('/byresources', (req, res) => {
     });
 });
 
+router.post('/addresources', (req, res) => {
+    const { username, amount, resourceType } = req.body;
+    const allowedResources = ['coins', 'cpu', 'ram', 'disk', 'servers', 'ports', 'database', 'backup'];
 
+    if (!allowedResources.includes(resourceType)) {
+        return res.status(400).send('Invalid resource type.');
+    }
 
+    const query = `UPDATE users SET ${resourceType} = ? WHERE username = ?`;
+    db.run(query, [amount, username], (updateErr) => {
+        if (updateErr) {
+            console.error(updateErr);
+            return res.status(500).send('Error updating resources.');
+        }
 
+        db.get('SELECT * FROM users WHERE username = ?', [username], (err, row) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send('Error fetching updated user data.');
+            }
 
-
-
-
-
-
-
-
-
+            req.session.user = { ...row };
+            res.redirect('/resources?success=Successfully purchased.');
+        });
+    });
+});

@@ -28,9 +28,9 @@ async function registerPteroUser(username, email, password, firstName, lastName)
             if (error.response.status === 422 && error.response.data.errors && error.response.data.errors.length > 0) {
                 // Check if the error is due to duplicate email or username
                 const errorMessage = error.response.data.errors[0].detail;
-                if (errorMessage.includes('email')) {
-                    // Return null to indicate registration failure
-                    return null;
+                if (errorMessage.includes('email') || errorMessage.includes('username')) {
+                    // Return the existing user data
+                    return await getPteroUserByEmail(email);
                 }
             }
             console.error('Error registering user in Pterodactyl:', error.response.status);
@@ -44,6 +44,29 @@ async function registerPteroUser(username, email, password, firstName, lastName)
         }
         return null; // Return null indicating registration failed
     }
+}
+
+// Function to get existing user by email
+async function getPteroUserByEmail(email) {
+    try {
+        const response = await axios.get(`${settings.pterodactyl.domain}/api/application/users`, {
+            params: {
+                filter: {
+                    email: email
+                }
+            },
+            headers: {
+                'Authorization': `Bearer ${settings.pterodactyl.key}`,
+                'Content-Type': 'application/json',
+            },
+        });
+        if (response.data.data.length > 0) {
+            return response.data.data[0]; // Return the first matched user
+        }
+    } catch (error) {
+        console.error('Error fetching user by email from Pterodactyl:', error.message);
+    }
+    return null;
 }
 
 module.exports = { registerPteroUser };

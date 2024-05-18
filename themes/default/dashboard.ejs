@@ -21,27 +21,34 @@
 
   <main>
     <%- include('./includes/status') %>
-    <section class="container">
+    <section class="card-container">
       <h2>User Servers</h2>
       <div class="server-list">
         <% userServers.forEach(server => { %>
+          <center>
         <div class="server-card">
           <p>Server Name: <%= server.name %></p>
-          <p>Description: <%= server.description %></p>
-          <p>Ram: <%= server.ram %></p>
+          <p>Ram:<%= server.ram %></p>
           <p>Disk: <%= server.disk %></p>
           <p>Cpu: <%= server.cpu %></p>
           <p>Ports: <%= server.ports %></p>
           <p>Databases: <%= server.database %></p>
           <p>Status: <%= server.suspended ? 'Suspended' : 'Active' %></p>
           <button onclick="window.location.href='./manage?id=<%= server.identifier %>'">Manage</button>
-
-
-
         </div>
+        </center>
         <% }); %>
       </div>
     </section>
+    <style>
+      /* Modern Theme for Server Cards */
+      .card-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      </style>
 <%- include('./includes/ads/ad-1') %>
 <%- include('./includes/ads/ad-2') %>
 </div>
