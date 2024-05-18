@@ -132,7 +132,11 @@
           "per": 1
         },
 
-
+        "renewals": {
+          "status": true,
+          "cost": 0,
+          "delay": 14
+        },
         
      "storelimits": {
           "ram": "8192",

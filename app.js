@@ -94,6 +94,8 @@ app.set('views', path.join(__dirname, `./themes/${theme}`));
 db.serialize(() => {
     db.run("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT, password TEXT, email TEXT, first_name TEXT, last_name TEXT, pterodactyl_id TEXT, servers INTEGER DEFAULT 0, ports INTEGER DEFAULT 0, ram INTEGER DEFAULT 0, disk INTEGER DEFAULT 0, cpu INTEGER DEFAULT 0, database INTEGER DEFAULT 0, backup INTEGER DEFAULT 0, coins INTEGER DEFAULT 0)");
     db.run("CREATE TABLE IF NOT EXISTS youtube (id INTEGER, yt_link TEXT)");
+    db.run(`CREATE TABLE IF NOT EXISTS renewals (id INTEGER PRIMARY KEY AUTOINCREMENT, serverId TEXT NOT NULL,next_renewal DATETIME NOT NULL, status TEXT DEFAULT 'active')`);
+  
 });
 //Load Theme 
 const pagesConfig = JSON.parse(fs.readFileSync(`./themes/${theme}/pages.json`));
@@ -482,8 +484,172 @@ router.post('/insertlink', async (req, res) => {
 });
 
 
-// Function to create server
+// Function to Renewal
+const getCurrentDateFormatted = () => {
+    const now = new Date();
+    const month = pad(now.getMonth() + 1, 2);
+    const day = pad(now.getDate(), 2);
+    const year = now.getFullYear();
+    const hour = pad(now.getHours(), 2);
+    const minute = pad(now.getMinutes(), 2);
+    const second = pad(now.getSeconds(), 2);
+    return `${day}:${month}:${year}:${hour}:${minute}:${second}`;};
 
+const pad = (num, size) => {
+    return ('0' + num).slice(-size);
+};
+
+
+const checkAndSuspendExpiredServers = async () => {
+    if (!settings.store.renewals.status) {
+        console.log('Renewals feature is disabled. Skipping check.');
+        return;
+    }
+
+    try {
+        const currentDate = getCurrentDateFormatted();
+
+        const expiredServers = await new Promise((resolve, reject) => {
+            db.all(`SELECT serverId FROM renewals WHERE next_renewal < ? AND status = 'active'`, [currentDate], (err, rows) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(rows);
+                }
+            });
+        });
+
+        if (!Array.isArray(expiredServers)) {
+            throw new TypeError('Expected an array of expired servers');
+        }
+        for (const server of expiredServers) {
+            try {
+                const response = await fetch(`${settings.pterodactyl.domain}/api/application/servers/${server.serverId}/suspend`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${settings.pterodactyl.key}`
+                    }
+                });
+                if (response.ok) {
+                    
+                    await new Promise((resolve, reject) => {
+                        db.run(`UPDATE renewals SET status = 'suspended' WHERE serverId = ?`, [server.serverId], (err) => {
+                            if (err) {
+                                reject(err);
+                            } else {
+                                resolve();
+                            }
+                        });
+                    });
+                } else {
+                    const errorMessage = await response.text();
+                    console.error(`Error suspending server ${server.serverId}:`, errorMessage);
+                }
+            } catch (error) {
+                console.error(`Error suspending server ${server.serverId}:`, error);
+            }
+        }
+    } catch (error) {
+        console.error('Error checking for expired servers:', error);
+    }
+};
+
+setInterval(checkAndSuspendExpiredServers, 60000);
+
+
+
+router.get('/renew', async (req, res) => {
+    if (!settings.store.renewals.status) {
+        return res.redirect('/manage?error=Server renewal feature is currently disabled.');
+    }
+
+    try {
+        const serverId = req.query.id;
+        if (!serverId) {
+            return res.redirect('/manage?error=No server ID provided for renewal.');
+        }
+
+        const userId = req.session.user.pterodactyl_id;
+        const coins = await getUserCoins(userId, db);
+
+        // Check if user has sufficient coins
+        const cost = settings.store.renewals.cost;
+        if (coins < cost) {
+            return res.redirect('/manage?error=Insufficient coins for renewal.');
+        }
+
+const nextRenewalDate = new Date();
+nextRenewalDate.setDate(nextRenewalDate.getDate() + settings.store.renewals.days);
+nextRenewalDate.setHours(nextRenewalDate.getHours() + settings.store.renewals.hour);
+nextRenewalDate.setMinutes(nextRenewalDate.getMinutes() + settings.store.renewals.minute);
+const formattedRenewalDate = formatDate(nextRenewalDate);
+
+function formatDate(date) {
+    const day = pad(date.getDate(), 2);
+    const month = pad(date.getMonth() + 1, 2);
+    const year = date.getFullYear();
+    const hour = pad(date.getHours(), 2);
+    const minute = pad(date.getMinutes(), 2);
+    const second = pad(date.getSeconds(), 2);
+    return `${day}:${month}:${year}:${hour}:${minute}:${second}`;}
+
+await new Promise((resolve, reject) => {
+    db.run(
+        `UPDATE renewals SET next_renewal = ?, status = 'active' WHERE serverId = ?`,
+        [formattedRenewalDate, serverId],
+        (err) => {
+            if (err) {
+                return reject(err);
+            }
+            resolve();
+        }
+    );
+});
+
+        const unsuspendResponse = await fetch(`${settings.pterodactyl.domain}/api/application/servers/${serverId}/unsuspend`, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${settings.pterodactyl.key}`
+            }
+        });
+
+        if (unsuspendResponse.ok) {
+            console.log(`Server ${serverId} unsuspended successfully.`);
+        } else {
+            const errorMessage = await unsuspendResponse.text();
+            console.error(`Error unsuspending server ${serverId}:`, errorMessage);
+        }
+
+        await new Promise((resolve, reject) => {
+            db.run(
+                `UPDATE users SET coins = coins - ? WHERE pterodactyl_id = ?`,
+                [cost, userId],
+                (err) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    resolve();
+                }
+            );
+        });
+
+        return res.redirect('/manage?success=Server renewed successfully.');
+    } catch (error) {
+        console.error('Error renewing server:', error);
+        return res.redirect('/manage?error=Internal server error.');
+    }
+});
+
+
+
+
+
+
+// Function to create server 
 router.post('/createserver', async (req, res) => {
     if (settings.webserver.server_creation === false) {
         return res.redirect('/manage?alert=Sorry, Server Creation Not Enabled');
@@ -574,6 +740,33 @@ router.post('/createserver', async (req, res) => {
                 body: JSON.stringify(serverConfig)
             });
             if (response.ok) {
+                const serverData = await response.json();
+                const serverId = serverData.attributes.id;
+  // Calculate next renewal date based on settings
+const nextRenewalDate = new Date();
+nextRenewalDate.setDate(nextRenewalDate.getDate() + settings.store.renewals.days);
+nextRenewalDate.setHours(nextRenewalDate.getHours() + settings.store.renewals.hour);
+nextRenewalDate.setMinutes(nextRenewalDate.getMinutes() + settings.store.renewals.minute);
+const formattedRenewalDate = formatDate(nextRenewalDate);
+
+// Function to format date as dd:mm:yy:h:m:s
+function formatDate(date) {
+    const day = pad(date.getDate(), 2);
+    const month = pad(date.getMonth() + 1, 2);
+    const year = date.getFullYear();
+    const hour = pad(date.getHours(), 2);
+    const minute = pad(date.getMinutes(), 2);
+    const second = pad(date.getSeconds(), 2);
+    return `${day}:${month}:${year}:${hour}:${minute}:${second}`;
+}
+
+
+                await db.run(
+                    `INSERT INTO renewals (serverId, next_renewal) VALUES (?, ?)`,
+                    [serverId, formattedRenewalDate]
+                );
+                console.log(formattedRenewalDate);
+
                 if (settings.discord.logging.status === true && settings.discord.logging.actions.user.create_server === true) {
                     const message = `User Created Server:\nName: ${name}\nCPU: ${cpu} cores\nRAM: ${ram} MB\nDisk: ${disk} MB\nDatabases: ${database}\nBackups: ${backup}\nPorts: ${port}`;
                     const color = 0x00FF00; // Green color in hexadecimal
@@ -591,7 +784,11 @@ router.post('/createserver', async (req, res) => {
         }
     }
 });
-//delete ptero server
+
+
+
+
+// delete ptero server
 router.get('/delete', async (req, res) => {
     const serverId = req.query.id; // Retrieve the server ID from the query string
     if (!serverId) {
@@ -606,9 +803,16 @@ router.get('/delete', async (req, res) => {
                 'Authorization': `Bearer ${settings.pterodactyl.key}`
             }
         });
+
         if (response.status === 204) {
-            // Server deleted successfully
-            return res.redirect('/manage?success=Server deleted successfully.');
+            // Server deleted successfully from Pterodactyl
+            try {
+                await db.run(`DELETE FROM renewals WHERE serverId = ?`, [serverId]);
+                return res.redirect('/manage?success=Server and renewal record deleted successfully.');
+            } catch (dbError) {
+                console.error('Error deleting renewal record:', dbError);
+                return res.redirect('/manage?error=Server deleted but failed to delete renewal record.');
+            }
         } else {
             // Error deleting server
             return res.redirect('/manage?error=Error deleting server.');
@@ -618,6 +822,7 @@ router.get('/delete', async (req, res) => {
         return res.redirect('/manage?error=Internal server error.');
     }
 });
+
 
 //Update user servers
 app.post('/updateserver', (req, res) => {

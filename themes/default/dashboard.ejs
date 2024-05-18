@@ -35,6 +35,9 @@
           <p>Databases: <%= server.database %></p>
           <p>Status: <%= server.suspended ? 'Suspended' : 'Active' %></p>
           <button onclick="window.location.href='./manage?id=<%= server.identifier %>'">Manage</button>
+          <% if (settings.store.renewals.status == true) { %>
+          <button onclick="window.location.href='./renew?id=<%= server.id %>'">Renew</button>
+          <% } %>
         </div>
         </center>
         <% }); %>
