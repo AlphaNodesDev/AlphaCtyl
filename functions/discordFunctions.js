@@ -32,7 +32,6 @@ async function joinDiscordGuild(discordUserId, accessToken) {
                     'Content-Type': 'application/json',
                 },
             });
-
             if (response.status !== 204) {
                 console.error(`Error adding user to guild ${guildId}: ${response.status} - ${response.statusText}`);
                 console.error(response.data); // Log response data for further insights
