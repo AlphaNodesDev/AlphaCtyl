@@ -54,25 +54,28 @@
           });
         }
       
-          function onPlayerStateChange(event) {
-            if (event.data == YT.PlayerState.ENDED) {
-              console.log('Video ended');
-              $.ajax({
-                type: 'POST',
-                url: 'insertlink',
-                data: {
-                  userId: '<%= user.pterodactyl_id %>',
-                  link: '<%= link %>'
-                },
-                success: function(response) {
-                  console.log(response);
-                },
-                error: function(xhr, status, error) {
-                  console.error('Failed to insert link into the database:', error);
-                }
-              });
+        function onPlayerStateChange(event) {
+    if (event.data == YT.PlayerState.ENDED) {
+        console.log('Video ended');
+        $.ajax({
+            type: 'POST',
+            url: 'insertlink',
+            data: {
+                userId: '<%= user.pterodactyl_id %>',
+                link: '<%= link %>'
+            },
+            success: function(response) {
+                console.log(response);
+                // Redirect to /youtube?success=Coins Rewarded on success
+                window.location.href = '/youtube?success=Coins Rewarded';
+            },
+            error: function(xhr, status, error) {
+                console.error('Failed to insert link into the database:', error);
             }
-          }
+        });
+    }
+}
+
         <% } %>
       </script>
       <script src="https://www.youtube.com/iframe_api"></script>

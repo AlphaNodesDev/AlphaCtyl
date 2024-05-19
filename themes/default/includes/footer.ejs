@@ -10,7 +10,6 @@
       </label>
     </div>
   </footer>
-  <script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.bundle.js'></script><script  src="./script.js"></script>
 
   <script>
     document.addEventListener("DOMContentLoaded", function() {
@@ -58,22 +57,3 @@
 
   
   </script>
-<script>
-      
-  window.onload = function() {
-    const error = "<%= typeof(error) !== 'undefined' ? error : '' %>";
-    if (error) {
-      document.getElementById('errorMessage').innerText = error;
-      document.getElementById('errorModal').style.display = 'block';
-    }
-  }
-
-  
-  const closeModal = document.querySelector('.close');
-  if (closeModal) {
-    closeModal.addEventListener('click', () => {
-      document.getElementById('errorModal').style.display = 'none';
-    });
-  }
-  
-</script>

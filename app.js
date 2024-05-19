@@ -115,9 +115,6 @@ const { logErrorToFile, logNormalToFile, parseLogs, parseNormalLogs } = require(
 const { joinDiscordGuild, sendDiscordWebhook, assignDiscordRole } = require('./functions/discordFunctions.js'); 
 const { updateUserCoins } = require('./functions/updateUserCoins.js'); 
 const { fetchAllocations } = require('./functions/fetchAllocations.js'); 
-
-
-
 app.use('/', router);
 //logout process
 app.get('/logout', (req, res) => {
@@ -239,9 +236,6 @@ Object.keys(pages).forEach((page) => {
         }
     });
 });
-
-
-
 // Discord Login Strategy
 passport.use(new DiscordStrategy({
     clientID: settings.discord.clientID,
@@ -270,29 +264,24 @@ passport.use(new DiscordStrategy({
         }
                 return done(null, { ...row, accessToken });
             }
-            
             const firstName = profile.username.split('#')[0];
             const lastName = profile.username.split('#')[0];
             const password = randomstring.generate({
                 length: 10,
                 charset: 'alphanumeric'
             });
-
             const pteroUser = await registerPteroUser(profile.username, profile.email, password, firstName, lastName);
             if (!pteroUser) {
                 logErrorToFile(`Error: Failed to register user in panel. Connection Error`);
                 return done(new Error('Failed to register user in panel.'));
             }
-
             const userId = pteroUser.attributes ? pteroUser.attributes.uuid : pteroUser.uuid;
-
             if (settings.discord.logging.status === true && settings.discord.logging.actions.user.signup === true) {
                 const message = `User logged in: ${profile.username}`;
                 const webhookUrl = settings.discord.logging.webhook; 
                 const color = 0x00FF00; 
                 sendDiscordWebhook(webhookUrl, message, color);
             }
-            
         if (settings.discord.bot.joinguild.enabled === true) {
             try {
                 const discordUserId = profile.id;
@@ -306,7 +295,6 @@ passport.use(new DiscordStrategy({
                 return res.status(error.response.status || 500).json(error.response.data);
             }
         }
-
             await db.run('INSERT INTO users (id, username, email, password, first_name, last_name, pterodactyl_id) VALUES (?, ?, ?, ?, ?, ?, ?)', 
                 [profile.id, profile.username, profile.email, password, firstName, lastName, userId]);
 
@@ -316,15 +304,12 @@ passport.use(new DiscordStrategy({
         return done(error); 
     }
 }));
-
 passport.serializeUser((user, done) => {
     done(null, user);
 });
-
 passport.deserializeUser((user, done) => {
     done(null, user);
 });
-
 // Discord login process
 app.get('/discord', passport.authenticate('discord'));
 app.get('/discord/callback', passport.authenticate('discord', { failureRedirect: '/' }), async (req, res) => {
@@ -341,9 +326,6 @@ app.get('/discord/callback', passport.authenticate('discord', { failureRedirect:
         res.redirect('/dashboard');
     });
 });
-
-
-
 // Pteropassword reset
 router.get('/resetptero', async (req, res) => {
     try {
@@ -371,10 +353,6 @@ router.get('/resetptero', async (req, res) => {
     } catch (error) {  
     logErrorToFile(`Error resetting password in Pterodactyl panel for user:${userId} `);
          return res.redirect('settings?error=Error resetting password.');}});
-
-
-
-
 //Functions To check for websocket connections
 wss.on('connection', function connection(ws, req) {
     const urlParams = new URLSearchParams(req.url.split('?')[1]);
@@ -412,7 +390,6 @@ wss.on('connection', function connection(ws, req) {
         }
     });
 });
-
 //YouTube Reward 
 router.get('/watchvideo', async (req, res) => {
     try {
@@ -452,7 +429,6 @@ router.get('/watchvideo', async (req, res) => {
 
     }
 });
-
 app.use((req, res, next) => {
     res.setHeader('Permissions-Policy', 'document-domain "self" https://www.youtube.com');
     next();
@@ -470,7 +446,6 @@ router.post('/insertlink', async (req, res) => {
             const reward = settings.youtube.coins;
             updateUserCoins(userId, reward, db);
             res.status(200).send('Coins Rewarded');
-            return res.redirect('/youtube?success=Coins Rewarded');
 
         });
     } catch (error) {
@@ -479,8 +454,6 @@ router.post('/insertlink', async (req, res) => {
 
     }
 });
-
-
 // Function to Suspend servers 
 const checkAndSuspendExpiredServers = async () => {
     if (!settings.store.renewals.status) {
@@ -552,8 +525,6 @@ const pad = (num, size) => {
 };
 
 setInterval(checkAndSuspendExpiredServers, 60000);
-
-
 //functions to renew 
 router.get('/renew', async (req, res) => {
     if (!settings.store.renewals.status) {
@@ -602,7 +573,6 @@ await new Promise((resolve, reject) => {
         }
     );
 });
-
         const unsuspendResponse = await fetch(`${settings.pterodactyl.domain}/api/application/servers/${serverId}/unsuspend`, {
             method: 'POST',
             headers: {
@@ -638,12 +608,6 @@ await new Promise((resolve, reject) => {
         return res.redirect('/manage?error=Internal server error.');
     }
 });
-
-
-
-
-
-
 // Function to create server 
 router.post('/createserver', async (req, res) => {
     if (settings.webserver.server_creation === false) {
@@ -743,7 +707,6 @@ nextRenewalDate.setDate(nextRenewalDate.getDate() + settings.store.renewals.days
 nextRenewalDate.setHours(nextRenewalDate.getHours() + settings.store.renewals.hour);
 nextRenewalDate.setMinutes(nextRenewalDate.getMinutes() + settings.store.renewals.minute);
 const formattedRenewalDate = formatDate(nextRenewalDate);
-
 // Function to format date as dd:mm:yy:h:m:s
 function formatDate(date) {
     const day = pad(date.getDate(), 2);
@@ -754,8 +717,6 @@ function formatDate(date) {
     const second = pad(date.getSeconds(), 2);
     return `${day}:${month}:${year}:${hour}:${minute}:${second}`;
 }
-
-
                 await db.run(
                     `INSERT INTO renewals (serverId, next_renewal) VALUES (?, ?)`,
                     [serverId, formattedRenewalDate]
@@ -779,10 +740,6 @@ function formatDate(date) {
         }
     }
 });
-
-
-
-
 // delete ptero server
 router.get('/delete', async (req, res) => {
     const serverId = req.query.id; // Retrieve the server ID from the query string
@@ -798,7 +755,6 @@ router.get('/delete', async (req, res) => {
                 'Authorization': `Bearer ${settings.pterodactyl.key}`
             }
         });
-
         if (response.status === 204) {
             // Server deleted successfully from Pterodactyl
             try {
@@ -817,8 +773,6 @@ router.get('/delete', async (req, res) => {
         return res.redirect('/manage?error=Internal server error.');
     }
 });
-
-
 //Update user servers
 app.post('/updateserver', (req, res) => {
     const serverId = parseInt(req.body.id);
@@ -830,8 +784,6 @@ app.post('/updateserver', (req, res) => {
       res.status(404).send('Server not found');
     }
   });
-  
-
 // Buy Resources  
 router.post('/byresources', (req, res) => {
     const { servers, cpu, ram, disk, ports, database, backup } = req.body;
@@ -881,7 +833,6 @@ router.post('/byresources', (req, res) => {
         );
     });
 });
-
 router.post('/addresources', (req, res) => {
     const { username, amount, resourceType } = req.body;
     const allowedResources = ['coins', 'cpu', 'ram', 'disk', 'servers', 'ports', 'database', 'backup'];
@@ -889,20 +840,17 @@ router.post('/addresources', (req, res) => {
     if (!allowedResources.includes(resourceType)) {
         return res.status(400).send('Invalid resource type.');
     }
-
     const query = `UPDATE users SET ${resourceType} = ? WHERE username = ?`;
     db.run(query, [amount, username], (updateErr) => {
         if (updateErr) {
             console.error(updateErr);
             return res.status(500).send('Error updating resources.');
         }
-
         db.get('SELECT * FROM users WHERE username = ?', [username], (err, row) => {
             if (err) {
                 console.error(err);
                 return res.status(500).send('Error fetching updated user data.');
             }
-
             req.session.user = { ...row };
             res.redirect('/resources?success=Successfully purchased.');
         });

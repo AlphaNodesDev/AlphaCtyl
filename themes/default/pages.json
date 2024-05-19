@@ -1,8 +1,7 @@
 {
 
     "oauth":{
-        "/": "index.ejs",
-        "register": "register.ejs"
+        "/": "index.ejs"
     },
     "pages": {
         "dashboard": "dashboard.ejs",
