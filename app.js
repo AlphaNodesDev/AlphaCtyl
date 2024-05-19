@@ -1,7 +1,6 @@
 const express = require('express');
 const session = require('express-session');
 const passport = require('passport');
-const axios = require('axios');
 const version = "1.0.0";
 const DiscordStrategy = require('passport-discord').Strategy;
 const bodyParser = require('body-parser');
@@ -15,6 +14,7 @@ const router = express.Router();
 const settings = JSON.parse(fs.readFileSync('settings.json'));
 const DB_FILE_PATH = settings.database;
 const PORT = process.env.PORT || settings.website.port;
+const WEBSOCKET_PORT = settings.afk.websocket.port
 const DOMAIN = settings.website.domain;
 const theme = settings.defaulttheme;
 const randomstring = require('randomstring');
@@ -46,7 +46,7 @@ const { Client, GatewayIntentBits } = require('discord.js');
 const db = new sqlite3.Database(DB_FILE_PATH);
 //Websocket Config
 const WebSocket = require('ws');
-const wss = new WebSocket.Server({ port: 8080 });
+const wss = new WebSocket.Server({ port: WEBSOCKET_PORT });
 const activeConnections = new Map();
 const client = new Client({
     intents: [
@@ -111,10 +111,13 @@ const { getUserIdByUUID, getUserServersCount, getUserServers } = require('./api/
 const { getUserCoins } = require('./api/getuserCoins.js');
 const { getUserResources } = require('./api/getuseresources.js');
 const { updatePasswordInPanel } = require('./api/updatePasswordInPanel.js'); 
+
 const { logErrorToFile, logNormalToFile, parseLogs, parseNormalLogs } = require('./functions/saveLogs.js'); 
 const { joinDiscordGuild, sendDiscordWebhook, assignDiscordRole } = require('./functions/discordFunctions.js'); 
 const { updateUserCoins } = require('./functions/updateUserCoins.js'); 
 const { fetchAllocations } = require('./functions/fetchAllocations.js'); 
+
+
 app.use('/', router);
 //logout process
 app.get('/logout', (req, res) => {
@@ -124,6 +127,7 @@ app.get('/logout', (req, res) => {
         } else {
             res.redirect('/'); 
         }});});
+
  //render appname and logo to oauth pages only
 Object.keys(oauthPages).forEach(page => {
     app.get(`/${page}`, (req, res) => {
@@ -194,27 +198,40 @@ Object.keys(adminPages).forEach(page => {
         }
     });
 });
+
+
+
 // render values to all pages
 Object.keys(pages).forEach((page) => {
     router.get(`/${page}`, async (req, res) => {
+        if (!req.session.user || !req.session.user.id) {
+            return res.redirect('/?error=Please Login Again.');
+        }
+
         try {
-            if (!req.session.user.id) {
-     
-                return res.redirect('/?error=Please Login Again.');
-            }
             const userId = req.session.user.pterodactyl_id;
             const db = new sqlite3.Database(DB_FILE_PATH);
-            const userIdentifier = await getUserIdByUUID(userId);
-            const userresources = await getUserResources(userId, db);
-            const userServersCount = await getUserServersCount(userIdentifier.id);
-            const userServers = await getUserServers(userIdentifier.id);
-            const coins = await getUserCoins(userId, db);
+
+            // Use Promise.all to handle multiple asynchronous operations
+            const [userIdentifier , userresources, userServersCount, userServers, coins] = await Promise.all([
+                getUserIdByUUID(userId),
+                getUserResources(userId, db),
+                getUserServersCount(userId),
+                getUserServers(userId),
+                getUserCoins(userId, db)
+  
+            ]);
+
+            db.close();
+
             res.render(pages[page], {
                 user: req.session.user,
+                WEBSOCKET_PORT,
                 userresources,
                 userServersCount,
                 userServers,
-                AppName: AppName,
+                userIdentifier,
+                AppName,
                 AppLogo: AppImg,
                 packageserver,
                 packagecpu,
@@ -222,20 +239,22 @@ Object.keys(pages).forEach((page) => {
                 packagedisk,
                 packageport,
                 packagedatabase,
-                userIdentifier,
                 packagebackup,
                 ads,
                 coins,
                 afktimer,
                 pterodactyldomain,
-                settings: settings   
+                settings
             });
-            db.close();
         } catch (error) {
+            console.error('Error fetching data:', error);
             return res.redirect('/?error=Please Login Again.');
         }
     });
 });
+
+
+
 // Discord Login Strategy
 passport.use(new DiscordStrategy({
     clientID: settings.discord.clientID,
@@ -304,6 +323,8 @@ passport.use(new DiscordStrategy({
         return done(error); 
     }
 }));
+
+
 passport.serializeUser((user, done) => {
     done(null, user);
 });

@@ -1,6 +1,10 @@
 const axios = require('axios');
 const settings = require('../settings.json');
+const fs = require('fs');
+const path = require('path');
 
+const LOG_FILE_PATH = path.join(__dirname, 'error.log');
+const NORMAL_LOG_FILE_PATH = path.join(__dirname, 'normal.log');
 
 
 //Log Erro

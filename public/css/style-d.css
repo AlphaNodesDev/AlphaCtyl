@@ -56,9 +56,12 @@ body {
 .text-main {
   color: var(--color-main);
 }
+
 /*
 Sidebar
 */
+
+
 .sidebar {
   width: 345px;
   height: 100%;
@@ -186,6 +189,8 @@ Sidebar
   background-color: var(--color-main);
   color: #fff;
 }
+
+
 /* main */
 .main-content {
   margin-left: 345px;
