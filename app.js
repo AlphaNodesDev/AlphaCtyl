@@ -1,7 +1,6 @@
 const express = require('express');
 const session = require('express-session');
 const passport = require('passport');
-const axios = require('axios');
 const version = "1.0.0";
 const DiscordStrategy = require('passport-discord').Strategy;
 const bodyParser = require('body-parser');
@@ -27,7 +26,7 @@ const figletOptions = {
 };
 const appNameAscii = figlet.textSync('AlphaCtyl', figletOptions);
 const authorNameAscii = figlet.textSync('By: AbhiRam', figletOptions);
-const AppName = settings.website.name;
+const AppName = settings.name;
 const AppImg = settings.website.logo;
 const ads = settings.ads;
 const afktimer = settings.afk.timer
@@ -95,7 +94,6 @@ db.serialize(() => {
     db.run("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT, password TEXT, email TEXT, first_name TEXT, last_name TEXT, pterodactyl_id TEXT, servers INTEGER DEFAULT 0, ports INTEGER DEFAULT 0, ram INTEGER DEFAULT 0, disk INTEGER DEFAULT 0, cpu INTEGER DEFAULT 0, database INTEGER DEFAULT 0, backup INTEGER DEFAULT 0, coins INTEGER DEFAULT 0)");
     db.run("CREATE TABLE IF NOT EXISTS youtube (id INTEGER, yt_link TEXT)");
     db.run(`CREATE TABLE IF NOT EXISTS renewals (id INTEGER PRIMARY KEY AUTOINCREMENT, serverId TEXT NOT NULL,next_renewal DATETIME NOT NULL, status TEXT DEFAULT 'active')`);
-  
 });
 //Load Theme 
 const pagesConfig = JSON.parse(fs.readFileSync(`./themes/${theme}/pages.json`));
@@ -105,7 +103,7 @@ const pages = pagesConfig.pages;
 const oauthPages = pagesConfig.oauth;
 //load admin pages
 const adminPages = pagesConfig.admin;
-//includes from other api
+//includes from other api, not api but handlers...
 const { registerPteroUser } = require('./api/getPteroUser.js');
 const { getUserIdByUUID, getUserServersCount, getUserServers } = require('./api/getPteroServers.js'); 
 const { getUserCoins } = require('./api/getuserCoins.js');
@@ -127,7 +125,7 @@ app.get('/logout', (req, res) => {
  //render appname and logo to oauth pages only
 Object.keys(oauthPages).forEach(page => {
     app.get(`/${page}`, (req, res) => {
-        if (settings.webserver.Maintainance === true) {
+        if (settings.webserver.maintainance) {
             res.send('Sorry, the site is currently under maintenance. Please try again later.');
         }else{
         res.render(oauthPages[page], { 
@@ -141,26 +139,24 @@ Object.keys(oauthPages).forEach(page => {
 Object.keys(adminPages).forEach(page => {
     app.get(`/${page}`, async (req, res) => {
         try {
-            if (!req.session.user || !req.session.user.pterodactyl_id) {
+            if (!req.session.user || !req.session.user.pterodactyl_id) 
                 return res.redirect('/?error=Please Login Again.');
-            }
+            
             const userId = req.session.user.pterodactyl_id;
             const userIdentifier = await getUserIdByUUID(userId);
-            if(userIdentifier.admin === true){
+            if(userIdentifier.admin){
                 const db = new sqlite3.Database(DB_FILE_PATH, (err) => {
                     if (err) {
                         logErrorToFile(`Error opening database: ${err.message}`);
                         return res.status(500).send('Database connection error');
                     }
                     fs.readFile(LOG_FILE_PATH, 'utf8', (err, errorLogsData) => {
-                        if (err) {
-                            errorLogsData = 'Could not load error logs.';
-                        }
+                        if (err) errorLogsData = 'Could not load error logs.';
+                        
                         const errorLogsByDate = parseLogs(errorLogsData);
                         fs.readFile(NORMAL_LOG_FILE_PATH, 'utf8', (err, normalLogsData) => {
-                            if (err) {
-                                normalLogsData = 'Could not load normal logs.';
-                            }
+                            if (err) normalLogsData = 'Could not load normal logs.';
+                            
                             const normalLogsByDate = parseNormalLogs(normalLogsData);
                                 db.all('SELECT * FROM Users', (err, users) => {
                                 if (err) {
@@ -177,9 +173,8 @@ Object.keys(adminPages).forEach(page => {
                                     users: users 
                                 });
                                 db.close((err) => {
-                                    if (err) {
-                                        logErrorToFile(`Error closing database: ${err.message}`);
-                                    }
+                                    if (err) logErrorToFile(`Error closing database: ${err.message}`);
+                                    
                                 });
                             });
                         });
@@ -198,10 +193,9 @@ Object.keys(adminPages).forEach(page => {
 Object.keys(pages).forEach((page) => {
     router.get(`/${page}`, async (req, res) => {
         try {
-            if (!req.session.user.id) {
-     
+            if (!req.session.user.id) 
                 return res.redirect('/?error=Please Login Again.');
-            }
+            
             const userId = req.session.user.pterodactyl_id;
             const db = new sqlite3.Database(DB_FILE_PATH);
             const userIdentifier = await getUserIdByUUID(userId);
@@ -245,18 +239,13 @@ passport.use(new DiscordStrategy({
 }, async (accessToken, refreshToken, profile, done) => {
     try {
         db.get('SELECT * FROM users WHERE email = ?', [profile.email], async (err, row) => {
-            if (err) {
-                return done(err);
-            }
+            if (err) return done(err);
             if (row) {
-        if (settings.discord.bot.joinguild.enabled === true) {
+        if (settings.discord.bot.joinguild.enabled) {
             try {
                 const discordUserId = profile.id;
                 await joinDiscordGuild(discordUserId, accessToken); 
-                if (settings.discord.bot.giverole.enabled === true) {
-
-                    assignDiscordRole(discordUserId)
-                    }
+                if (settings.discord.bot.giverole.enabled) assignDiscordRole(discordUserId)
             } catch (error) {
                 logErrorToFile('Error adding user to guild:', error.response.data);
                 return res.status(error.response.status || 500).json(error.response.data);
@@ -276,13 +265,13 @@ passport.use(new DiscordStrategy({
                 return done(new Error('Failed to register user in panel.'));
             }
             const userId = pteroUser.attributes ? pteroUser.attributes.uuid : pteroUser.uuid;
-            if (settings.discord.logging.status === true && settings.discord.logging.actions.user.signup === true) {
+            if (settings.discord.logging.status && settings.discord.logging.actions.user.signup) {
                 const message = `User logged in: ${profile.username}`;
                 const webhookUrl = settings.discord.logging.webhook; 
                 const color = 0x00FF00; 
                 sendDiscordWebhook(webhookUrl, message, color);
             }
-        if (settings.discord.bot.joinguild.enabled === true) {
+        if (settings.discord.bot.joinguild.enabled) {
             try {
                 const discordUserId = profile.id;
                 await joinDiscordGuild(discordUserId, accessToken);
@@ -320,7 +309,6 @@ app.get('/discord/callback', passport.authenticate('discord', { failureRedirect:
             logErrorToFile('Error retrieving user details:', err);
             return res.redirect('/');
         }
-
 
         req.session.user = row;
         res.redirect('/dashboard');
@@ -373,9 +361,7 @@ wss.on('connection', function connection(ws, req) {
         return true;
     }
     const isNewConnection = handleNewConnection(userId, page);
-    if (!isNewConnection) {
-        return;
-    }
+    if (!isNewConnection) return;
     ws.on('message', function incoming(message) {
         const reward = settings.afk.coins;
         updateUserCoins(userId, reward, db);
@@ -394,9 +380,9 @@ wss.on('connection', function connection(ws, req) {
 router.get('/watchvideo', async (req, res) => {
     try {
         const youtubeLinks = settings?.youtube?.links;
-        if (!youtubeLinks || youtubeLinks.length === 0) {
+        if (!youtubeLinks || youtubeLinks.length === 0) 
             return res.redirect('/youtube?error=No YouTube links found in settings.');
-        }
+        
         const userId = req.session.user.pterodactyl_id;
         const coins = await getUserCoins(userId, db);
         const watchedVideos = await new Promise((resolve, reject) => {
@@ -409,9 +395,9 @@ router.get('/watchvideo', async (req, res) => {
             });
         });
         const availableLinks = youtubeLinks.filter(link => !watchedVideos.includes(link));
-        if (availableLinks.length === 0) {
+        if (availableLinks.length === 0) 
             return res.redirect('/youtube?error=You have watched all available videos.');
-        }
+        
         const randomIndex = Math.floor(Math.random() * availableLinks.length);
         const randomLink = availableLinks[randomIndex];
         res.render('player', { 
@@ -426,7 +412,6 @@ router.get('/watchvideo', async (req, res) => {
     } catch (error) {
         logErrorToFile('Error while processing /watchvideo:', error);
         return res.redirect('/youtube?error=Internal server error.');
-
     }
 });
 app.use((req, res, next) => {
@@ -439,10 +424,9 @@ router.post('/insertlink', async (req, res) => {
         const userId = req.body.userId;
         const youtubeLink = req.body.link;
         db.run('INSERT INTO youtube (id, yt_link) VALUES (?, ?)', [userId, youtubeLink], (err) => {
-            if (err) {
+            if (err) 
                 return res.redirect('/youtube?error=Task Failed.');
-
-            }
+            
             const reward = settings.youtube.coins;
             updateUserCoins(userId, reward, db);
             res.status(200).send('Coins Rewarded');
@@ -451,12 +435,11 @@ router.post('/insertlink', async (req, res) => {
     } catch (error) {
         console.error(error);
         return res.redirect('/youtube?error=Internal server error.');
-
     }
 });
 // Function to Suspend servers 
 const checkAndSuspendExpiredServers = async () => {
-    if (!settings.store.renewals.status) {
+    if (!settings.renewals.status) {
         console.log('Renewals feature is disabled. Skipping check.');
         return;
     }
@@ -474,9 +457,9 @@ const checkAndSuspendExpiredServers = async () => {
             });
         });
 
-        if (!Array.isArray(expiredServers)) {
+        if (!Array.isArray(expiredServers)) 
             throw new TypeError('Expected an array of expired servers');
-        }
+        
         for (const server of expiredServers) {
             try {
                 const response = await fetch(`${settings.pterodactyl.domain}/api/application/servers/${server.serverId}/suspend`, {
@@ -488,7 +471,6 @@ const checkAndSuspendExpiredServers = async () => {
                     }
                 });
                 if (response.ok) {
-                    
                     await new Promise((resolve, reject) => {
                         db.run(`UPDATE renewals SET status = 'suspended' WHERE serverId = ?`, [server.serverId], (err) => {
                             if (err) {
@@ -527,29 +509,27 @@ const pad = (num, size) => {
 setInterval(checkAndSuspendExpiredServers, 60000);
 //functions to renew 
 router.get('/renew', async (req, res) => {
-    if (!settings.store.renewals.status) {
+    if (!settings.renewals.status) 
         return res.redirect('/manage?error=Server renewal feature is currently disabled.');
-    }
-
+    
     try {
         const serverId = req.query.id;
-        if (!serverId) {
+        if (!serverId) 
             return res.redirect('/manage?error=No server ID provided for renewal.');
-        }
-
+        
         const userId = req.session.user.pterodactyl_id;
         const coins = await getUserCoins(userId, db);
 
         // Check if user has sufficient coins
-        const cost = settings.store.renewals.cost;
-        if (coins < cost) {
+        const cost = settings.renewals.cost;
+        if (coins < cost) 
             return res.redirect('/manage?error=Insufficient coins for renewal.');
-        }
+        
 
 const nextRenewalDate = new Date();
-nextRenewalDate.setDate(nextRenewalDate.getDate() + settings.store.renewals.days);
-nextRenewalDate.setHours(nextRenewalDate.getHours() + settings.store.renewals.hour);
-nextRenewalDate.setMinutes(nextRenewalDate.getMinutes() + settings.store.renewals.minute);
+nextRenewalDate.setDate(nextRenewalDate.getDate() + settings.renewals.days);
+nextRenewalDate.setHours(nextRenewalDate.getHours() + settings.renewals.hour);
+nextRenewalDate.setMinutes(nextRenewalDate.getMinutes() + settings.renewals.minute);
 const formattedRenewalDate = formatDate(nextRenewalDate);
 
 function formatDate(date) {
@@ -566,9 +546,8 @@ await new Promise((resolve, reject) => {
         `UPDATE renewals SET next_renewal = ?, status = 'active' WHERE serverId = ?`,
         [formattedRenewalDate, serverId],
         (err) => {
-            if (err) {
+            if (err) 
                 return reject(err);
-            }
             resolve();
         }
     );
@@ -628,27 +607,27 @@ router.post('/createserver', async (req, res) => {
             const availablePorts = (userResources.row.ports + packageport) - userServersCount.totalPorts;
             const { name, cpu, ram, disk, port, database, backup } = req.body;
 
-            if (availableServers <= 0) {
+            if (availableServers <= 0) 
                 return res.redirect('/manage?info=You don\'t have enough available servers to create the server.');
-            }
-            if (cpu > availableCpu) {
+            
+            if (cpu > availableCpu) 
                 return res.redirect('/manage?info=You don\'t have enough available CPU to create the server.');
-            }
-            if (ram > availableRam) {
+            
+            if (ram > availableRam) 
                 return res.redirect('/manage?info=You don\'t have enough available RAM to create the server.');
-            }
-            if (disk > availableDisk) {
+            
+            if (disk > availableDisk) 
                 return res.redirect('/manage?info=You don\'t have enough available disk space to create the server.');
-            }
-            if (database > availableDatabase) {
+            
+            if (database > availableDatabase) 
                 return res.redirect('/manage?info=You don\'t have enough available database to create the server.');
-            }
-            if (backup > availablebackup) {
+            
+            if (backup > availablebackup) 
                 return res.redirect('/manage?info=You don\'t have enough available backup to create the server.');
-            }
-            if (port > availablePorts) {
+            
+            if (port > availablePorts) 
                 return res.redirect('/manage?info=You don\'t have enough available ports to create the server.');
-            }
+            
             const eggKey = req.body.egg;
             const locationKey = req.body.locations;
             const eggConfig = settings.eggs[eggKey];
@@ -658,12 +637,12 @@ router.post('/createserver', async (req, res) => {
             try {
                 allocationId = await fetchAllocations(locationId);
             } catch (error) {
-                if (error.message.includes('Node not found')) {
+                if (error.message.includes('Node not found')) 
                     return res.redirect('/manage?error=No nodes found for the given location.');
-                }
-                if (error.message.includes('No unassigned allocation found')) {
+                
+                if (error.message.includes('No unassigned allocation found')) 
                     return res.redirect('/manage?error=All nodes are full for the given location.');
-                }
+                
                 return res.redirect('/manage?error=Error fetching allocations.');
             }
             const serverConfig = {
@@ -703,9 +682,9 @@ router.post('/createserver', async (req, res) => {
                 const serverId = serverData.attributes.id;
   // Calculate next renewal date based on settings
 const nextRenewalDate = new Date();
-nextRenewalDate.setDate(nextRenewalDate.getDate() + settings.store.renewals.days);
-nextRenewalDate.setHours(nextRenewalDate.getHours() + settings.store.renewals.hour);
-nextRenewalDate.setMinutes(nextRenewalDate.getMinutes() + settings.store.renewals.minute);
+nextRenewalDate.setDate(nextRenewalDate.getDate() + settings.renewals.days);
+nextRenewalDate.setHours(nextRenewalDate.getHours() + settings.renewals.hour);
+nextRenewalDate.setMinutes(nextRenewalDate.getMinutes() + settings.renewals.minute);
 const formattedRenewalDate = formatDate(nextRenewalDate);
 // Function to format date as dd:mm:yy:h:m:s
 function formatDate(date) {
@@ -723,7 +702,7 @@ function formatDate(date) {
                 );
                 console.log(formattedRenewalDate);
 
-                if (settings.discord.logging.status === true && settings.discord.logging.actions.user.create_server === true) {
+                if (settings.discord.logging.status && settings.discord.logging.actions.user.create_server) {
                     const message = `User Created Server:\nName: ${name}\nCPU: ${cpu} cores\nRAM: ${ram} MB\nDisk: ${disk} MB\nDatabases: ${database}\nBackups: ${backup}\nPorts: ${port}`;
                     const color = 0x00FF00; // Green color in hexadecimal
                     sendDiscordWebhook(webhookUrl, message, color);
@@ -743,9 +722,9 @@ function formatDate(date) {
 // delete ptero server
 router.get('/delete', async (req, res) => {
     const serverId = req.query.id; // Retrieve the server ID from the query string
-    if (!serverId) {
+    if (!serverId) 
         return res.redirect('/manage?error=No server ID provided.');
-    }
+
     try {
         const response = await fetch(`${settings.pterodactyl.domain}/api/application/servers/${serverId}`, {
             method: 'DELETE',
@@ -794,9 +773,9 @@ router.post('/byresources', (req, res) => {
             res.send('Error authenticating user.');
             return;
         }
-        if (!row) {
+        if (!row) 
             return res.redirect('store?error=Invalid User.');
-        }
+
         const costs = {
             servers: servers * settings.store.servers.cost,
             cpu: cpu * settings.store.cpu.cost,
@@ -807,13 +786,13 @@ router.post('/byresources', (req, res) => {
             backup: backup * settings.store.backup.cost
         };
         const selectedResource = Object.keys(req.body).find(key => req.body[key] && req.body[key] !== '0');
-        if (!selectedResource || !settings.store[selectedResource]) {
+        if (!selectedResource || !settings.store[selectedResource]) 
             return res.redirect('store?error=Invalid selection.');
-        }
+
         const totalCost = costs[selectedResource];
-        if (row.coins < totalCost) {
+        if (row.coins < totalCost)
             return res.redirect('store?error=Not enough coins.');
-        }
+
         const updates = {
             coins: row.coins - totalCost,
             [`${selectedResource}`]: (row[`${selectedResource}`] || 0) + parseInt(req.body[selectedResource]) * settings.store[selectedResource].per
@@ -837,9 +816,9 @@ router.post('/addresources', (req, res) => {
     const { username, amount, resourceType } = req.body;
     const allowedResources = ['coins', 'cpu', 'ram', 'disk', 'servers', 'ports', 'database', 'backup'];
 
-    if (!allowedResources.includes(resourceType)) {
+    if (!allowedResources.includes(resourceType)) 
         return res.status(400).send('Invalid resource type.');
-    }
+
     const query = `UPDATE users SET ${resourceType} = ? WHERE username = ?`;
     db.run(query, [amount, username], (updateErr) => {
         if (updateErr) {

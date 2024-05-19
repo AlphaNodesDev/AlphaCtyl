@@ -1,0 +1,235 @@
+{
+  "version": "1.0.0",
+  "name": "AlphaCtyl",
+  "defaulttheme": "default",
+  "timezone": "Asia/Kolkatta",
+  "website": {
+    "domain": "http://localhost:2024",
+    "port": 2024,
+    "secret": "5646457875645",
+    "logo": "https://i.ibb.co/1TQbcJ9/a-high-resolution-logo-transparent.png"
+  },
+  "pterodactyl": {
+    "domain": "https://control.alphanodes.online",
+    "key": ""
+  },
+  "database": "database.db",
+  "packages": {
+    "list": {
+      "default": {
+        "ram": 1024,
+        "disk": 1024,
+        "cpu": 100,
+        "servers": 1,
+        "ports": 1,
+        "database": 1,
+        "backups": 1
+      }
+    }
+  },
+  "ads": {
+    "ad1": "code for ad 1",
+    "ad2": "code for ad 2"
+  },
+  "youtube": {
+    "coins": "50",
+    "links": [
+      "FAyKDaXEAgc"
+    ]
+  },
+  "discord": {
+    "_Note_": "Oath2 clientID And clientSecret",
+    "clientID": "",
+    "clientSecret": "",
+    "bot": {
+      "token": "",
+      "joinguild": {
+        "_comment": "The Discord bot must be in these servers and have invite permissions. Automatic guild joining will not work unless role packages are configured correctly. You can always just set it to a random role & package so that only this works.",
+        "enabled": false,
+        "guildid": [
+          ""
+        ]
+      },
+      "giverole": {
+        "_comment": "Both the bot and the user must be on the server, give the specify role on registering",
+        "enabled": false,
+        "guildid": "",
+        "roleid": ""
+      }
+    },
+    "logging": {
+      "status": false,
+      "webhook": "",
+      "actions": {
+        "user": {
+          "signup": true,
+          "create_server": true,
+          "modify_server": true,
+          "buy_servers": true,
+          "buy_ram": true,
+          "buy_cpu": true,
+          "buy_disk": true
+        },
+        "admin": {
+          "set_coins": true,
+          "add_coins": true,
+          "set_resources": true,
+          "set_plan": true,
+          "create_coupon": true,
+          "revoke_coupon": true,
+          "remove_account": true,
+          "view_ip": true
+        }
+      }
+    }
+  },
+  "webserver": {
+    "maintainance": false,
+    "account_creation": true,
+    "server_creation": true
+  },
+  "store": {
+    "enabled": true,
+    "ram": {
+      "cost": 100,
+      "per": 1024
+    },
+    "disk": {
+      "cost": 100,
+      "per": 5120
+    },
+    "cpu": {
+      "cost": 100,
+      "per": 75
+    },
+    "servers": {
+      "cost": 100,
+      "per": 1
+    },
+    "port": {
+      "cost": 100,
+      "per": 1
+    },
+    "database": {
+      "cost": 100,
+      "per": 1
+    },
+    "backup": {
+      "cost": 100,
+      "per": 1
+    },
+    "storelimits": {
+      "ram": "8192",
+      "disk": "10240",
+      "cpu": "400",
+      "servers": "8"
+    }
+  },
+  "renewals": {
+    "status": true,
+    "cost": 0,
+    "delay": 14
+  },
+  "locations": {
+    "1": {
+      "id": 1,
+      "name": "Default Location 1",
+      "package": null
+    },
+    "2": {
+      "id": 2,
+      "name": "Default Location 2",
+      "package": null
+    }
+  },
+  "eggs": {
+    "paper": {
+      "display": "Minecraft Java | Paper/Spigot",
+      "minimum": {
+        "ram": 1024,
+        "disk": 1024,
+        "cpu": 100
+      },
+      "maximum": {
+        "ram": null,
+        "disk": null,
+        "cpu": null
+      },
+      "info": {
+        "egg": 3,
+        "docker_image": "ghcr.io/pterodactyl/yolks:java_17",
+        "startup": "java -Xms128M -Xmx{{SERVER_MEMORY}}M -Dterminal.jline=false -Dterminal.ansi=true -jar {{SERVER_JARFILE}}",
+        "environment": {
+          "SERVER_JARFILE": "server.jar",
+          "BUILD_NUMBER": "latest"
+        },
+        "feature_limits": {
+          "databases": 4,
+          "backups": 4
+        }
+      }
+    },
+    "bedrock": {
+      "display": "Minecraft Bedrock | Vanilla",
+      "note": "Please upload the Vanilla egg from the parkervcp egg repo to the panel, then change the egg ID to the ID of the uploaded egg.",
+      "minimum": {
+        "ram": 512,
+        "disk": 512,
+        "cpu": 75
+      },
+      "maximum": {
+        "ram": null,
+        "disk": null,
+        "cpu": null
+      },
+      "info": {
+        "egg": 18,
+        "docker_image": "quay.io/parkervcp/pterodactyl-images:base_debian",
+        "startup": "./bedrock_server",
+        "environment": {
+          "BEDROCK_VERSION": "latest",
+          "LD_LIBRARY_PATH": ".",
+          "SERVERNAME": "Bedrock Dedicated Server",
+          "GAMEMODE": "survival",
+          "DIFFICULTY": "easy",
+          "CHEATS": "false"
+        },
+        "feature_limits": {
+          "databases": 4,
+          "backups": 4
+        }
+      }
+    },
+    "bungeecord": {
+      "display": "Minecraft Java | BungeeCord",
+      "minimum": {
+        "ram": 512,
+        "disk": 512,
+        "cpu": 75
+      },
+      "maximum": {
+        "ram": null,
+        "disk": null,
+        "cpu": null
+      },
+      "info": {
+        "egg": 5,
+        "docker_image": "ghcr.io/pterodactyl/yolks:java_17",
+        "startup": "java -Xms128M -Xmx{{SERVER_MEMORY}}M -jar {{SERVER_JARFILE}}",
+        "environment": {
+          "SERVER_JARFILE": "bungeecord.jar",
+          "BUNGEE_VERSION": "latest"
+        },
+        "feature_limits": {
+          "databases": 4,
+          "backups": 4,
+          "allocations": 1
+        }
+      }
+    }
+  },
+  "afk": {
+    "timer": 60000,
+    "coins": "1"
+  }
+}
