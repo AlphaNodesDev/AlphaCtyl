@@ -117,52 +117,7 @@ const { updateUserCoins } = require('./functions/updateUserCoins.js');
 const { fetchAllocations } = require('./functions/fetchAllocations.js'); 
 
 
-//register process
-router.post('/register', async (req, res) => {
-    const { username, email, password, firstName, lastName } = req.body;
-    try {
-        db.get('SELECT * FROM users WHERE email = ? OR username = ?', [email, username], async (err, row) => {
-            if (err) {
-                console.error(err);
-                logErrorToFile(`Error Registering  User: ${err.message}`);
-                return res.send('Error checking user existence.');
-            }
-            if (row) {
-                if (row.email === email) {
-                    return res.redirect('/register?error=Email already exists.');
 
-                } else if (row.username === username) {
-                    return res.redirect('/register?error=Username already exists.');
-                }
-            }
-            try {
-                const pteroUser = await registerPteroUser(username, email, password, firstName, lastName);
-                const userId = pteroUser.attributes.uuid;
-                await db.run('INSERT INTO users (username, email, password, first_name, last_name, pterodactyl_id) VALUES (?, ?, ?, ?, ?, ?)', [username, email, password, firstName, lastName, userId]);
-                req.session.user = { pterodactyl_id: userId, username }; 
-              res.redirect('/dashboard');
-            } catch (registerError) {
-                logErrorToFile(`Error opening database: ${registerError}`);
-                return res.redirect('/register?error=Error registering user.');
-            }});
-    } catch (error) {
-        logErrorToFile(`Error in registration route: ${error}`);
-        return res.redirect('/register?error=Error registering user.');
-    }
-});
-//login process
-router.post('/login', (req, res) => {
-    const { email, password } = req.body;
-    db.get('SELECT * FROM users WHERE email = ? AND password = ?', [email, password], (err, row) => {
-        if (err) {
-            console.error(err);
-            res.send('Error authenticating user.');
-        } else if (row) {
-            req.session.user = row;
-            res.redirect('/dashboard');
-        } else {
-            return res.redirect('/?error=Invalid email or passwordr.');
- }});});
 app.use('/', router);
 //logout process
 app.get('/logout', (req, res) => {
@@ -246,7 +201,7 @@ Object.keys(adminPages).forEach(page => {
 Object.keys(pages).forEach((page) => {
     router.get(`/${page}`, async (req, res) => {
         try {
-            if (!req.session.user || !req.session.user.pterodactyl_id) {
+            if (!req.session.user.id) {
      
                 return res.redirect('/?error=Please Login Again.');
             }
@@ -284,12 +239,15 @@ Object.keys(pages).forEach((page) => {
         }
     });
 });
-//Discord Login
+
+
+
+// Discord Login Strategy
 passport.use(new DiscordStrategy({
     clientID: settings.discord.clientID,
     clientSecret: settings.discord.clientSecret,
     callbackURL: `${DOMAIN}/discord/callback`,
-    scope: ['identify', 'email'],
+    scope: ['identify', 'email', 'guilds.join'], 
 }, async (accessToken, refreshToken, profile, done) => {
     try {
         db.get('SELECT * FROM users WHERE email = ?', [profile.email], async (err, row) => {
@@ -297,56 +255,95 @@ passport.use(new DiscordStrategy({
                 return done(err);
             }
             if (row) {
-                return done(null, row);
+        if (settings.discord.bot.joinguild.enabled === true) {
+            try {
+                const discordUserId = profile.id;
+                await joinDiscordGuild(discordUserId, accessToken); 
+                if (settings.discord.bot.giverole.enabled === true) {
+
+                    assignDiscordRole(discordUserId)
+                    }
+            } catch (error) {
+                logErrorToFile('Error adding user to guild:', error.response.data);
+                return res.status(error.response.status || 500).json(error.response.data);
             }
+        }
+                return done(null, { ...row, accessToken });
+            }
+            
             const firstName = profile.username.split('#')[0];
             const lastName = profile.username.split('#')[0];
             const password = randomstring.generate({
                 length: 10,
                 charset: 'alphanumeric'
             });
+
             const pteroUser = await registerPteroUser(profile.username, profile.email, password, firstName, lastName);
             if (!pteroUser) {
                 logErrorToFile(`Error: Failed to register user in panel. Connection Error`);
                 return done(new Error('Failed to register user in panel.'));
             }
+
             const userId = pteroUser.attributes ? pteroUser.attributes.uuid : pteroUser.uuid;
+
             if (settings.discord.logging.status === true && settings.discord.logging.actions.user.signup === true) {
                 const message = `User logged in: ${profile.username}`;
                 const webhookUrl = settings.discord.logging.webhook; 
                 const color = 0x00FF00; 
                 sendDiscordWebhook(webhookUrl, message, color);
             }
-            await db.run('INSERT INTO users (username, email, password, first_name, last_name, pterodactyl_id) VALUES (?, ?, ?, ?, ?, ?)', [profile.username, profile.email, password, firstName, lastName, userId]);
-            return done(null, profile);
+            
+        if (settings.discord.bot.joinguild.enabled === true) {
+            try {
+                const discordUserId = profile.id;
+                await joinDiscordGuild(discordUserId, accessToken);
+                if (settings.discord.bot.giverole.enabled === false) {
+
+                assignDiscordRole(discordUserId)
+                }
+            } catch (error) {
+                logErrorToFile('Error adding user to guild:', error.response.data);
+                return res.status(error.response.status || 500).json(error.response.data);
+            }
+        }
+
+            await db.run('INSERT INTO users (id, username, email, password, first_name, last_name, pterodactyl_id) VALUES (?, ?, ?, ?, ?, ?, ?)', 
+                [profile.id, profile.username, profile.email, password, firstName, lastName, userId]);
+
+            return done(null, { ...profile, accessToken });
         });
     } catch (error) {
         return done(error); 
     }
 }));
+
 passport.serializeUser((user, done) => {
     done(null, user);
 });
-passport.deserializeUser((obj, done) => {
-    done(null, obj);
+
+passport.deserializeUser((user, done) => {
+    done(null, user);
 });
+
 // Discord login process
 app.get('/discord', passport.authenticate('discord'));
 app.get('/discord/callback', passport.authenticate('discord', { failureRedirect: '/' }), async (req, res) => {
-    const { email, id: discordUserId, username: discordUsername, accessToken } = req.user;
+    const { email, id: discordUserId, accessToken } = req.user;
+
     db.get('SELECT * FROM users WHERE email = ?', [email], async (err, row) => {
         if (err) {
             logErrorToFile('Error retrieving user details:', err);
-            return res.redirect('/'); }
-        if (settings.discord.bot.joinguild.enabled === true) {
-            await joinDiscordGuild(discordUserId, accessToken);
-        if (settings.discord.bot.giverole.enabled === true) {
-            const guildId = settings.discord.bot.giverole.guildid;
-            const roleId = settings.discord.bot.giverole.roleid;
-            await assignDiscordRole(discordUserId, guildId, roleId);  } }
+            return res.redirect('/');
+        }
+
+
         req.session.user = row;
         res.redirect('/dashboard');
-    });});
+    });
+});
+
+
+
 // Pteropassword reset
 router.get('/resetptero', async (req, res) => {
     try {
@@ -484,22 +481,7 @@ router.post('/insertlink', async (req, res) => {
 });
 
 
-// Function to Renewal
-const getCurrentDateFormatted = () => {
-    const now = new Date();
-    const month = pad(now.getMonth() + 1, 2);
-    const day = pad(now.getDate(), 2);
-    const year = now.getFullYear();
-    const hour = pad(now.getHours(), 2);
-    const minute = pad(now.getMinutes(), 2);
-    const second = pad(now.getSeconds(), 2);
-    return `${day}:${month}:${year}:${hour}:${minute}:${second}`;};
-
-const pad = (num, size) => {
-    return ('0' + num).slice(-size);
-};
-
-
+// Function to Suspend servers 
 const checkAndSuspendExpiredServers = async () => {
     if (!settings.store.renewals.status) {
         console.log('Renewals feature is disabled. Skipping check.');
@@ -555,11 +537,24 @@ const checkAndSuspendExpiredServers = async () => {
         console.error('Error checking for expired servers:', error);
     }
 };
+const getCurrentDateFormatted = () => {
+    const now = new Date();
+    const month = pad(now.getMonth() + 1, 2);
+    const day = pad(now.getDate(), 2);
+    const year = now.getFullYear();
+    const hour = pad(now.getHours(), 2);
+    const minute = pad(now.getMinutes(), 2);
+    const second = pad(now.getSeconds(), 2);
+    return `${day}:${month}:${year}:${hour}:${minute}:${second}`;};
+
+const pad = (num, size) => {
+    return ('0' + num).slice(-size);
+};
 
 setInterval(checkAndSuspendExpiredServers, 60000);
 
 
-
+//functions to renew 
 router.get('/renew', async (req, res) => {
     if (!settings.store.renewals.status) {
         return res.redirect('/manage?error=Server renewal feature is currently disabled.');
