@@ -80,7 +80,7 @@ app.listen(PORT, async () => {
     console.log(chalk.red(' ',"-------------------------------"));
 });
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, `./themes/${theme}`)));
 app.use(session({
     secret: settings.website.secret,
     resave: false,

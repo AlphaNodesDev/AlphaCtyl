@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AlphaCtyl Player</title>
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/line-awesome/css/line-awesome.min.css'><link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="css/style-d.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  
+    <script src="https://kit.fontawesome.com/062f52da9a.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <% if (typeof link !== 'undefined') { %>
+      
+        <div id="player"></div>
+  
+        <% } %>
+        <style>
+          html, body {
+          height: 100%;
+          margin: 0;
+          overflow: hidden;
+        }
+        
+        #player {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+        }
+        
+        </style>
+              <script>
+                <% if (typeof link !== 'undefined') { %>
+                  var player;
+        function onYouTubeIframeAPIReady() {
+          player = new YT.Player('player', {
+            height: '100%',
+            width: '100%',
+            videoId: '<%= link %>',
+            playerVars: {
+              'autoplay': 1,
+              'mute': 1,
+              'controls': 0, // Hide player controls
+              'disablekb': 1 // Disable keyboard control
+            },
+            events: {
+              'onStateChange': onPlayerStateChange
+            }
+          });
+        }
+      
+        function onPlayerStateChange(event) {
+    if (event.data == YT.PlayerState.ENDED) {
+        console.log('Video ended');
+        $.ajax({
+            type: 'POST',
+            url: 'insertlink',
+            data: {
+                userId: '<%= user.pterodactyl_id %>',
+                link: '<%= link %>'
+            },
+            success: function(response) {
+                console.log(response);
+                // Redirect to /youtube?success=Coins Rewarded on success
+                window.location.href = '/youtube?success=Coins Rewarded';
+            },
+            error: function(xhr, status, error) {
+                console.error('Failed to insert link into the database:', error);
+            }
+        });
+    }
+}
+
+        <% } %>
+      </script>
+      <script src="https://www.youtube.com/iframe_api"></script>
+
+</body>
+</html>
