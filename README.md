@@ -21,6 +21,7 @@ AlphaCtyl is a powerful and user-friendly web panel designed to streamline the m
     <img src="https://github.com/AlphaNodesDev/AlphaCtyl/assets/89145034/5880d443-3cf1-41d1-aadf-46b577c65a72" alt="Auth Image 2" style="width: 100%; height: auto;">
   </div>
 </div>
+###Extra Themes
 
 ### Light Mode
 <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
