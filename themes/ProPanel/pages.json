@@ -15,7 +15,8 @@
         "afk": "afk",
         "extra": "extra.ejs",
         "youtube": "youtube.ejs",
-        "player": "player.ejs"
+        "player": "player.ejs",
+        "linkvertise": "linkvertise.ejs"
 
     },
 

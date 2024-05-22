@@ -106,6 +106,8 @@ const oauthPages = pagesConfig.oauth;
 //load admin pages
 const adminPages = pagesConfig.admin;
 //includes from other api
+
+
 const { registerPteroUser } = require('./api/getPteroUser.js');
 const { getUserIdByUUID, getUserServersCount, getUserServers } = require('./api/getPteroServers.js'); 
 const { getUserCoins } = require('./api/getuserCoins.js');
@@ -877,3 +879,70 @@ router.post('/addresources', (req, res) => {
         });
     });
 });
+
+
+
+
+
+
+// Route to generate Linkvertise link
+const lvcodes = {};
+const cooldowns = {};
+app.get('/lv/get', async (req, res) => {
+    if (!req.session.user.pterodactyl_id) return res.redirect("/login");
+
+    let referer = req.headers.referer;
+    console.log(`Referer: ${referer}`); 
+
+    if (!referer) {
+        return res.send('An error occurred with your browser! Referer header is missing.');
+    }
+
+    referer = referer.toLowerCase();
+    if (referer.includes('?')) referer = referer.split('?')[0];
+
+    if (!referer.endsWith('/lv') && !referer.endsWith('/lv/')) {
+        return res.send('An error occurred with your browser! Invalid referer.');
+    }
+
+    if (!referer.endsWith('/')) referer += '/';
+
+    const code = makeid(12);
+    const lvurl = linkvertise(settings.linkvertise.userid, referer + `redeem/${code}`);
+
+    lvcodes[req.session.userinfo.id] = {
+        code: code,
+        user: req.session.userinfo.id,
+        generated: Date.now()
+    };
+
+    res.redirect(lvurl);
+});
+
+// Utility functions
+function linkvertise(userid, link) {
+    var base_url = `https://link-to.net/${userid}/${Math.random() * 1000}/dynamic`;
+    var href = base_url + "?r=" + btoa(encodeURI(link));
+    return href;
+}
+
+function btoa(str) {
+    var buffer;
+
+    if (str instanceof Buffer) {
+        buffer = str;
+    } else {
+        buffer = Buffer.from(str.toString(), "binary");
+    }
+    return buffer.toString("base64");
+}
+
+function makeid(length) {
+    let result = '';
+    let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let charactersLength = characters.length;
+    for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
+}
