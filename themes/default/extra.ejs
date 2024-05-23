@@ -19,13 +19,17 @@
   <%- include('./includes/header') %>
 
   <main>
-     <button onclick="window.load.href = 'linkvertise'">Linkvertise</button>
+     <button onclick="linkpays()">LinkPays</button>
     <%- include('./includes/ads/ad-1') %>
     <%- include('./includes/ads/ad-2') %>
 </div>
 <!-- partial -->
 
 <%- include('./includes/footer') %>
-
+<script>
+  function linkpays(){
+    window.location.replace('/extra/linkpays/generate')
+  }
+</script>
 </body>
 </html>

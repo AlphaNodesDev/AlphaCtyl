@@ -9,11 +9,10 @@ module.exports.load = async function (express, session, passport ,version, Disco
 ) {
 
 
-
 // Discord Login Strategy
 passport.use(new DiscordStrategy({
-    clientID: settings.discord.clientID,
-    clientSecret: settings.discord.clientSecret,
+    clientID: settings.discord.oauth2.clientID,
+    clientSecret: settings.discord.oauth2.clientSecret,
     callbackURL: `${DOMAIN}/discord/callback`,
     scope: ['identify', 'email', 'guilds.join'], 
 }, async (accessToken, refreshToken, profile, done) => {
