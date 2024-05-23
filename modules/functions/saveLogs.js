@@ -1,5 +1,5 @@
 const axios = require('axios');
-const settings = require('../settings.json');
+const settings = require('../../settings.json');
 const fs = require('fs');
 const path = require('path');
 

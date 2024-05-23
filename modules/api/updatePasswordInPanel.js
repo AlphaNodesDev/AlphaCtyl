@@ -1,6 +1,6 @@
 
 const axios = require('axios');
-const settings = require('../settings.json');
+const settings = require('../../settings.json');
 async function updatePasswordInPanel(userIdentifier, newPassword, email, username, first_name, last_name) {
     const apiUrl = `${settings.pterodactyl.domain}/api/application/users/${userIdentifier}`;
     const requestBody = {

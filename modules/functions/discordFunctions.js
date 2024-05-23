@@ -1,5 +1,5 @@
 const axios = require('axios');
-const settings = require('../settings.json');
+const settings = require('../../settings.json');
 // Function to send a Discord webhook using axios
 function sendDiscordWebhook(webhookUrl, message, color) {
     axios.post(webhookUrl, {

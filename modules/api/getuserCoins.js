@@ -1,5 +1,5 @@
 const axios = require('axios');
-const settings = require('../settings.json');
+const settings = require('../../settings.json');
 
 async function getUserCoins(userId, db) {
     return new Promise((resolve, reject) => {

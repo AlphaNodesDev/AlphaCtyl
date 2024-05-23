@@ -17,7 +17,7 @@
     const switchInput = document.querySelector(".switch input");
   
     switchInput.addEventListener("change", function() {
-      const stylesheet = this.checked ? "css/style-d.css" : "css/style.css";
+      const stylesheet = this.checked ? "assets/css/style-d.css" : "assets/css/style.css";
       updateStylesheet(stylesheet);
       localStorage.setItem("preferredStylesheet", stylesheet);
     });
@@ -40,17 +40,17 @@
     if (preferredStylesheet) {
       updateStylesheet(preferredStylesheet);
       // Check the checkbox if dark mode preference is stored
-      if (preferredStylesheet === "css/style-d.css") {
+      if (preferredStylesheet === "assets/css/style-d.css") {
         switchInput.checked = true;
       }
     } else {
       // If no preference is found in local storage, check if the browser is in dark mode
       const isDarkMode = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-      const defaultStylesheet = isDarkMode ? "css/style-d.css" : "css/style.css";
+      const defaultStylesheet = isDarkMode ? "assets/css/style-d.css" : "assets/css/style.css";
       updateStylesheet(defaultStylesheet);
       localStorage.setItem("preferredStylesheet", defaultStylesheet);
       // Check the checkbox if default stylesheet is dark mode
-      if (defaultStylesheet === "css/style-d.css") {
+      if (defaultStylesheet === "assets/css/style-d.css") {
         switchInput.checked = true;
       }
     }

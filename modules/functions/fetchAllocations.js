@@ -1,6 +1,6 @@
 
 const axios = require('axios');
-const settings = require('../settings.json');
+const settings = require('../../settings.json');
 async function fetchAllocations(locationId) {
     try {
         // Fetch nodes
