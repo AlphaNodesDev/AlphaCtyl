@@ -32,7 +32,7 @@ function parseLogs(data) {
     logLines.forEach(line => {
         const match = line.match(/^(.*?) - (.*)$/);
         if (match) {
-            const date = match[1].split('T')[0]; // Extract date part
+            const date = match[1].split('T')[0]; 
             if (!logsByDate[date]) {
                 logsByDate[date] = [];
             }
@@ -47,7 +47,7 @@ function parseNormalLogs(data) {
     logLines.forEach(line => {
         const match = line.match(/^(.*?) - (.*)$/);
         if (match) {
-            const date = match[1].split('T')[0]; // Extract date part
+            const date = match[1].split('T')[0]; 
             if (!logsByDate[date]) {
                 logsByDate[date] = [];
             }

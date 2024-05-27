@@ -94,12 +94,18 @@ Object.keys(pages).forEach((page) => {
             const db = new sqlite3.Database(DB_FILE_PATH);
 
             // Use Promise.all to handle multiple asynchronous operations
-            const [userIdentifier , userresources, userServersCount, userServers, coins] = await Promise.all([
+            const [userIdentifier , userresources, coins] = await Promise.all([
                 getUserIdByUUID(userId),
                 getUserResources(userId, db),
-                getUserServersCount(userId),
-                getUserServers(userId),
                 getUserCoins(userId, db)
+  
+            ]);
+            // Use Promise.all to handle multiple asynchronous operations
+            const [ userServersCount, userServers] = await Promise.all([
+       
+                getUserServersCount(userIdentifier),
+                getUserServers(userIdentifier),
+            
   
             ]);
 

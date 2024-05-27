@@ -1,0 +1,177 @@
+<%- include('./includes/header') %>
+
+
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Animated -->
+            <div class="animated fadeIn">
+                   <!-- store -->
+                   <div class="content">
+                    <div class="animated fadeIn">
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <strong class="card-title">Create Server</strong>
+                                    </div>
+                                    <div class="card-body">
+                                        <!-- Create Server -->
+                                        <form method="post" action="/createserver">
+                                        <div id="pay-invoice">
+                                            <div class="card-body">
+                                                <div class="card-title">
+                                                    <h3 class="text-center">Enter Server Details</h3>
+                                                </div>
+                                                <hr>
+                                                
+                                                <div class="row form-group">
+                                                    <div class="col col-md-3"><label for="locations" class=" form-control-label">Select Location</label></div>
+                                                    <div class="col-12 col-md-9">
+                                                        <select name="locations" id="locations" class="form-control-sm form-control">
+                                                            <% Object.keys(settings.locations).forEach(locationKey => { %>
+                                                                <option value="<%= locationKey %>"><%= settings.locations[locationKey].name %></option>
+                                                                <% }); %>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="row form-group">
+                                                    <div class="col col-md-3"><label for="locations" class=" form-control-label">Select Egg</label></div>
+                                                    <div class="col-12 col-md-9">
+                                                <select name="egg" id="egg" class="form-control">
+                                                    <% Object.keys(settings.eggs).forEach(eggKey => { %>
+                                                    <option value="<%= eggKey %>"><%= settings.eggs[eggKey].display %></option>
+                                                    <% }); %>
+                                                  </select>
+                                                </div>
+                                            </div>
+
+                                                <div class="has-success form-group">
+                                                    <label  class=" form-control-label">SERVER NAME</label>
+                                                    <input type="text" placeholder="Server Name" name="name"  class="is-valid form-control-success form-control">
+                                                </div>
+                           <div class="has-success form-group">
+                            <label  class=" form-control-label">CPU</label>
+                            <input type="text" name="cpu" placeholder="Cpu in %" class="is-valid form-control-success form-control">
+                        </div>
+                        <div class="has-success form-group">
+                            <label  class=" form-control-label">DISK</label>
+                            <input type="text" name="disk" placeholder="Disk In mib"  class="is-valid form-control-success form-control">
+                        </div>
+                        <div class="has-success form-group">
+                            <label  class=" form-control-label">RAM</label>
+                            <input type="text" name="ram" placeholder="Ram in Mib" class="is-valid form-control-success form-control">
+                        </div>
+                        <div class="has-success form-group">
+                            <label  class=" form-control-label">DATABASE</label>
+                            <input type="text" name="database" placeholder="Number Of Databases" class="is-valid form-control-success form-control">
+                        </div>
+                        <div class="has-success form-group">
+                            <label  class=" form-control-label">BACKUP</label>
+                            <input type="text" name="backup" placeholder="Number Of Backups" class="is-valid form-control-success form-control">
+                        </div>
+                        <div class="has-success form-group">
+                            <label  class=" form-control-label">PORTS</label>
+                            <input type="text" name="port" placeholder="Number Of Ports" class="is-valid form-control-success form-control">
+                        </div>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fa-solid fa-plus" type="submit"></i>&nbsp; Create
+                        </button>
+
+                                            </div>
+                                        </div>
+                                    </form>
+                                    </div>
+                                </div> <!-- .card -->
+        
+                            </div><!--/.col-->
+                            </div>
+                            </div>
+                            </div>
+                  </div>
+                <div class="row">
+                <!-- Status -->
+                          <!-- Status -->
+                          <div class="content">
+                            <div class="animated fadeIn">
+                                <div class="row">
+                                    <div class="col-lg-6">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <strong class="card-title">Servers</strong>
+                                            </div>
+                                            <div class="card-body">
+                                                <table class="table">
+                                                    <thead>
+                                                        <tr>
+                                                          <th scope="col">NAME</th>
+                                                          <th scope="col">CPU</th>
+                                                          <th scope="col">RAM</th>
+                                                          <th scope="col">DISK</th>
+                                                          <th scope="col">MANAGE</th>
+                                                      </tr>
+                                                  </thead>
+                                                  <tbody>
+                                                    <% userServers.forEach(server => { %>
+                                                        <tr>
+                                                        <th scope="row"><%= server.name %></th>
+                                                        <td><%= server.cpu %></td>
+                                                        <td><%= server.ram %></td>
+                                                        <td><%= server.disk %></td>
+        
+                                                        <td>   
+                                                            <% if (server.suspended == false){ %>
+                                                            <button onclick="notreleased()" type="button" class="btn btn-success btn-sm"><i class="fa-solid fa-gears"></i>&nbsp; manage</button>
+                                                            <% } else { %>
+                                                            <% if (settings.store.renewals.status == true) { %>
+                                                                <button onclick="window.location.href='./dashboard?job=Renew Server&&message=Are You Sure to Renew Server for <%= settings.store.renewals.days %> Days <%= settings.store.renewals.hour %> Hour <%= settings.store.renewals.minute %> Minutes&&id=<%= server.id %>'" type="button" class="btn btn-danger btn-sm"><i class="fa-solid fa-clock-o"></i>&nbsp; Suspended</button>
+                                                            <% }} %>
+                                                            </td>
+                                                    </tr>
+                                                    <% }); %>
+                                                </tbody>
+                                                
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                        </div>
+                        <!-- Status -->
+           <!-- .row -->
+            </div>
+            <!-- .animated -->
+        </div>
+        <!-- /.content -->
+        <div class="clearfix"></div>
+        <!-- Footer -->
+        <footer class="site-footer">
+            <div class="footer-inner bg-white">
+                <div class="row">
+                    <div class="col-sm-6">
+                        Copyright &copy; 2024 <%= AppName %>
+                    </div>
+                    <div class="col-sm-6 text-right">
+                        Designed by <a href="https://github.io/AlphaCtyl">Abhiram</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+        <!-- /.site-footer -->
+    </div>
+    <!-- /#right-panel -->
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@2.2.4/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.4/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-match-height@0.7.2/dist/jquery.matchHeight.min.js"></script>
+    <script src="assets/js/main.js"></script>
+    <!--  Chart js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.7.3/dist/Chart.bundle.min.js"></script>
+    <!--Flot Chart-->
+    <script src="https://cdn.jsdelivr.net/npm/jquery.flot@0.8.3/jquery.flot.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flot-spline@0.0.1/js/jquery.flot.spline.min.js"></script>
+    <!-- local -->
+    <script src="assets/js/widgets.js"></script>
+</body>
+</html>

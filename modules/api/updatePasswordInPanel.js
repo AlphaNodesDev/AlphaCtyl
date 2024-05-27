@@ -2,7 +2,7 @@
 const axios = require('axios');
 const settings = require('../../settings.json');
 async function updatePasswordInPanel(userIdentifier, newPassword, email, username, first_name, last_name) {
-    const apiUrl = `${settings.pterodactyl.domain}/api/application/users/${userIdentifier}`;
+    const apiUrl = `${settings.pterodactyl.domain}/api/application/users/${userIdentifier.id}`;
     const requestBody = {
         email: email,
         username: username,
@@ -28,4 +28,6 @@ async function updatePasswordInPanel(userIdentifier, newPassword, email, usernam
         res.status(500).send('Error updating password');
     }
 }
+
+
 module.exports = { updatePasswordInPanel };

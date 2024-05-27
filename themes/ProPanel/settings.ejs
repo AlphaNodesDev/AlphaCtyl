@@ -1,0 +1,106 @@
+<%- include('./includes/header') %>
+
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Animated -->
+            <div class="animated fadeIn">
+                          <!-- Status -->
+                          <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card-header">Manage Pterodactyl</div>
+                                <div class="card-body card-block">
+                                    <form action="#" method="post" class="">
+                                        <div class="form-actions form-group">
+                                            <button type="button" onclick="window.location.href='<%= settings.pterodactyl.domain %>'" class="btn btn-primary btn-sm"><i class="fa fa-star"></i>&nbsp; Login To Panel</button>
+                                            <button onclick="passwordreset()" type="button" class="btn btn-warning btn-sm"><i class="fa fa-map-marker"></i>&nbsp; Reset Pterodactyl Password</button>
+                                            <button onclick="notreleased()" type="button" class="btn btn-danger btn-sm"><i class="fa fa-rss"></i>&nbsp;Force Delete Servers</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                 
+                          <div class="content">
+                            <div class="animated fadeIn">
+                                <div class="row">
+                                    <div class="col-lg-6">
+                                        <div class="card">
+                                            <div class="card-header">Account Settings</div>
+                                            <div class="card-body card-block">
+                                                <form action="#" method="post" class="">
+                                                    <div class="form-group">
+                                                        <div class="input-group">
+                                                            <div class="input-group-addon">Username</div>
+                                                            <input type="text" id="username3" name="username3" class="form-control">
+                                                            <div class="input-group-addon"><i class="fa fa-user"></i></div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <div class="input-group">
+                                                            <div class="input-group-addon">Email</div>
+                                                            <input type="email" id="email3" name="email3" class="form-control">
+                                                            <div class="input-group-addon"><i class="fa fa-envelope"></i></div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <div class="input-group">
+                                                            <div class="input-group-addon">Password</div>
+                                                            <input type="password" id="password3" name="password3" class="form-control">
+                                                            <div class="input-group-addon"><i class="fa fa-asterisk"></i></div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-actions form-group">
+                                                        <button type="button" onclick="notreleased()" class="btn btn-primary btn-sm"><i class="fa fa-star"></i>&nbsp; Update</button>
+                                                                           </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                
+
+                        </div>
+                        <!-- Status -->
+           <!-- .row -->
+            </div>
+            <!-- .animated -->
+        </div>
+        <!-- /.content -->
+        <div class="clearfix"></div>
+        <!-- Footer -->
+        <footer class="site-footer">
+            <div class="footer-inner bg-white">
+                <div class="row">
+                    <div class="col-sm-6">
+                        Copyright &copy; 2024 <%= AppName %>
+                    </div>
+                    <div class="col-sm-6 text-right">
+                        Designed by <a href="https://github.io/AlphaCtyl">Abhiram</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+        <!-- /.site-footer -->
+    </div>
+    <!-- /#right-panel -->
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@2.2.4/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.4/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-match-height@0.7.2/dist/jquery.matchHeight.min.js"></script>
+    <script src="assets/js/main.js"></script>
+    <!--  Chart js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.7.3/dist/Chart.bundle.min.js"></script>
+    <!--Flot Chart-->
+    <script src="https://cdn.jsdelivr.net/npm/jquery.flot@0.8.3/jquery.flot.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flot-spline@0.0.1/js/jquery.flot.spline.min.js"></script>
+    <!-- local -->
+    <script src="assets/js/widgets.js"></script>
+
+    <script>
+        function passwordreset(){
+            window.location.replace('/resetptero')
+        }
+    </script>
+</body>
+</html>

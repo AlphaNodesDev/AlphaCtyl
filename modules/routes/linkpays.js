@@ -26,13 +26,16 @@ module.exports.load = async function (
 
     app.get('/extra/linkpays/generate', async (req, res) => {
         if (!req.session.user || !req.session.user.pterodactyl_id) {
-            return res.redirect('/index');
+            return res.redirect('/');
         }
 
-        if (cooldowns[req.session.user.id] && cooldowns[req.session.user.id] > Date.now()) {
-            return res.redirect('/linkvertise');
-        } else if (cooldowns[req.session.user.id]) {
-            delete cooldowns[req.session.user.id];
+        const userId = req.session.user.id;
+
+        if (cooldowns[userId] && cooldowns[userId] > Date.now()) {
+            const remainingTime = Math.ceil((cooldowns[userId] - Date.now()) / 1000); // Remaining time in seconds
+            return res.redirect(`/extra?alert=Cooldown remining time${remainingTime} s`);
+        } else if (cooldowns[userId]) {
+            delete cooldowns[userId];
         }
 
         const userCode = generateUserCode();

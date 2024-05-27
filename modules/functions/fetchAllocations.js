@@ -3,7 +3,6 @@ const axios = require('axios');
 const settings = require('../../settings.json');
 async function fetchAllocations(locationId) {
     try {
-        // Fetch nodes
         const response = await fetch(`${settings.pterodactyl.domain}/api/application/nodes`, {
             method: 'GET',
             headers: {
@@ -46,7 +45,6 @@ async function fetchAllocations(locationId) {
         const allocationsData = await allocationsResponse.json();
         const allocations = allocationsData.data;
 
-        // Find the first allocation that is not assigned
         const notAssignedAllocation = allocations.find(allocation => !allocation.attributes.assigned);
 
         if (!notAssignedAllocation) {

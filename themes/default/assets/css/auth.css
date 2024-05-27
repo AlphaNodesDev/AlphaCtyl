@@ -12,7 +12,7 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background: #1f293a;
+    background: #080808;
 }
 
 .container {
@@ -281,11 +281,11 @@ button {
     bottom: 0;
     left: 0;
     width: 100%;
-    background-color: #1f293a;
+    background-color: #000000;
     padding: 10px 0;
     text-align: center;
     font-size: 14px;
-    color: #666;
+    color: #ffffff;
     border-top: 1px solid #ddd;
   }
   

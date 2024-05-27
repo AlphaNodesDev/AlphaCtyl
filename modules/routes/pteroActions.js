@@ -13,26 +13,18 @@ module.exports.load = async function (express, session, passport ,version, Disco
 router.get('/resetptero', async (req, res) => {
     try {
         const userId = req.session.user.pterodactyl_id;
-        const userIdentifier = await getUserIdByUUID(uuid);
+        const userIdentifier = await getUserIdByUUID(userId);
         console.log('User Identifier:', userIdentifier.id);
         const newPassword = randomstring.generate({
             length: 10,
             charset: 'alphanumeric'
         });
-        await updatePasswordInPanel(userIdentifier.id, newPassword, req.session.user.email, req.session.user.username, req.session.user.first_name, req.session.user.last_name);
+        await updatePasswordInPanel(userIdentifier, newPassword, req.session.user.email, req.session.user.username, req.session.user.first_name, req.session.user.last_name);
         const uuid = req.session.user.pterodactyl_id;
         const coins = await getUserCoins(userId, db);
-        res.render("settings", { 
-            successMessage: 'Pterodactyl Password Reset', 
-            value: 'Your New Password is ' + newPassword + '', 
-            user: req.session.user,
-            AppName: AppName,
-            AppLogo: AppImg,
-            ads,
-            pterodactyldomain,
-            coins 
-        });
-        console.log('updating password in panel:');
+        return res.redirect('settings?success=your New Password is: ${newPassword}');
+
+      
     } catch (error) {  
     logErrorToFile(`Error resetting password in Pterodactyl panel for user:${userId} `);
          return res.redirect('settings?error=Error resetting password.');}});
@@ -43,7 +35,6 @@ router.get('/resetptero', async (req, res) => {
 // Function to Suspend servers 
 const checkAndSuspendExpiredServers = async () => {
     if (!settings.store.renewals.status) {
-        console.log('Renewals feature is disabled. Skipping check.');
         return;
     }
 
@@ -362,6 +353,8 @@ router.get('/delete', async (req, res) => {
 });
 
 //Update user servers
+
+//pending 
 app.post('/updateserver', (req, res) => {
     const serverId = parseInt(req.body.id);
     const serverIndex = servers.findIndex(s => s.id === serverId);

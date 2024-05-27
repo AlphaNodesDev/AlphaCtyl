@@ -50,8 +50,8 @@ async function getUserServersCount(userIdentifier) {
             console.error('Failed to fetch servers:', response.status);
             return null;
         }
-
-        const userServers = response.data.data.filter(server => server.attributes.user === userIdentifier);
+        const pterouserid = userIdentifier.id;
+        const userServers = response.data.data.filter(server => server.attributes.user === pterouserid);
         
         // Calculate total RAM, disk space, ports, and CPU usage
         let totalRAM = 0;
@@ -99,10 +99,10 @@ async function getUserServers(userIdentifier) {
             console.error('Failed to fetch servers:', response.status);
             return null;
         }
+        const pterouserid = userIdentifier.id;
 
-        const userServers = response.data.data.filter(server => server.attributes.user === userIdentifier);
+        const userServers = response.data.data.filter(server => server.attributes.user === pterouserid);
         
-        // Map each server to its details
         const serverDetails = userServers.map(server => ({
             id: server.attributes.id,
             name: server.attributes.name,
