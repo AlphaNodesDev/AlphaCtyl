@@ -320,7 +320,8 @@ function formatDate(date) {
 });
 // delete ptero server
 router.get('/delete', async (req, res) => {
-    const serverId = req.query.id; // Retrieve the server ID from the query string
+    const serverId = req.query.id; 
+
     if (!serverId) {
         return res.redirect('/manage?error=No server ID provided.');
     }
@@ -337,7 +338,7 @@ router.get('/delete', async (req, res) => {
             // Server deleted successfully from Pterodactyl
             try {
                 await db.run(`DELETE FROM renewals WHERE serverId = ?`, [serverId]);
-                return res.redirect('/manage?success=Server and renewal record deleted successfully.');
+                return res.redirect('/manage?success=Server  deleted successfully.');
             } catch (dbError) {
                 console.error('Error deleting renewal record:', dbError);
                 return res.redirect('/manage?error=Server deleted but failed to delete renewal record.');
