@@ -12,7 +12,7 @@
         "header": "header.ejs",
         "footer": "footer.ejs",
         "sidebar": "sidebar.ejs",
-        "afk": "afk",
+        "afk": "afk.ejs",
         "extra": "extra.ejs",
         "youtube": "youtube.ejs",
         "player": "player.ejs"
