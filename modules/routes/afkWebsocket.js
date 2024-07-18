@@ -9,10 +9,11 @@ module.exports.load = async function (express, session, passport ,version, Disco
 ) {
 
 //Functions To check for websocket connections
-wss.on('connection', function connection(ws, req) {
+ss.on('connection', function connection(ws, req) {
     const urlParams = new URLSearchParams(req.url.split('?')[1]);
     const userId = urlParams.get('userId');
     const page = urlParams.get('page');
+
     function handleNewConnection(userId, page) {
         if (activeConnections.has(userId)) {
             const pageSet = activeConnections.get(userId);
@@ -27,14 +28,17 @@ wss.on('connection', function connection(ws, req) {
         }
         return true;
     }
+
     const isNewConnection = handleNewConnection(userId, page);
     if (!isNewConnection) {
         return;
     }
+
     ws.on('message', function incoming(message) {
         const reward = settings.afk.coins;
         updateUserCoins(userId, reward, db);
     });
+
     ws.on('close', function close() {
         const pageSet = activeConnections.get(userId);
         if (pageSet) {
@@ -45,6 +49,5 @@ wss.on('connection', function connection(ws, req) {
         }
     });
 });
-
 
 }
