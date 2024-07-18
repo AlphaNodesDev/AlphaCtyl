@@ -27,7 +27,7 @@
                                                 const page = 'afk'; 
                                                 const afktimer = '<%= afktimer %>';
                                                 const port = '<%= WEBSOCKET_PORT %>';
-                                                const socket = new WebSocket(`ws://localhost:${port}?userId=${userId}&page=${page}`);                                            
+                                                const socket = new WebSocket(`wss://yourdomain.com:${port}?userId=${userId}&page=${page}`);
                                                 function updateConnectionStatus(connected) {
                                                     const connectionStatusDiv = document.getElementById('connectionStatus');
                                                     connectionStatusDiv.innerHTML = connected
