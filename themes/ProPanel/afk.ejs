@@ -17,6 +17,7 @@
                                         <p class="text-muted m-b-15">
                                             While Staying Here You Will Earn Coins
                                         </p>
+                                    
                                         <center>
                                             <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.2/socket.io.js"></script>
                                             <div id="connectionStatus">WebSocket disconnected</div>
@@ -27,7 +28,7 @@
                                                 const page = 'afk'; 
                                                 const afktimer = '<%= afktimer %>';
                                                 const port = '<%= WEBSOCKET_PORT %>';
-                                                const socket = new WebSocket(`wss://yourdomain.com:${port}?userId=${userId}&page=${page}`);
+                                                const socket = new WebSocket(`wss://${DOMAIN}:${port}?userId=${userId}&page=${page}`);
                                                 function updateConnectionStatus(connected) {
                                                     const connectionStatusDiv = document.getElementById('connectionStatus');
                                                     connectionStatusDiv.innerHTML = connected
