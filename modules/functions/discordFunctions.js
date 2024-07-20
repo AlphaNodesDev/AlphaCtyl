@@ -1,19 +1,24 @@
 const axios = require('axios');
 const settings = require('../../settings.json');
 // Function to send a Discord webhook using axios
-function sendDiscordWebhook(webhookUrl, message, color) {
+function sendDiscordWebhook(webhookUrl, title, message, color, appName) {
     axios.post(webhookUrl, {
         embeds: [{
-            description: message,
-            color: color
+            title: title, // Title of the embed
+            description: message, // Main message
+            color: color, // Embed color
+            footer: {
+                text: `Powered by ${appName}`, // Footer text
+            }
         }]
-    }).then(response => {
+    })
+    .then(response => {
         console.log('Webhook sent successfully:', response.data);
-    }).catch(error => {
+    })
+    .catch(error => {
         console.error('Error sending webhook:', error.message);
     });
 }
-
 // Function to join a Discord guild using axios
 async function joinDiscordGuild(discordUserId, accessToken) {
     const guildId = settings.discord.bot.joinguild.guildid[0]; 

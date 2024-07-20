@@ -15,7 +15,7 @@
                         <p class="text-muted m-b-15">
                             While Staying Here You Will Earn Coins
                         </p>
-                        <p>This earning session you have earned <code id="sessionEarn">0 coins</code>.</p>
+                        <p>This earning session you have earned <code id="sessionEarn">0</code> coins.</p>
                         <p>AFK Duration: <span id="afkDuration">0</span> seconds</p>
                         <center>
                             <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.2/socket.io.js"></script>
@@ -23,9 +23,9 @@
 
                             <script>
                                 let totalCoins = 0;
-                                let afkSeconds = '<%= afktimer %>'; 
+                                let afkSeconds = parseInt('<%= afktimer %>', 10); 
                                 const userId = '<%= user.pterodactyl_id %>';
-                                const afktimer = '<%= afktimer %>';
+                                const afktimer = parseInt('<%= afktimer %>', 10);
                                 let isDisconnectedDueToAltSession = false;
 
                                 function connect() {
@@ -39,7 +39,7 @@
                                     socket.onmessage = (event) => {
                                         let data = JSON.parse(event.data);
                                         if (data.type === "coin") {
-                                            totalCoins += data.amount;
+                                            totalCoins += parseInt(data.amount, 10);
                                             document.getElementById("sessionEarn").innerText = `${totalCoins} coins`;
                                             afkSeconds = afktimer; 
                                         }
