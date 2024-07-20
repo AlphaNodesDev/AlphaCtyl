@@ -47,8 +47,19 @@ const db = new sqlite3.Database(DB_FILE_PATH);
 
 // Websocket Config
 const WebSocket = require('ws');
-const wss = new WebSocket.Server({ port: WEBSOCKET_PORT });
+const http = require('http');
+
+const server = http.createServer(app);
+
 const activeConnections = new Map();
+
+
+// WebSocket Setup with express-ws
+const expressWs = require('express-ws')(app);
+const wss = expressWs.getWss();  
+
+
+
 
 const client = new Client({
     intents: [GatewayIntentBits.Guilds]

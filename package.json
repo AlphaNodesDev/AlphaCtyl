@@ -17,6 +17,7 @@
     "ejs": "^3.1.10",
     "express": "^4.19.2",
     "express-session": "^1.18.0",
+    "express-ws": "^5.0.2",
     "figlet": "^1.5.1",
     "moment-timezone": "^0.5.45",
     "node-fetch": "^3.3.2",

@@ -8,7 +8,7 @@ module.exports.load = async function (express, session, passport ,version, Disco
     updateUserCoins,fetchAllocations
 ) {
 
-    wss.on('connection', function connection(ws, req) {
+    app.ws('/afk/ws', (ws, req) => {
         const urlParams = new URLSearchParams(req.url.split('?')[1]);
         const userId = urlParams.get('userId');
         const page = urlParams.get('page');
@@ -33,12 +33,14 @@ module.exports.load = async function (express, session, passport ,version, Disco
             return;
         }
     
-        ws.on('message', function incoming(message) {
+        const rewardInterval = setInterval(() => {
             const reward = settings.afk.coins;
             updateUserCoins(userId, reward, db);
-        });
+            ws.send(JSON.stringify({ type: 'coin', amount: reward }));
+        }, settings.afk.timer * 1000); // Timer in seconds
     
         ws.on('close', function close() {
+            clearInterval(rewardInterval);
             const pageSet = activeConnections.get(userId);
             if (pageSet) {
                 pageSet.delete(page);
@@ -48,5 +50,6 @@ module.exports.load = async function (express, session, passport ,version, Disco
             }
         });
     });
+    
 
 }
