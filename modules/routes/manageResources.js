@@ -1,7 +1,3 @@
-
-
-
-
 module.exports.load = async function (express, session, passport ,version, DiscordStrategy,bodyParser, figlet
     ,sqlite3,fs,chalk,path,app,router,settings,DB_FILE_PATH,PORT,WEBSOCKET_PORT,DOMAIN,theme,randomstring,
     figletOptions,appNameAscii,authorNameAscii,AppName,AppImg,ads,afktimer,packageserver,packagecpu,
@@ -10,7 +6,6 @@ module.exports.load = async function (express, session, passport ,version, Disco
     joinDiscordGuild, sendDiscordWebhook, assignDiscordRole ,registerPteroUser,getUserIdByUUID, getUserServersCount, getUserServers ,getUserCoins,getUserResources,updatePasswordInPanel,
     updateUserCoins,fetchAllocations
 ) {
-
 // Buy Resources  
 router.post('/byresources', (req, res) => {
     const { servers, cpu, ram, disk, ports, database, backup } = req.body;

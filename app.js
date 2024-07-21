@@ -53,20 +53,20 @@ const server = http.createServer(app);
 
 const activeConnections = new Map();
 
-
 // WebSocket Setup with express-ws
 const expressWs = require('express-ws')(app);
 const wss = expressWs.getWss();  
 
-
-
-
 const client = new Client({
-    intents: [GatewayIntentBits.Guilds]
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent
+    ]
 });
 
 if(settings.discord.bot.enabled){
-client.login(settings.discord.bot.token).catch(console.error);
+    client.login(settings.discord.bot.token).catch(console.error);
 }
 
 client.on('ready', () => {
@@ -85,6 +85,7 @@ client.on('ready', () => {
         });
     }
 });
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, `./themes/${theme}`)));
 app.use(session({
@@ -136,6 +137,7 @@ app.get('/logout', (req, res) => {
     });
 });
 
+// Load Route Modules
 const routesDirectory = path.join(__dirname, 'modules/routes');
 const routesFiles = fs.readdirSync(routesDirectory).filter(file => file.endsWith('.js'));
 
@@ -169,8 +171,28 @@ const loadRouteModules = routesFiles.map(file => {
     });
 });
 
-Promise.all(loadRouteModules).then(() => {
+// Load and initialize plugins
+const pluginsDirectory = path.join(__dirname, 'plugins');
+const pluginFiles = fs.readdirSync(pluginsDirectory).filter(file => file.endsWith('.js'));
 
+pluginFiles.forEach(file => {
+    const pluginPath = path.join(pluginsDirectory, file);
+    const plugin = require(pluginPath);
+
+    if (typeof plugin === 'function') {
+        try {
+            plugin(client, db); // Initialize plugin with the client and db
+            console.log(`Loaded plugin: ${file}`);
+        } catch (error) {
+            console.error(`Error initializing plugin ${file}:`, error);
+        }
+    } else {
+        console.warn(`The plugin ${file} does not export a function.`);
+    }
+});
+
+
+Promise.all([loadRouteModules]).then(() => {
     app.listen(PORT, async () => {
         console.log(chalk.red("================================================================"));
         console.log(chalk.green(appNameAscii));

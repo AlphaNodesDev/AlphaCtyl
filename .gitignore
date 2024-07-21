@@ -6,5 +6,5 @@ database.db
 /normal.log 
 /themes/default
 /database.sqlite
-database.sqlite
-
+/plugins
+/olddb.sqlite
