@@ -22,7 +22,7 @@ router.get('/resetptero', async (req, res) => {
         await updatePasswordInPanel(userIdentifier, newPassword, req.session.user.email, req.session.user.username, req.session.user.first_name, req.session.user.last_name);
         const uuid = req.session.user.pterodactyl_id;
         const coins = await getUserCoins(userId, db);
-        return res.redirect('settings?success=your New Password is: ${newPassword}');
+        return res.redirect('settings?success=your New Password is:'+` ${newPassword}`);
 
       
     } catch (error) {  
@@ -304,7 +304,8 @@ function formatDate(date) {
                 if (settings.discord.logging.status === true && settings.discord.logging.actions.user.create_server === true) {
                     const message = `User Created Server:\nName: ${name}\nCPU: ${cpu} cores\nRAM: ${ram} MB\nDisk: ${disk} MB\nDatabases: ${database}\nBackups: ${backup}\nPorts: ${port}`;
                     const color = 0x00FF00; // Green color in hexadecimal
-                    sendDiscordWebhook(webhookUrl, message, color);
+                    sendDiscordWebhook(webhookUrl, message, 'Resource Purchase Notification', color, 'AlphaCtyl');
+
                 }
                 return res.redirect('/manage?success=Server created successfully.');
             } else {

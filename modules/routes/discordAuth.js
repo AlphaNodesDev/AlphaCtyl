@@ -42,7 +42,7 @@ module.exports.load = async function (
                     } else {
                         // User is restricted from logging in
                         return done(null, false, { message: 'Your account is restricted or timed out by admin.' });
-                    }
+                    } 
                 }
                 const firstName = profile.username.split('#')[0];
                 const lastName = profile.username.split('#')[0];
@@ -60,7 +60,7 @@ module.exports.load = async function (
                     const message = `User logged in: ${profile.username}`;
                     const webhookUrl = settings.discord.logging.webhook;
                     const color = 0x00FF00;
-                    sendDiscordWebhook(webhookUrl, message, color);
+                    sendDiscordWebhook(webhookUrl, 'User Logined', message, color, 'AlphaCtyl');
                 }
                 if (settings.discord.bot.joinguild.enabled === true) {
                     try {

@@ -8,3 +8,4 @@ database.db
 /database.sqlite
 /plugins
 /olddb.sqlite
+/pending.txt
