@@ -1,5 +1,6 @@
 const express = require('express');
 const session = require('express-session');
+const flash = require('connect-flash');
 const passport = require('passport');
 const version = "1.0.0";
 const DiscordStrategy = require('passport-discord').Strategy;
@@ -42,7 +43,8 @@ const pterodactyldomain = settings.pterodactyl.domain;
 const LOG_FILE_PATH = path.join(__dirname, 'error.log');
 const NORMAL_LOG_FILE_PATH = path.join(__dirname, 'normal.log');
 const webhookUrl = settings.discord.logging.webhook;
-const { Client, GatewayIntentBits } = require('discord.js');
+const { Client, GatewayIntentBits, MessageActionRow, MessageButton} = require('discord.js');
+
 const db = new sqlite3.Database(DB_FILE_PATH);
 
 // Websocket Config
@@ -97,10 +99,10 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, `./themes/${theme}`));
-
+app.use(flash());
 // Database table creation
 db.serialize(() => {
-    db.run("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY,avatar TEXT,discord_id TEXT, username TEXT, password TEXT, email TEXT, first_name TEXT, last_name TEXT, pterodactyl_id TEXT, servers INTEGER DEFAULT 0, ports INTEGER DEFAULT 0, ram INTEGER DEFAULT 0, disk INTEGER DEFAULT 0, cpu INTEGER DEFAULT 0, database INTEGER DEFAULT 0, backup INTEGER DEFAULT 0, coins INTEGER DEFAULT 0)");
+    db.run("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY,avatar TEXT,discord_id TEXT, username TEXT, password TEXT, email TEXT, first_name TEXT, last_name TEXT, pterodactyl_id TEXT, status INTEGER DEFAULT 1, servers INTEGER DEFAULT 0, ports INTEGER DEFAULT 0, ram INTEGER DEFAULT 0, disk INTEGER DEFAULT 0, cpu INTEGER DEFAULT 0, database INTEGER DEFAULT 0, backup INTEGER DEFAULT 0, coins INTEGER DEFAULT 0)");
     db.run("CREATE TABLE IF NOT EXISTS youtube (id INTEGER, yt_link TEXT)");
     db.run(`CREATE TABLE IF NOT EXISTS renewals (id INTEGER PRIMARY KEY AUTOINCREMENT, serverId TEXT NOT NULL, next_renewal DATETIME NOT NULL, status TEXT DEFAULT 'active')`);
 });

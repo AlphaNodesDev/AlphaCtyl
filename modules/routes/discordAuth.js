@@ -11,12 +11,11 @@ module.exports.load = async function (
     getUserIdByUUID, getUserServersCount, getUserServers, getUserCoins, 
     getUserResources, updatePasswordInPanel, updateUserCoins, fetchAllocations
 ) {
-
     // Discord Login Strategy
     passport.use(new DiscordStrategy({
         clientID: settings.discord.oauth2.clientID,
         clientSecret: settings.discord.oauth2.clientSecret,
-        callbackURL: `${DOMAIN}/discord/callback`,
+        callbackURL: settings.discord.oauth2.callbackpath,
         scope: ['identify', 'email', 'guilds.join'],
     }, async (accessToken, refreshToken, profile, done) => {
         try {
@@ -25,19 +24,25 @@ module.exports.load = async function (
                     return done(err);
                 }
                 if (row) {
-                    if (settings.discord.bot.joinguild.enabled === true) {
-                        try {
-                            const discordUserId = profile.id;
-                            await joinDiscordGuild(discordUserId, accessToken);
-                            if (settings.discord.bot.giverole.enabled === true) {
-                                assignDiscordRole(discordUserId);
+                    // Check the user's status
+                    if (row.status === 1) {
+                        if (settings.discord.bot.joinguild.enabled === true) {
+                            try {
+                                const discordUserId = profile.id;
+                                await joinDiscordGuild(discordUserId, accessToken);
+                                if (settings.discord.bot.giverole.enabled === true) {
+                                    assignDiscordRole(discordUserId);
+                                }
+                            } catch (error) {
+                                logErrorToFile('Error adding user to guild:', error.response.data);
+                                return done(new Error('Failed to add user to guild.'));
                             }
-                        } catch (error) {
-                            logErrorToFile('Error adding user to guild:', error.response.data);
-                            return res.status(error.response.status || 500).json(error.response.data);
                         }
+                        return done(null, { ...row, accessToken });
+                    } else {
+                        // User is restricted from logging in
+                        return done(null, false, { message: 'Your account is restricted or timed out by admin.' });
                     }
-                    return done(null, { ...row, accessToken });
                 }
                 const firstName = profile.username.split('#')[0];
                 const lastName = profile.username.split('#')[0];
@@ -66,11 +71,11 @@ module.exports.load = async function (
                         }
                     } catch (error) {
                         logErrorToFile('Error adding user to guild:', error.response.data);
-                        return res.status(error.response.status || 500).json(error.response.data);
+                        return done(new Error('Failed to add user to guild.'));
                     }
                 }
-                await db.run('INSERT INTO users (id, discord_id, username, email, password, first_name, last_name, pterodactyl_id, avatar) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                    [profile.id, profile.id, profile.username, profile.email, password, firstName, lastName, userId, profile.avatar]);
+                await db.run('INSERT INTO users (id, discord_id, username, email, password, first_name, last_name, pterodactyl_id, avatar, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                    [profile.id, profile.id, profile.username, profile.email, password, firstName, lastName, userId, profile.avatar, 1]); // Set default status to 1
                 return done(null, { ...profile, accessToken });
             });
         } catch (error) {
@@ -97,9 +102,15 @@ module.exports.load = async function (
                 return res.redirect('/');
             }
 
-            req.session.user = row;
-            res.redirect('/dashboard');
+            // Check the user's status
+            if (row.status === 1 || row.status === 0) {
+                req.session.user = row;
+                res.redirect('/dashboard');
+            } else {
+                res.redirect('/?error=Your account is restricted or timed out by admin.');
+            }
         });
     });
 
-}
+
+};
