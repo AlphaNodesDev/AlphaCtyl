@@ -113,7 +113,6 @@ Object.keys(pages).forEach((page) => {
 
             res.render(pages[page], {
                 user: req.session.user,
-                WEBSOCKET_PORT,
                 userresources,
                 userServersCount,
                 userServers,

@@ -34,6 +34,7 @@
         "ad2": "code for ad 2"
     },
     "youtube": {
+        "enable": false,
         "coins": "50",
         "_Note_":"Youtube Video code after v= (https://www.youtube.com/watch?v=xTBDsVl9fQQ) ",
         "links": [
