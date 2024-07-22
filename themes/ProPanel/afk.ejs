@@ -29,7 +29,7 @@
                                 let isDisconnectedDueToAltSession = false;
 
                                 function connect() {
-                                    const socket = new WebSocket(`${window.location.href.startsWith("https://") ? "wss" : "ws"}://${window.location.host}/afk/ws?userId=${userId}&page=afk`);
+                                    const socket = new WebSocket(`${window.location.href.startsWith("https://") ? "wss" : "ws"}://${window.location.host}/afk?userId=${userId}&page=afk`);
 
                                     socket.onopen = () => {
                                         console.log("WebSocket connection opened");

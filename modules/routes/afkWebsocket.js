@@ -8,7 +8,7 @@ module.exports.load = async function (express, session, passport ,version, Disco
     updateUserCoins,fetchAllocations
 ) {
 
-    app.ws('/afk/ws', (ws, req) => {
+    app.ws('/afk', (ws, req) => {
         const urlParams = new URLSearchParams(req.url.split('?')[1]);
         const userId = urlParams.get('userId');
         const page = urlParams.get('page');
