@@ -6,6 +6,7 @@
     "pages": {
         "dashboard": "dashboard.ejs",
         "manage": "manage.ejs",
+        "updateserver": "updateserver.ejs",
         "settings": "settings.ejs",
         "store": "store.ejs",
         "status": "status.ejs",
@@ -16,6 +17,7 @@
         "extra": "extra.ejs",
         "youtube": "youtube.ejs",
         "player": "player.ejs"
+
 
     },
 

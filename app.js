@@ -86,10 +86,7 @@ client.on('ready', async () => {
 
     if (settings.discord.bot.description) {
         try {
-            console.log('Setting bot presence with the following settings:');
-            console.log('Description:', settings.discord.bot.description);
-            console.log('Activity Type:', settings.discord.bot.activityType);
-            console.log('Status:', settings.discord.bot.status);
+   
 
             await client.user.setPresence({
                 activities: [{ name: settings.discord.bot.description,    
@@ -98,7 +95,6 @@ client.on('ready', async () => {
                 status: settings.discord.bot.status
             });
 
-            console.log('Bot presence set successfully.');
         } catch (error) {
             console.error('Error setting bot presence:', error);
         }
