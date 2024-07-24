@@ -62,7 +62,9 @@
         "bot": {
             "enabled": true,
             "name": "AlphaCtyl",
-            "description": "Managing AlphaCtyl Dashboard", 
+            "description": "AlphaCtyl Dashboard", 
+            "activityType": "PLAYING",
+            "status": "idle",
             "token": "Bot Token Here",
             "joinguild": {
                 "_comment": "The Discord bot must be in these servers and have invite permissions.",

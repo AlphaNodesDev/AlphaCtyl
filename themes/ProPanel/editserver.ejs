@@ -122,8 +122,6 @@
                                                         <td>   
                                                             <% if (server.suspended == false){ %>
                                                             <button onclick="window.location.href='./delete?id=<%= server.id %>'" type="button" class="btn btn-danger btn-sm"><i class="fa-solid  fa-times-circle"></i>&nbsp; Delete</button>
-                                                            <button onclick="window.location.href='./manage?id=<%= server.id %>'" type="button" class="btn btn-success btn-sm"><i class="fa-solid  fa-gear"></i>&nbsp; Manage</button>
-
                                                             <% } else { %>
                                                             <% if (settings.store.renewals.status == true) { %>
                                                                 <button onclick="window.location.href='./dashboard?job=Renew Server&&message=Are You Sure to Renew Server for <%= settings.store.renewals.days %> Days <%= settings.store.renewals.hour %> Hour <%= settings.store.renewals.minute %> Minutes&&id=<%= server.id %>'" type="button" class="btn btn-danger btn-sm"><i class="fa-solid fa-clock-o"></i>&nbsp; Suspended</button>

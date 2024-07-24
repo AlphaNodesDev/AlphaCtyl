@@ -15,8 +15,6 @@ const router = express.Router();
 const settings = JSON.parse(fs.readFileSync('settings.json'));
 const DB_FILE_PATH = settings.database;
 const PORT = process.env.PORT || settings.website.port;
-const WEBSOCKET_PORT = settings.afk.websocket.port;
-const DOMAIN = settings.website.domain;
 const theme = settings.defaulttheme;
 const randomstring = require('randomstring');
 const figletOptions = {
@@ -43,7 +41,7 @@ const pterodactyldomain = settings.pterodactyl.domain;
 const LOG_FILE_PATH = path.join(__dirname, 'error.log');
 const NORMAL_LOG_FILE_PATH = path.join(__dirname, 'normal.log');
 const webhookUrl = settings.discord.logging.webhook;
-const { Client, GatewayIntentBits, MessageActionRow, MessageButton} = require('discord.js');
+const {ActivityType , Client, GatewayIntentBits, MessageActionRow, MessageButton} = require('discord.js');
 
 const db = new sqlite3.Database(DB_FILE_PATH);
 
@@ -71,22 +69,44 @@ if(settings.discord.bot.enabled){
     client.login(settings.discord.bot.token).catch(console.error);
 }
 
-client.on('ready', () => {
-    console.log(chalk.red('  ',"-----------------------------"));
-    console.log(chalk.red('|',`Logged in as ${client.user.tag}`, '|'));
+
+client.on('ready', async () => {
     console.log(chalk.red('  ', "-----------------------------"));
+    console.log(chalk.red('|', `Logged in as ${client.user.tag}`, '|'));
+    console.log(chalk.red('  ', "-----------------------------"));
+
     if (settings.discord.bot.name && client.user.username !== settings.discord.bot.name) {
-        client.user.setUsername(settings.discord.bot.name).then(user => {
+        try {
+            const user = await client.user.setUsername(settings.discord.bot.name);
             console.log(`Bot username set to ${user.username}`);
-        }).catch(console.error);
-    }
+        } catch (error) {
+            console.error('Error setting bot username:', error);
+        }
+    } 
+
     if (settings.discord.bot.description) {
-        client.user.setPresence({
-            activities: [{ name: settings.discord.bot.description, type: 'PLAYING' }],
-            status: 'online'
-        });
+        try {
+            console.log('Setting bot presence with the following settings:');
+            console.log('Description:', settings.discord.bot.description);
+            console.log('Activity Type:', settings.discord.bot.activityType);
+            console.log('Status:', settings.discord.bot.status);
+
+            await client.user.setPresence({
+                activities: [{ name: settings.discord.bot.description,    
+                         type: ActivityType[settings.discord.bot.activityType], 
+                    url: 'https://www.youtube.com/shorts/pDCTUzN7Jzo'  }],
+                status: settings.discord.bot.status
+            });
+
+            console.log('Bot presence set successfully.');
+        } catch (error) {
+            console.error('Error setting bot presence:', error);
+        }
+    } else {
+        console.log('Bot description not set.');
     }
 });
+
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, `./themes/${theme}`)));
@@ -128,6 +148,7 @@ const { updateUserCoins } = require('./modules/functions/updateUserCoins.js');
 const { fetchAllocations } = require('./modules/functions/fetchAllocations.js'); 
 
 app.use('/', router);
+
 // Logout process
 app.get('/logout', (req, res) => {
     req.session.destroy((err) => {

@@ -1,7 +1,7 @@
 
 
 module.exports.load = async function (express, session, passport ,version, DiscordStrategy,bodyParser, figlet
-    ,sqlite3,fs,chalk,path,app,router,settings,DB_FILE_PATH,PORT,WEBSOCKET_PORT,DOMAIN,theme,randomstring,
+    ,sqlite3,fs,chalk,path,app,router,settings,DB_FILE_PATH,PORT,theme,randomstring,
     figletOptions,appNameAscii,authorNameAscii,AppName,AppImg,ads,afktimer,packageserver,packagecpu,
     packageram,packagedisk,packageport,packagedatabase,packagebackup,pterodactyldomain,LOG_FILE_PATH,NORMAL_LOG_FILE_PATH,
     webhookUrl,db,WebSocket,wss,activeConnections,pagesConfig,pages,oauthPages,adminPages,logErrorToFile, logNormalToFile, parseLogs, parseNormalLogs,
@@ -186,8 +186,10 @@ await new Promise((resolve, reject) => {
     }
 });
 
-// Function to create server 
+// Function to create server
 router.post('/createserver', async (req, res) => {
+    const settings = JSON.parse(fs.readFileSync('settings.json', 'utf8'));
+
     if (settings.webserver.server_creation === false) {
         return res.redirect('/manage?alert=Sorry, Server Creation Not Enabled');
     } else {
@@ -197,14 +199,39 @@ router.post('/createserver', async (req, res) => {
             const userIdentifier = uuid.id;
             const userResources = await getUserResources(userId, db);
             const userServersCount = await getUserServersCount(userIdentifier);
+
             const availableServers = (userResources.row.servers + packageserver) - userServersCount.count;
             const availableCpu = (userResources.row.cpu + packagecpu) - userServersCount.totalCPU;
             const availableRam = (userResources.row.ram + packageram) - userServersCount.totalRAM;
             const availableDisk = (userResources.row.disk + packagedisk) - userServersCount.totalDisk;
             const availableDatabase = (userResources.row.database + packagedatabase) - userServersCount.totalDatabase;
-            const availablebackup = (userResources.row.backup + packagebackup) - userServersCount.totalBackup;
+            const availableBackup = (userResources.row.backup + packagebackup) - userServersCount.totalBackup;
             const availablePorts = (userResources.row.ports + packageport) - userServersCount.totalPorts;
-            const { name, cpu, ram, disk, port, database, backup } = req.body;
+
+            const { name, cpu, ram, disk, port, database, backup, egg: eggKey, locations: locationKey } = req.body;
+
+            const eggConfig = settings.eggs[eggKey];
+            const locationsConfig = settings.locations[locationKey];
+            const locationId = locationsConfig.id;
+
+            if (!eggConfig) {
+                return res.redirect('/manage?info=Invalid egg configuration.');
+            }
+
+            // Minimum resource values from egg configuration
+            const minCpu = eggConfig.minimum.cpu;
+            const minRam = eggConfig.minimum.ram;
+            const minDisk = eggConfig.minimum.disk;
+
+            if (cpu < minCpu) {
+                return res.redirect(`/manage?info=CPU should be at least ${minCpu} cores.`);
+            }
+            if (ram < minRam) {
+                return res.redirect(`/manage?info=RAM should be at least ${minRam} MB.`);
+            }
+            if (disk < minDisk) {
+                return res.redirect(`/manage?info=Disk space should be at least ${minDisk} MB.`);
+            }
 
             if (availableServers <= 0) {
                 return res.redirect('/manage?info=You don\'t have enough available servers to create the server.');
@@ -221,17 +248,13 @@ router.post('/createserver', async (req, res) => {
             if (database > availableDatabase) {
                 return res.redirect('/manage?info=You don\'t have enough available database to create the server.');
             }
-            if (backup > availablebackup) {
+            if (backup > availableBackup) {
                 return res.redirect('/manage?info=You don\'t have enough available backup to create the server.');
             }
             if (port > availablePorts) {
                 return res.redirect('/manage?info=You don\'t have enough available ports to create the server.');
             }
-            const eggKey = req.body.egg;
-            const locationKey = req.body.locations;
-            const eggConfig = settings.eggs[eggKey];
-            const locationsConfig = settings.locations[locationKey];
-            const locationId = locationsConfig.id;
+
             let allocationId;
             try {
                 allocationId = await fetchAllocations(locationId);
@@ -244,6 +267,7 @@ router.post('/createserver', async (req, res) => {
                 }
                 return res.redirect('/manage?error=Error fetching allocations.');
             }
+
             const serverConfig = {
                 name: name,
                 user: uuid.id,
@@ -267,6 +291,7 @@ router.post('/createserver', async (req, res) => {
                     default: allocationId
                 }
             };
+
             const response = await fetch(`${settings.pterodactyl.domain}/api/application/servers`, {
                 method: 'POST',
                 headers: {
@@ -276,37 +301,29 @@ router.post('/createserver', async (req, res) => {
                 },
                 body: JSON.stringify(serverConfig)
             });
+
             if (response.ok) {
                 const serverData = await response.json();
                 const serverId = serverData.attributes.id;
-  // Calculate next renewal date based on settings
-const nextRenewalDate = new Date();
-nextRenewalDate.setDate(nextRenewalDate.getDate() + settings.store.renewals.days);
-nextRenewalDate.setHours(nextRenewalDate.getHours() + settings.store.renewals.hour);
-nextRenewalDate.setMinutes(nextRenewalDate.getMinutes() + settings.store.renewals.minute);
-const formattedRenewalDate = formatDate(nextRenewalDate);
-// Function to format date as dd:mm:yy:h:m:s
-function formatDate(date) {
-    const day = pad(date.getDate(), 2);
-    const month = pad(date.getMonth() + 1, 2);
-    const year = date.getFullYear();
-    const hour = pad(date.getHours(), 2);
-    const minute = pad(date.getMinutes(), 2);
-    const second = pad(date.getSeconds(), 2);
-    return `${day}:${month}:${year}:${hour}:${minute}:${second}`;
-}
+
+                // Calculate next renewal date based on settings
+                const nextRenewalDate = new Date();
+                nextRenewalDate.setDate(nextRenewalDate.getDate() + settings.store.renewals.days);
+                nextRenewalDate.setHours(nextRenewalDate.getHours() + settings.store.renewals.hour);
+                nextRenewalDate.setMinutes(nextRenewalDate.getMinutes() + settings.store.renewals.minute);
+                const formattedRenewalDate = formatDate(nextRenewalDate);
+
                 await db.run(
                     `INSERT INTO renewals (serverId, next_renewal) VALUES (?, ?)`,
                     [serverId, formattedRenewalDate]
                 );
-                console.log(formattedRenewalDate);
 
                 if (settings.discord.logging.status === true && settings.discord.logging.actions.user.create_server === true) {
                     const message = `User Created Server:\nName: ${name}\nCPU: ${cpu} cores\nRAM: ${ram} MB\nDisk: ${disk} MB\nDatabases: ${database}\nBackups: ${backup}\nPorts: ${port}`;
                     const color = 0x00FF00; // Green color in hexadecimal
-                    sendDiscordWebhook(webhookUrl, message, 'Resource Purchase Notification', color, 'AlphaCtyl');
-
+                    sendDiscordWebhook(settings.discord.webhook.url, message, 'Resource Purchase Notification', color, 'AlphaCtyl');
                 }
+
                 return res.redirect('/manage?success=Server created successfully.');
             } else {
                 const errorMessage = await response.text();
@@ -319,6 +336,8 @@ function formatDate(date) {
         }
     }
 });
+
+
 // delete ptero server
 router.get('/delete', async (req, res) => {
     const serverId = req.query.id; 
