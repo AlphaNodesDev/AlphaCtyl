@@ -6,6 +6,9 @@ database.db
 /normal.log 
 /themes/default
 /database.sqlite
-/plugins
+/plugins/DiscordbotV1.js
+/plugins/DiscordbotV2.js
+/plugins/backupbot.js
+/plugins/configs
 /olddb.sqlite
 /pending.txt
