@@ -14,5 +14,20 @@ async function getUserCoins(userId, db) {
         });
     });
 }
+async function getNotification(userId, db) {
+    return new Promise((resolve, reject) => {
+        db.all('SELECT notification FROM notifications WHERE id = ?', [userId], (err, rows) => {
+            if (err) {
+                console.error(err.message);
+                reject(err);
+            } else {
+                const notifications = rows.map(row => row.notification);
+                resolve(notifications);
+            }
+        });
+    });
+}
 
-module.exports = { getUserCoins };
+
+
+module.exports = { getUserCoins, getNotification};

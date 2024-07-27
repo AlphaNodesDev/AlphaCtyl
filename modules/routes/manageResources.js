@@ -4,9 +4,8 @@ module.exports.load = async function (express, session, passport ,version, Disco
     packageram,packagedisk,packageport,packagedatabase,packagebackup,pterodactyldomain,LOG_FILE_PATH,NORMAL_LOG_FILE_PATH,
     webhookUrl,db,WebSocket,wss,activeConnections,pagesConfig,pages,oauthPages,adminPages,logErrorToFile, logNormalToFile, parseLogs, parseNormalLogs,
     joinDiscordGuild, sendDiscordWebhook, assignDiscordRole ,registerPteroUser,getUserIdByUUID, getUserServersCount, getUserServers ,getUserCoins,getUserResources,updatePasswordInPanel,
-    updateUserCoins,fetchAllocations
-) {
-// Buy Resources  
+    updateUserCoins,fetchAllocations,addNotification
+){// Buy Resources  
 router.post('/byresources', (req, res) => {
     const { servers, cpu, ram, disk, ports, database, backup } = req.body;
 

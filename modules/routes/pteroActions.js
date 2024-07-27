@@ -6,9 +6,8 @@ module.exports.load = async function (express, session, passport ,version, Disco
     packageram,packagedisk,packageport,packagedatabase,packagebackup,pterodactyldomain,LOG_FILE_PATH,NORMAL_LOG_FILE_PATH,
     webhookUrl,db,WebSocket,wss,activeConnections,pagesConfig,pages,oauthPages,adminPages,logErrorToFile, logNormalToFile, parseLogs, parseNormalLogs,
     joinDiscordGuild, sendDiscordWebhook, assignDiscordRole ,registerPteroUser,getUserIdByUUID, getUserServersCount, getUserServers ,getUserCoins,getUserResources,updatePasswordInPanel,
-    updateUserCoins,fetchAllocations
-) {
-
+    updateUserCoins,fetchAllocations,addNotification
+){
     function formatDate(date) {
         const day = pad(date.getDate(), 2);
         const month = pad(date.getMonth() + 1, 2);
@@ -22,7 +21,6 @@ router.get('/resetptero', async (req, res) => {
     try {
         const userId = req.session.user.pterodactyl_id;
         const userIdentifier = await getUserIdByUUID(userId);
-        console.log('User Identifier:', userIdentifier.id);
         const newPassword = randomstring.generate({
             length: 10,
             charset: 'alphanumeric'

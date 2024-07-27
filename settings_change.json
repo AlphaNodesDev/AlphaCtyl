@@ -25,6 +25,15 @@
                 "ports": 1,
                 "database": 1,
                 "backups": 1
+            },
+            "gold": {
+                "ram": 2048,
+                "disk": 2048,
+                "cpu": 200,
+                "servers": 2,
+                "ports": 2,
+                "database": 1,
+                "backups": 1
             }
         }
     },

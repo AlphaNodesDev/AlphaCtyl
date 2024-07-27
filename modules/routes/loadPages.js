@@ -5,7 +5,7 @@ module.exports.load = async function (express, session, passport ,version, Disco
     packageram,packagedisk,packageport,packagedatabase,packagebackup,pterodactyldomain,LOG_FILE_PATH,NORMAL_LOG_FILE_PATH,
     webhookUrl,db,WebSocket,wss,activeConnections,pagesConfig,pages,oauthPages,adminPages,logErrorToFile, logNormalToFile, parseLogs, parseNormalLogs,
     joinDiscordGuild, sendDiscordWebhook, assignDiscordRole ,registerPteroUser,getUserIdByUUID, getUserServersCount, getUserServers ,getUserCoins,getUserResources,updatePasswordInPanel,
-    updateUserCoins,fetchAllocations
+    updateUserCoins,fetchAllocations,getNotification
 ) {
 
 
@@ -81,7 +81,6 @@ Object.keys(adminPages).forEach(page => {
 });
 
 
-
 // render values to all pages
 Object.keys(pages).forEach((page) => {
     router.get(`/${page}`, async (req, res) => {
@@ -94,19 +93,17 @@ Object.keys(pages).forEach((page) => {
             const db = new sqlite3.Database(DB_FILE_PATH);
 
             // Use Promise.all to handle multiple asynchronous operations
-            const [userIdentifier , userresources, coins] = await Promise.all([
+            const [userIdentifier, userresources, coins, notifications] = await Promise.all([
                 getUserIdByUUID(userId),
                 getUserResources(userId, db),
-                getUserCoins(userId, db)
-  
+                getUserCoins(userId, db),
+                getNotification(userId, db)
             ]);
+
             // Use Promise.all to handle multiple asynchronous operations
-            const [ userServersCount, userServers] = await Promise.all([
-       
+            const [userServersCount, userServers] = await Promise.all([
                 getUserServersCount(userIdentifier),
-                getUserServers(userIdentifier),
-            
-  
+                getUserServers(userIdentifier)
             ]);
 
             db.close();
@@ -130,7 +127,8 @@ Object.keys(pages).forEach((page) => {
                 coins,
                 afktimer,
                 pterodactyldomain,
-                settings
+                settings,
+                notifications  // Pass the notifications array
             });
         } catch (error) {
             console.error('Error fetching data:', error);

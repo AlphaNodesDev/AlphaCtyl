@@ -47,7 +47,19 @@ async function joinDiscordGuild(discordUserId, accessToken) {
     }
     
 }
-
+    // Function to add a notification to the database
+    async function addNotification(userId, message, db) {
+        return new Promise((resolve, reject) => {
+            db.run('INSERT INTO notifications (id, notification) VALUES (?, ?)', [userId, message], (err) => {
+                if (err) {
+                    console.error(err.message);
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    }
 
 // Function to assign a role to a user in a Discord guild
 async function assignDiscordRole(discordUserId) {
@@ -66,4 +78,4 @@ async function assignDiscordRole(discordUserId) {
     }
 }
 
-module.exports = { joinDiscordGuild, sendDiscordWebhook, assignDiscordRole };
+module.exports = {addNotification, joinDiscordGuild, sendDiscordWebhook, assignDiscordRole };

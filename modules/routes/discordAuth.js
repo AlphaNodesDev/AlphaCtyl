@@ -1,4 +1,3 @@
-
 module.exports.load = async function (express, session, passport ,version, DiscordStrategy,bodyParser, figlet
     ,sqlite3,fs,chalk,path,app,router,settings,DB_FILE_PATH,PORT,theme,randomstring,
     figletOptions,appNameAscii,authorNameAscii,AppName,AppImg,ads,afktimer,packageserver,packagecpu,
@@ -7,6 +6,7 @@ module.exports.load = async function (express, session, passport ,version, Disco
     joinDiscordGuild, sendDiscordWebhook, assignDiscordRole ,registerPteroUser,getUserIdByUUID, getUserServersCount, getUserServers ,getUserCoins,getUserResources,updatePasswordInPanel,
     updateUserCoins,fetchAllocations
 ) {
+
 
     // Discord Login Strategy
     passport.use(new DiscordStrategy({
@@ -35,6 +35,8 @@ module.exports.load = async function (express, session, passport ,version, Disco
                                 return done(new Error('Failed to add user to guild.'));
                             }
                         }
+                        
+              
                         return done(null, { ...row, accessToken });
                     } else {
                         // User is restricted from logging in
@@ -73,6 +75,9 @@ module.exports.load = async function (express, session, passport ,version, Disco
                 }
                 await db.run('INSERT INTO users (id, discord_id, username, email, password, first_name, last_name, pterodactyl_id, avatar, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                     [profile.id, profile.id, profile.username, profile.email, password, firstName, lastName, userId, profile.avatar, 1]); // Set default status to 1
+
+          
+                
                 return done(null, { ...profile, accessToken });
             });
         } catch (error) {
@@ -90,24 +95,26 @@ module.exports.load = async function (express, session, passport ,version, Disco
 
     // Discord login process
     app.get('/discord', passport.authenticate('discord'));
-    app.get('/discord/callback', passport.authenticate('discord', { failureRedirect: '/' }), async (req, res) => {
+    app.get('/discord/callback', passport.authenticate('discord', { failureRedirect: '/?error= Your account is restricted or timed out by admin.' }), async (req, res) => {
         const { email, id: discordUserId, accessToken } = req.user;
-
+    
         db.get('SELECT * FROM users WHERE email = ?', [email], async (err, row) => {
             if (err) {
                 logErrorToFile('Error retrieving user details:', err);
-                return res.redirect('/');
+                // Render the homepage with an error message
+                return res.render('home', { error: 'An error occurred while retrieving user details.' });
             }
-
+    
             // Check the user's status
-            if (row.status === 1 || row.status === 0) {
+            if (row.status === 1) {
                 req.session.user = row;
                 res.redirect('/dashboard');
             } else {
-                res.redirect('/?error=Your account is restricted or timed out by admin.');
+                // Render the homepage with an error message
+                res.render('home', { error: 'Your account is restricted or timed out by admin.' });
             }
         });
     });
-
-
+    
+    
 };

@@ -95,23 +95,28 @@
                     <div class="header-left">
 
                      
-                
-
                         <div class="dropdown for-notification">
                             <button class="btn btn-secondary dropdown-toggle" type="button" id="notification" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <i class="fa fa-bell"></i>
-                                <span class="count bg-danger">0</span>
+                                <span class="count bg-danger"><%= notifications.length %></span>
                             </button>
                             <div class="dropdown-menu" aria-labelledby="notification">
-                                <p class="red">You have 0 Notification</p>
-                                <!----
-                                <a class="dropdown-item media" href="#">
-                                    <i class="fa fa-check"></i>
-                                    <p>Test Notification</p>
-                                </a>
-                       -->
+                                <% if (notifications && notifications.length > 0) { %>
+                                    <% notifications.forEach(function(notification) { %>
+                                        <a class="dropdown-item media" href="#">
+                                            <i class="fa fa-check"></i>
+                                            <p><%= notification %></p>
+                                        </a>
+                                    <% }) %>
+                                <% } else { %>
+                                    <p class="red">You have 0 Notifications</p>
+                                <% } %>
                             </div>
                         </div>
+                        
+                        
+                        
+                        
 
                         <div class="dropdown for-message">
                             <button class="btn btn-secondary dropdown-toggle" type="button" id="message" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">

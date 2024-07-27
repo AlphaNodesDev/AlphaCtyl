@@ -119,6 +119,7 @@ app.use(flash());
 // Database table creation
 db.serialize(() => {
     db.run("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY,avatar TEXT,discord_id TEXT, username TEXT, password TEXT, email TEXT, first_name TEXT, last_name TEXT, pterodactyl_id TEXT, status INTEGER DEFAULT 1, servers INTEGER DEFAULT 0, ports INTEGER DEFAULT 0, ram INTEGER DEFAULT 0, disk INTEGER DEFAULT 0, cpu INTEGER DEFAULT 0, database INTEGER DEFAULT 0, backup INTEGER DEFAULT 0, coins INTEGER DEFAULT 0)");
+    db.run("CREATE TABLE IF NOT EXISTS notifications (id INTEGER, notification TEXT)");
     db.run("CREATE TABLE IF NOT EXISTS youtube (id INTEGER, yt_link TEXT)");
     db.run(`CREATE TABLE IF NOT EXISTS renewals (id INTEGER PRIMARY KEY AUTOINCREMENT, serverId TEXT NOT NULL, next_renewal DATETIME NOT NULL, status TEXT DEFAULT 'active')`);
 });
@@ -135,11 +136,11 @@ const adminPages = pagesConfig.admin;
 // Import API functions
 const { registerPteroUser } = require('./modules/api/getPteroUser.js');
 const { getUserIdByUUID, getUserServersCount, getUserServers } = require('./modules/api/getPteroServers.js'); 
-const { getUserCoins } = require('./modules/api/getuserCoins.js');
+const { getUserCoins,getNotification } = require('./modules/api/getuserCoins.js');
 const { getUserResources } = require('./modules/api/getuseresources.js');
 const { updatePasswordInPanel } = require('./modules/api/updatePasswordInPanel.js'); 
 const { logErrorToFile, logNormalToFile, parseLogs, parseNormalLogs } = require('./modules/functions/saveLogs.js'); 
-const { joinDiscordGuild, sendDiscordWebhook, assignDiscordRole } = require('./modules/functions/discordFunctions.js'); 
+const { joinDiscordGuild, sendDiscordWebhook, assignDiscordRole ,addNotification} = require('./modules/functions/discordFunctions.js'); 
 const { updateUserCoins } = require('./modules/functions/updateUserCoins.js'); 
 const { fetchAllocations } = require('./modules/functions/fetchAllocations.js'); 
 
@@ -172,7 +173,7 @@ const loadRouteModules = routesFiles.map(file => {
                     packageram, packagedisk, packageport, packagedatabase, packagebackup, pterodactyldomain, LOG_FILE_PATH, NORMAL_LOG_FILE_PATH,
                     webhookUrl, db, WebSocket, wss, activeConnections, pagesConfig, pages, oauthPages, adminPages, logErrorToFile, logNormalToFile, parseLogs, parseNormalLogs,
                     joinDiscordGuild, sendDiscordWebhook, assignDiscordRole, registerPteroUser, getUserIdByUUID, getUserServersCount, getUserServers, getUserCoins, getUserResources, updatePasswordInPanel,
-                    updateUserCoins, fetchAllocations).then(() => {
+                    updateUserCoins, fetchAllocations, getNotification,addNotification).then(() => {
                         console.log(chalk.blue.bgGreen(`Loaded module: ${file}`));
                         resolve();
                     }).catch(error => {
