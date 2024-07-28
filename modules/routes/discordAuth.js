@@ -95,25 +95,25 @@ module.exports.load = async function (express, session, passport ,version, Disco
 
     // Discord login process
     app.get('/discord', passport.authenticate('discord'));
-    app.get('/discord/callback', passport.authenticate('discord', { failureRedirect: '/?error= Your account is restricted or timed out by admin.' }), async (req, res) => {
-        const { email, id: discordUserId, accessToken } = req.user;
-    
-        db.get('SELECT * FROM users WHERE email = ?', [email], async (err, row) => {
+    app.get('/discord/callback', (req, res, next) => {
+        passport.authenticate('discord', { failureRedirect: '/?error=auth_failed' }, async (err, user, info) => {
             if (err) {
-                logErrorToFile('Error retrieving user details:', err);
-                // Render the homepage with an error message
-                return res.render('home', { error: 'An error occurred while retrieving user details.' });
+                logErrorToFile('OAuth error during authentication:', err);
+                return res.redirect('/?error=auth_failed');
+            }
+            if (!user) {
+                return res.redirect('/?error=auth_failed');
             }
     
-            // Check the user's status
-            if (row.status === 1) {
-                req.session.user = row;
+            req.logIn(user, async (err) => {
+                if (err) {
+                    logErrorToFile('Error during login:', err);
+                    return res.redirect('/?error=auth_failed');
+                }
+                    req.session.user = user;
                 res.redirect('/dashboard');
-            } else {
-                // Render the homepage with an error message
-                res.render('home', { error: 'Your account is restricted or timed out by admin.' });
-            }
-        });
+            });
+        })(req, res, next);
     });
     
     
