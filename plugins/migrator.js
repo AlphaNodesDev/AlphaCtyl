@@ -39,9 +39,7 @@ if (isPluginEnabled()) {
         const oldDb = new sqlite3.Database('./olddb.sqlite', (err) => {
             if (err) {
                 console.error('Error opening old database:', err.message);
-            } else {
-                console.log('Old database connected.');
-            }
+            } 
         });
 
         const helpMessage = {
@@ -66,8 +64,8 @@ if (isPluginEnabled()) {
             if (message.author.bot) return;
 
             const content = message.content.trim();
-            const prefix = content.startsWith('!!') ? '!!' : '!'; // Determine the prefix
-            const args = content.slice(prefix.length).trim().split(/ +/); // Slice to remove the prefix
+            const prefix = content.startsWith('!!') ? '!!' : '!'; 
+            const args = content.slice(prefix.length).trim().split(/ +/); 
             const command = args.shift().toLowerCase();
             const mention = message.mentions.users.first();
 

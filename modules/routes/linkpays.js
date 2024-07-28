@@ -24,6 +24,11 @@ module.exports.load = async function (
         return code;
     }
 
+    // Extract the domain from the callback URL
+    const callbackUrl = settings.discord.oauth2.callbackpath;
+    const parsedUrl = new URL(callbackUrl);
+    const domain = `${parsedUrl.protocol}//${parsedUrl.host}`; 
+
     app.get('/extra/linkpays/generate', async (req, res) => {
         if (!req.session.user || !req.session.user.pterodactyl_id) {
             return res.redirect('/');
@@ -33,7 +38,7 @@ module.exports.load = async function (
 
         if (cooldowns[userId] && cooldowns[userId] > Date.now()) {
             const remainingTime = Math.ceil((cooldowns[userId] - Date.now()) / 1000); // Remaining time in seconds
-            return res.redirect(`/extra?alert=Cooldown remining time${remainingTime} s`);
+            return res.redirect(`/extra?alert=Cooldown remaining time ${remainingTime} s`);
         } else if (cooldowns[userId]) {
             delete cooldowns[userId];
         }
@@ -45,14 +50,14 @@ module.exports.load = async function (
             redeemed: false
         };
 
-        const link = `${settings.website.domain}/extra/linkpays/redeem/${userCode}`;
+        const link = `${domain}/extra/linkpays/redeem/${userCode}`;
         const alias = generateUserCode();
 
         try {
             const response = await fetch(`https://linkpays.in/api?api=${settings.linkpays.apiKey}&url=${encodeURIComponent(link)}&alias=AlphaCtyl${alias}`);
             const data = await response.json();
             if (response.ok) {
-                res.json({ link: data.shortenedUrl });
+                res.redirect(data.shortenedUrl);
                 console.log(`${req.session.user.username} generated a linkpays link: `, link);
             } else {
                 console.error('Error generating linkpays.io link:', data);
@@ -116,7 +121,7 @@ module.exports.load = async function (
         });
 
         const coins = await getUserCoins(userId, db);
-        const newCoins = coins + settings.linkpays.coins;
+        const newCoins = settings.linkpays.coins;
         await updateUserCoins(userId, newCoins, db);
 
         res.redirect('/extra?success=SUCCESSLINKPAYS');

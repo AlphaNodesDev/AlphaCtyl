@@ -9,6 +9,5 @@ database.db
 /plugins/DiscordbotV1.js
 /plugins/DiscordbotV2.js
 /plugins/backupbot.js
-/plugins/configs
 /olddb.sqlite
 /pending.txt
