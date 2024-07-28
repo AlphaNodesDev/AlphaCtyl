@@ -244,6 +244,7 @@
         }
     },
     "afk": {
+        "enable": true,
         "timer": 60,
         "coins": 10
 
