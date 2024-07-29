@@ -90,13 +90,9 @@ Object.keys(pages).forEach((page) => {
 
         try {
             const userId = req.session.user.pterodactyl_id;
-            if (!userId) {
-                console.error('User ID is undefined.');
-                return res.redirect('/?error=Please Login Again.');
-            }
-
             const db = new sqlite3.Database(DB_FILE_PATH);
 
+            // Use Promise.all to handle multiple asynchronous operations
             const [userIdentifier, userresources, coins, notifications] = await Promise.all([
                 getUserIdByUUID(userId),
                 getUserResources(userId, db),
@@ -104,15 +100,10 @@ Object.keys(pages).forEach((page) => {
                 getNotification(userId, db)
             ]);
 
-            if (!userIdentifier) {
-                console.error('User identifier not found.');
-                db.close();
-                return res.redirect('/?error=Please Login Again.');
-            }
-
+            // Use Promise.all to handle multiple asynchronous operations
             const [userServersCount, userServers] = await Promise.all([
-                getUserServersCount(userIdentifier.id),
-                getUserServers(userIdentifier.id)
+                getUserServersCount(userIdentifier),
+                getUserServers(userIdentifier)
             ]);
 
             db.close();
@@ -137,7 +128,7 @@ Object.keys(pages).forEach((page) => {
                 afktimer,
                 pterodactyldomain,
                 settings,
-                notifications 
+                notifications  // Pass the notifications array
             });
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -145,5 +136,6 @@ Object.keys(pages).forEach((page) => {
         }
     });
 });
+
 
 }

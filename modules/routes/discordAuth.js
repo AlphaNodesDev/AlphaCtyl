@@ -93,28 +93,34 @@ module.exports.load = async function (express, session, passport ,version, Disco
         done(null, user);
     });
 
-    // Discord login process
-    app.get('/discord', passport.authenticate('discord'));
-    app.get('/discord/callback', (req, res, next) => {
-        passport.authenticate('discord', { failureRedirect: '/?error=auth_failed' }, async (err, user, info) => {
-            if (err) {
-                logErrorToFile('OAuth error during authentication:', err);
-                return res.redirect('/?error=auth_failed');
-            }
-            if (!user) {
-                return res.redirect('/?error=auth_failed');
-            }
-    
-            req.logIn(user, async (err) => {
-                if (err) {
-                    logErrorToFile('Error during login:', err);
-                    return res.redirect('/?error=auth_failed');
-                }
-                    req.session.user = user;
-                res.redirect('/dashboard');
-            });
-        })(req, res, next);
+// Discord login process
+app.get('/discord', passport.authenticate('discord'));
+
+app.get('/discord/callback', passport.authenticate('discord', { failureRedirect: '/?error=auth_failed' }), async (req, res) => {
+    const { email } = req.user;
+
+    const db = new sqlite3.Database(DB_FILE_PATH);
+
+    db.get('SELECT * FROM users WHERE email = ?', [email], async (err, row) => {
+        if (err) {
+            logErrorToFile('Error retrieving user details:', err);
+            // Render the homepage with an error message
+            return res.render('home', { error: 'An error occurred while retrieving user details.' });
+        }
+
+        // Check the user's status
+        if (row && row.status === 1) {
+            req.session.user = row;
+            res.redirect('/dashboard');
+        } else {
+            // Render the homepage with an error message
+            res.render('home', { error: 'Your account is restricted or timed out by admin.' });
+        }
     });
+
+    db.close();
+});
+
     
     
 };
