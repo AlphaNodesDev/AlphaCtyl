@@ -22,18 +22,12 @@ async function getUserIdByUUID(userId) {
             return null;
         }
         return {
-            userIdentifier: {
-                id: userData.attributes.id,
-                uuid: userData.attributes.uuid,
-            },
+            id: userData.attributes.id,
+            uuid: userData.attributes.uuid,
             email: userData.attributes.email,
             username: userData.attributes.username,
             admin: userData.attributes.root_admin,
-            createdAt: userData.attributes.created_at,
-        };
-        
-        
-
+            createdAt: userData.attributes.created_at,};
             
     } catch (error) {
         console.error('Error fetching user ID:', error.message);
