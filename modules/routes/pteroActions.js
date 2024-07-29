@@ -203,6 +203,7 @@ router.post('/createserver', async (req, res) => {
     } else {
         try {
             const userId = req.session.user.pterodactyl_id;
+            const uuid = await getUserIdByUUID(userId);
             const userIdentifier = await getUserIdByUUID(userId);
             const userResources = await getUserResources(userId, db);
             const userServersCount = await getUserServersCount(userIdentifier);
