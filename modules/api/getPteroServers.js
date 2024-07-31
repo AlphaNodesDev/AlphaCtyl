@@ -35,8 +35,28 @@ async function getUserIdByUUID(userId) {
       }
 }
 
+function calculateTimeRemaining(nextRenewal) {
+    
+    if (!nextRenewal) {
+        return 'No renewal date available';
+    }
+    const nextRenewalDate = new Date(nextRenewal);
+    const currentDate = new Date();
+    const timeDiff = nextRenewalDate - currentDate;
 
-async function getUserServersCount(userIdentifier) {
+    if (timeDiff <= 0) {
+        return 'Renewal overdue';
+    }
+
+    const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+
+    return `${days}d ${hours}h ${minutes}m ${seconds}s remaining`;
+}
+
+async function getUserServersCount(userIdentifier, db) {
     try {
         const response = await axios.get(`${settings.pterodactyl.domain}/api/application/servers`, {
             headers: {
@@ -52,7 +72,7 @@ async function getUserServersCount(userIdentifier) {
         }
         const pterouserid = userIdentifier.id;
         const userServers = response.data.data.filter(server => server.attributes.user === pterouserid);
-        
+
         // Calculate total RAM, disk space, ports, and CPU usage
         let totalRAM = 0;
         let totalDisk = 0;
@@ -61,14 +81,29 @@ async function getUserServersCount(userIdentifier) {
         let totalDatabase = 0;
         let totalBackup = 0;
 
-        userServers.forEach(server => {
+        // Add next renewal time to the server details
+        for (const server of userServers) {
             totalRAM += server.attributes.limits.memory;
             totalDisk += server.attributes.limits.disk;
             totalPorts += server.attributes.feature_limits.allocations;
             totalCPU += server.attributes.limits.cpu;
             totalDatabase += server.attributes.feature_limits.databases;
             totalBackup += server.attributes.feature_limits.backups;
-        });
+
+            // Fetch next renewal time for each server
+            const renewalInfo = await new Promise((resolve, reject) => {
+                db.get(`SELECT next_renewal, status FROM renewals WHERE serverId = ?`, [server.attributes.id], (err, row) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(row);
+                    }
+                });
+            });
+
+            server.attributes.next_renewal = renewalInfo ? renewalInfo.next_renewal : null;
+            server.attributes.status = renewalInfo ? renewalInfo.status : null;
+        }
 
         return {
             count: userServers.length,
@@ -77,13 +112,17 @@ async function getUserServersCount(userIdentifier) {
             totalPorts,
             totalCPU,
             totalDatabase,
-            totalBackup
+            totalBackup,
+            userServers
         };
     } catch (error) {
         console.error('Error fetching user servers:', error.message);
         throw error;
     }
 }
+
+
+
 
 async function getUserServers(userIdentifier) {
     try {
@@ -125,4 +164,4 @@ async function getUserServers(userIdentifier) {
 }
 
 
-module.exports = { getUserIdByUUID, getUserServersCount, getUserServers };
+module.exports = { getUserIdByUUID, getUserServersCount, getUserServers, calculateTimeRemaining };

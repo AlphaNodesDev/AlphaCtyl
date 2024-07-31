@@ -135,7 +135,7 @@ const adminPages = pagesConfig.admin;
 
 // Import API functions
 const { registerPteroUser } = require('./modules/api/getPteroUser.js');
-const { getUserIdByUUID, getUserServersCount, getUserServers } = require('./modules/api/getPteroServers.js'); 
+const { getUserIdByUUID, getUserServersCount, getUserServers, calculateTimeRemaining } = require('./modules/api/getPteroServers.js'); 
 const { getUserCoins,getNotification } = require('./modules/api/getuserCoins.js');
 const { getUserResources } = require('./modules/api/getuseresources.js');
 const { updatePasswordInPanel } = require('./modules/api/updatePasswordInPanel.js'); 
@@ -173,7 +173,7 @@ const loadRouteModules = routesFiles.map(file => {
                     packageram, packagedisk, packageport, packagedatabase, packagebackup, pterodactyldomain, LOG_FILE_PATH, NORMAL_LOG_FILE_PATH,
                     webhookUrl, db, WebSocket, wss, activeConnections, pagesConfig, pages, oauthPages, adminPages, logErrorToFile, logNormalToFile, parseLogs, parseNormalLogs,
                     joinDiscordGuild, sendDiscordWebhook, assignDiscordRole, registerPteroUser, getUserIdByUUID, getUserServersCount, getUserServers, getUserCoins, getUserResources, updatePasswordInPanel,
-                    updateUserCoins, fetchAllocations, getNotification,addNotification).then(() => {
+                    updateUserCoins, fetchAllocations, getNotification,addNotification,calculateTimeRemaining).then(() => {
                         console.log(chalk.blue.bgGreen(`Loaded module: ${file}`));
                         resolve();
                     }).catch(error => {

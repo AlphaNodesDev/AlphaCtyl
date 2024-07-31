@@ -108,6 +108,8 @@ const pad = (num, size) => {
 };
 
 setInterval(checkAndSuspendExpiredServers, 60000);
+
+
 //functions to renew 
 router.get('/renew', async (req, res) => {
     if (!settings.store.renewals.status) {
@@ -129,33 +131,48 @@ router.get('/renew', async (req, res) => {
             return res.redirect('/manage?error=Insufficient coins for renewal.');
         }
 
-const nextRenewalDate = new Date();
-nextRenewalDate.setDate(nextRenewalDate.getDate() + settings.store.renewals.days);
-nextRenewalDate.setHours(nextRenewalDate.getHours() + settings.store.renewals.hour);
-nextRenewalDate.setMinutes(nextRenewalDate.getMinutes() + settings.store.renewals.minute);
-const formattedRenewalDate = formatDate(nextRenewalDate);
+        // Fetch the existing next_renewal date
+        const renewalInfo = await new Promise((resolve, reject) => {
+            db.get(`SELECT next_renewal FROM renewals WHERE serverId = ?`, [serverId], (err, row) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(row);
+            });
+        });
 
-function formatDate(date) {
-    const day = pad(date.getDate(), 2);
-    const month = pad(date.getMonth() + 1, 2);
-    const year = date.getFullYear();
-    const hour = pad(date.getHours(), 2);
-    const minute = pad(date.getMinutes(), 2);
-    const second = pad(date.getSeconds(), 2);
-    return `${day}:${month}:${year}:${hour}:${minute}:${second}`;}
-
-await new Promise((resolve, reject) => {
-    db.run(
-        `UPDATE renewals SET next_renewal = ?, status = 'active' WHERE serverId = ?`,
-        [formattedRenewalDate, serverId],
-        (err) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve();
+        let nextRenewalDate;
+        if (renewalInfo && renewalInfo.next_renewal) {
+            // Parse the existing next_renewal date
+            nextRenewalDate = parseCustomDateFormat(renewalInfo.next_renewal);
+        } else {
+            // If no existing date, start from now
+            nextRenewalDate = new Date();
         }
-    );
-});
+
+        // Add renewal time
+        nextRenewalDate.setDate(nextRenewalDate.getDate() + settings.store.renewals.days);
+        nextRenewalDate.setHours(nextRenewalDate.getHours() + settings.store.renewals.hour);
+        nextRenewalDate.setMinutes(nextRenewalDate.getMinutes() + settings.store.renewals.minute);
+
+        // Format the new next_renewal date
+        const formattedRenewalDate = formatDate(nextRenewalDate);
+
+        // Update the database with the new next_renewal date
+        await new Promise((resolve, reject) => {
+            db.run(
+                `UPDATE renewals SET next_renewal = ?, status = 'active' WHERE serverId = ?`,
+                [formattedRenewalDate, serverId],
+                (err) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    resolve();
+                }
+            );
+        });
+
+        // Unsuspend the server
         const unsuspendResponse = await fetch(`${settings.pterodactyl.domain}/api/application/servers/${serverId}/unsuspend`, {
             method: 'POST',
             headers: {
@@ -172,6 +189,7 @@ await new Promise((resolve, reject) => {
             console.error(`Error unsuspending server ${serverId}:`, errorMessage);
         }
 
+        // Deduct coins
         await new Promise((resolve, reject) => {
             db.run(
                 `UPDATE users SET coins = coins - ? WHERE pterodactyl_id = ?`,
@@ -191,6 +209,28 @@ await new Promise((resolve, reject) => {
         return res.redirect('/manage?error=Internal server error.');
     }
 });
+
+
+
+// Function to format date in the custom format
+function formatDate(date) {
+    const day = pad(date.getDate(), 2);
+    const month = pad(date.getMonth() + 1, 2);
+    const year = date.getFullYear();
+    const hour = pad(date.getHours(), 2);
+    const minute = pad(date.getMinutes(), 2);
+    const second = pad(date.getSeconds(), 2);
+    return `${day}:${month}:${year}:${hour}:${minute}:${second}`;
+}
+
+
+
+// Helper function to parse the custom date format
+function parseCustomDateFormat(dateString) {
+    const [day, month, year, hours, minutes, seconds] = dateString.split(':').map(Number);
+    return new Date(year, month - 1, day, hours, minutes, seconds);
+}
+
 
 
 

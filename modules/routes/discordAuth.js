@@ -7,6 +7,12 @@ module.exports.load = async function (express, session, passport ,version, Disco
     updateUserCoins,fetchAllocations
 ) {
 
+    // Function to sanitize the username
+    function sanitizeUsername(username) {
+        // Remove any leading or trailing non-alphanumeric characters
+        return username.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    }
+
 
     // Discord Login Strategy
     passport.use(new DiscordStrategy({
@@ -49,7 +55,9 @@ module.exports.load = async function (express, session, passport ,version, Disco
                     length: 10,
                     charset: 'alphanumeric'
                 });
-                const pteroUser = await registerPteroUser(profile.username, profile.email, password, firstName, lastName);
+                const sanitizedUsername = sanitizeUsername(profile.username);
+
+                const pteroUser = await registerPteroUser(sanitizedUsername, profile.email, password, firstName, lastName);
                 if (!pteroUser) {
                     logErrorToFile(`Error: Failed to register user in panel. Connection Error`);
                     return done(new Error('Failed to register user in panel.'));
@@ -74,7 +82,7 @@ module.exports.load = async function (express, session, passport ,version, Disco
                     }
                 }
                 await db.run('INSERT INTO users (id, discord_id, username, email, password, first_name, last_name, pterodactyl_id, avatar, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                    [profile.id, profile.id, profile.username, profile.email, password, firstName, lastName, userId, profile.avatar, 1]); // Set default status to 1
+                    [profile.id, profile.id, sanitizedUsername, profile.email, password, firstName, lastName, userId, profile.avatar, 1]); // Set default status to 1
 
           
                 

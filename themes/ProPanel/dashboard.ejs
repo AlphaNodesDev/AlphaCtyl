@@ -6,9 +6,6 @@
             <div class="animated fadeIn">
                           <!-- Status -->
                           <div class="row">
-                            <%- include('./includes/status') %>
-                        </div>
-                 <div class="row">
                             <div class="col-lg-6">
                                 <div class="card">
                                     <div class="card-header">
@@ -24,30 +21,35 @@
                                                     <th scope="col">DISK</th>
                                                     <th scope="col">MANAGE</th>
                                                 </tr>
-                                          </thead>
-                                          <tbody>
-                                  <% userServers.forEach(server => { %>
-                                            <tr>
-                                                <th scope="row"><%= server.name %></th>
-                                                <td><%= server.cpu %></td>
-                                                <td><%= server.ram %></td>
-                                                <td><%= server.disk %></td>
+                                            </thead>
+                                            <tbody>
+                                                <% userServersCount.userServers.forEach(server => { %>
+                                                <tr>
+                                                    <th scope="row"><%= server.attributes.name %></th>
+                                                    <td><%= server.attributes.limits.cpu %></td>
+                                                    <td><%= server.attributes.limits.memory %></td>
+                                                    <td><%= server.attributes.limits.disk %></td>
+                                                    <td>
+                                                        
 
-<td>   
-    <% if (server.suspended == false){ %>
-    <button onclick="window.location.href='./manage?id=<%= server.identifier %>'" type="button" class="btn btn-success btn-sm"><i class="fa-solid fa-gears"></i>&nbsp; manage</button>
-    <% } else { %>
-    <% if (settings.store.renewals.status == true) { %>
-        <button onclick="window.location.href='./dashboard?job=Renew Server&&message=Are You Sure to Renew Server for <%= settings.store.renewals.days %> Days <%= settings.store.renewals.hour %> Hour <%= settings.store.renewals.minute %> Minutes&&id=<%= server.id %>'" type="button" class="btn btn-danger btn-sm"><i class="fa-solid fa-clock-o"></i>&nbsp; Suspended</button>
-        <% }} %>
-    </td>
-
-          
-                                            </tr>
-                                            <% }); %>
-                                        </tbody>
-                                        
-                                    </table>
+                                                        <% if (server.attributes.status !== 'suspended'){ %>
+                                                        <button onclick="window.location.href='./manage?id=<%= server.attributes.identifier %>'" type="button" class="btn btn-success btn-sm"><i class="fa-solid fa-gears"></i>&nbsp; manage</button>
+                                                        <% if (settings.store.renewals.status === true) { %>
+                                                            <button onclick="window.location.href='./dashboard?job=Renew Server&&message=Are You Sure to Renew Server for <%= settings.store.renewals.days %> Days <%= settings.store.renewals.hour %> Hour <%= settings.store.renewals.minute %> Minutes&&id=<%= server.attributes.id %>'" type="button" class="btn btn-danger btn-sm"><i class="fa-solid fa-clock-o"></i>&nbsp; <%= server.attributes.timeRemaining %></button>
+                                                            <% } %>
+                                                        <% } else { %>
+                                                        <div>
+                                                            <% if (settings.store.renewals.status === true) { %>
+                                                            <button onclick="window.location.href='./dashboard?job=Renew Server&&message=Are You Sure to Renew Server for <%= settings.store.renewals.days %> Days <%= settings.store.renewals.hour %> Hour <%= settings.store.renewals.minute %> Minutes&&id=<%= server.attributes.id %>'" type="button" class="btn btn-danger btn-sm"><i class="fa-solid fa-clock-o"></i>&nbsp; Suspended</button>
+                                                            <% } %>
+                                                        </div>
+                                                        <% } %>
+                                                    </td>
+                                                </tr>
+                                                <% }); %>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
