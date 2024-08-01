@@ -87,10 +87,13 @@ module.exports.load = async function (express, session, passport, version, Disco
     }
     
     function calculateTimeRemaining(nextRenewal) {
+
         if (!nextRenewal) {
             return 'No renewal date available';
         }
-    
+    if(nextRenewal === '00:00:00:00:00:00'){
+        return 'Suspended';
+    }
         const nextRenewalDate = parseCustomDateFormat(nextRenewal);
         const currentDate = new Date();
     
@@ -176,4 +179,5 @@ userServersCount.userServers.forEach(server => {
         });
     });
 
+    
 };

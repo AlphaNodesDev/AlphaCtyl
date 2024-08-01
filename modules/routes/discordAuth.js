@@ -1,10 +1,11 @@
-module.exports.load = async function (express, session, passport ,version, DiscordStrategy,bodyParser, figlet
-    ,sqlite3,fs,chalk,path,app,router,settings,DB_FILE_PATH,PORT,theme,randomstring,
-    figletOptions,appNameAscii,authorNameAscii,AppName,AppImg,ads,afktimer,packageserver,packagecpu,
-    packageram,packagedisk,packageport,packagedatabase,packagebackup,pterodactyldomain,LOG_FILE_PATH,NORMAL_LOG_FILE_PATH,
-    webhookUrl,db,WebSocket,wss,activeConnections,pagesConfig,pages,oauthPages,adminPages,logErrorToFile, logNormalToFile, parseLogs, parseNormalLogs,
-    joinDiscordGuild, sendDiscordWebhook, assignDiscordRole ,registerPteroUser,getUserIdByUUID, getUserServersCount, getUserServers ,getUserCoins,getUserResources,updatePasswordInPanel,
-    updateUserCoins,fetchAllocations
+module.exports.load = async function (
+    express, session, passport, version, DiscordStrategy, bodyParser, figlet,
+    sqlite3, fs, chalk, path, app, router, settings, DB_FILE_PATH, PORT, theme, randomstring,
+    figletOptions, appNameAscii, authorNameAscii, AppName, AppImg, ads, afktimer, packageserver, packagecpu,
+    packageram, packagedisk, packageport, packagedatabase, packagebackup, pterodactyldomain, LOG_FILE_PATH, NORMAL_LOG_FILE_PATH,
+    webhookUrl, db, WebSocket, wss, activeConnections, pagesConfig, pages, oauthPages, adminPages, logErrorToFile, logNormalToFile, parseLogs, parseNormalLogs,
+    joinDiscordGuild, sendDiscordWebhook, assignDiscordRole, registerPteroUser, getUserIdByUUID, getUserServersCount, getUserServers, getUserCoins, getUserResources, updatePasswordInPanel,
+    updateUserCoins, fetchAllocations
 ) {
 
     // Function to sanitize the username
@@ -12,7 +13,6 @@ module.exports.load = async function (express, session, passport ,version, Disco
         // Remove any leading or trailing non-alphanumeric characters
         return username.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
     }
-
 
     // Discord Login Strategy
     passport.use(new DiscordStrategy({
@@ -41,13 +41,11 @@ module.exports.load = async function (express, session, passport ,version, Disco
                                 return done(new Error('Failed to add user to guild.'));
                             }
                         }
-                        
-              
                         return done(null, { ...row, accessToken });
                     } else {
                         // User is restricted from logging in
                         return done(null, false, { message: 'Your account is restricted or timed out by admin.' });
-                    } 
+                    }
                 }
                 const firstName = profile.username.split('#')[0];
                 const lastName = profile.username.split('#')[0];
@@ -81,11 +79,10 @@ module.exports.load = async function (express, session, passport ,version, Disco
                         return done(new Error('Failed to add user to guild.'));
                     }
                 }
+
                 await db.run('INSERT INTO users (id, discord_id, username, email, password, first_name, last_name, pterodactyl_id, avatar, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                     [profile.id, profile.id, sanitizedUsername, profile.email, password, firstName, lastName, userId, profile.avatar, 1]); // Set default status to 1
 
-          
-                
                 return done(null, { ...profile, accessToken });
             });
         } catch (error) {
@@ -101,34 +98,59 @@ module.exports.load = async function (express, session, passport ,version, Disco
         done(null, user);
     });
 
-// Discord login process
-app.get('/discord', passport.authenticate('discord'));
+    // Discord login process
+    app.get('/discord', passport.authenticate('discord'));
 
-app.get('/discord/callback', passport.authenticate('discord', { failureRedirect: '/?error=auth_failed' }), async (req, res) => {
-    const { email } = req.user;
+    app.get('/discord/callback', (req, res, next) => {
+        passport.authenticate('discord', async (err, user, info) => {
+            if (err) {
+                logErrorToFile('OAuth callback error:', err);
+                return res.redirect('/?error=auth_failed');
+            }
+            if (!user) {
+                return res.redirect('/?error=auth_failed');
+            }
 
-    const db = new sqlite3.Database(DB_FILE_PATH);
+            req.logIn(user, async (loginErr) => {
+                if (loginErr) {
+                    logErrorToFile('Login error:', loginErr);
+                    return res.redirect('/?error=auth_failed');
+                }
 
-    db.get('SELECT * FROM users WHERE email = ?', [email], async (err, row) => {
-        if (err) {
-            logErrorToFile('Error retrieving user details:', err);
-            // Render the homepage with an error message
-            return res.render('home', { error: 'An error occurred while retrieving user details.' });
-        }
+                const { email } = user;
 
-        // Check the user's status
-        if (row && row.status === 1) {
-            req.session.user = row;
-            res.redirect('/dashboard');
+                const db = new sqlite3.Database(DB_FILE_PATH);
+
+                db.get('SELECT * FROM users WHERE email = ?', [email], async (dbErr, row) => {
+                    if (dbErr) {
+                        logErrorToFile('Error retrieving user details:', dbErr);
+                        // Render the homepage with an error message
+                        return res.render('index', { error: 'An error occurred while retrieving user details.' }); // Ensure the view name is 'index'
+                    }
+
+                    // Check the user's status
+                    if (row && row.status === 1) {
+                        req.session.user = row;
+                        res.redirect('/dashboard');
+                    } else {
+                        // Render the homepage with an error message
+                        res.render('index', { error: 'Your account is restricted or timed out by admin.' }); // Ensure the view name is 'index'
+                    }
+                });
+
+                db.close();
+            });
+        })(req, res, next);
+    });
+
+    // Error handling middleware
+    app.use((err, req, res, next) => {
+        if (err.name === 'TokenError') {
+            logErrorToFile('TokenError:', err);
+            res.redirect('/?error=auth_failed');
         } else {
-            // Render the homepage with an error message
-            res.render('home', { error: 'Your account is restricted or timed out by admin.' });
+            next(err);
         }
     });
 
-    db.close();
-});
-
-    
-    
 };

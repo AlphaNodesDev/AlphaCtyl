@@ -16,6 +16,7 @@ module.exports.load = async function (express, session, passport ,version, Disco
         const minute = pad(date.getMinutes(), 2);
         const second = pad(date.getSeconds(), 2);
         return `${day}:${month}:${year}:${hour}:${minute}:${second}`;}
+
 // Pteropassword reset
 router.get('/resetptero', async (req, res) => {
     try {
@@ -33,7 +34,8 @@ router.get('/resetptero', async (req, res) => {
       
     } catch (error) {  
     logErrorToFile(`Error resetting password in Pterodactyl panel for user:${userId} `);
-         return res.redirect('settings?error=Error resetting password.');}});
+         return res.redirect('settings?error=Error resetting password.');}
+        });
 
 
 
@@ -73,7 +75,7 @@ const checkAndSuspendExpiredServers = async () => {
                 if (response.ok) {
                     
                     await new Promise((resolve, reject) => {
-                        db.run(`UPDATE renewals SET status = 'suspended' WHERE serverId = ?`, [server.serverId], (err) => {
+                        db.run(`UPDATE renewals SET status = 'suspended', next_renewal = '00:00:00:00:00:00' WHERE serverId = ?`, [server.serverId], (err) => {
                             if (err) {
                                 reject(err);
                             } else {
@@ -360,12 +362,12 @@ router.post('/createserver', async (req, res) => {
                 nextRenewalDate.setHours(nextRenewalDate.getHours() + settings.store.renewals.hour);
                 nextRenewalDate.setMinutes(nextRenewalDate.getMinutes() + settings.store.renewals.minute);
                 const formattedRenewalDate = formatDate(nextRenewalDate);
-
+                if (settings.store.renewals.status === true) {
                 await db.run(
                     `INSERT INTO renewals (serverId, next_renewal) VALUES (?, ?)`,
                     [serverId, formattedRenewalDate]
                 );
-
+            }
                 if (settings.discord.logging.status === true && settings.discord.logging.actions.user.create_server === true) {
                     const message = `User Created Server:\nName: ${name}\nCPU: ${cpu} cores\nRAM: ${ram} MB\nDisk: ${disk} MB\nDatabases: ${database}\nBackups: ${backup}\nPorts: ${port}`;
                     const color = 0x00FF00; // Green color in hexadecimal
@@ -402,10 +404,13 @@ router.get('/delete', async (req, res) => {
                 'Authorization': `Bearer ${settings.pterodactyl.key}`
             }
         });
+
         if (response.status === 204) {
             // Server deleted successfully from Pterodactyl
             try {
+
                 await db.run(`DELETE FROM renewals WHERE serverId = ?`, [serverId]);
+             
                 return res.redirect('/manage?success=Server  deleted successfully.');
             } catch (dbError) {
                 console.error('Error deleting renewal record:', dbError);
@@ -415,6 +420,7 @@ router.get('/delete', async (req, res) => {
             // Error deleting server
             return res.redirect('/manage?error=Error deleting server.');
         }
+
     } catch (error) {
         console.error('Error deleting server:', error);
         return res.redirect('/manage?error=Internal server error.');
