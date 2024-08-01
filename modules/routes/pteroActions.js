@@ -112,7 +112,7 @@ const pad = (num, size) => {
 setInterval(checkAndSuspendExpiredServers, 60000);
 
 
-const moment = require('moment-timezone'); // Add this at the beginning with your other imports
+const moment = require('moment-timezone'); 
 
 router.get('/renew', async (req, res) => {
     if (!settings.store.renewals.status) {
@@ -145,7 +145,7 @@ router.get('/renew', async (req, res) => {
         });
 
         let nextRenewalDate;
-        const timezone = settings.timezone || 'UTC'; // Default to UTC if timezone is not set
+        const timezone = settings.timezone || 'UTC'; 
 
         if (renewalInfo && renewalInfo.next_renewal) {
             // Parse the existing next_renewal date

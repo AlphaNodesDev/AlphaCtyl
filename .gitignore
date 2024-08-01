@@ -11,5 +11,5 @@ database.db
 /plugins/backupbot.js
 /olddb.sqlite
 /pending.txt
-/database.sqlite
+database.sqlite
 /olddb.sqlite
