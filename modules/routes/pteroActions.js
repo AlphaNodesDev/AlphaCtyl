@@ -112,7 +112,8 @@ const pad = (num, size) => {
 setInterval(checkAndSuspendExpiredServers, 60000);
 
 
-//functions to renew 
+const moment = require('moment-timezone'); // Add this at the beginning with your other imports
+
 router.get('/renew', async (req, res) => {
     if (!settings.store.renewals.status) {
         return res.redirect('/manage?error=Server renewal feature is currently disabled.');
@@ -144,21 +145,32 @@ router.get('/renew', async (req, res) => {
         });
 
         let nextRenewalDate;
+        const timezone = settings.timezone || 'UTC'; // Default to UTC if timezone is not set
+
         if (renewalInfo && renewalInfo.next_renewal) {
             // Parse the existing next_renewal date
-            nextRenewalDate = parseCustomDateFormat(renewalInfo.next_renewal);
+            nextRenewalDate = moment.tz(renewalInfo.next_renewal, 'DD:MM:YYYY:HH:mm:ss', timezone);
+
+            // Check if the parsed date is valid
+            if (!nextRenewalDate.isValid() || nextRenewalDate.format('DD:MM:YYYY:HH:mm:ss') === '00:00:00:00:00:00') {
+                nextRenewalDate = moment().tz(timezone); // Use current date if invalid
+            }
         } else {
-            // If no existing date, start from now
-            nextRenewalDate = new Date();
+            nextRenewalDate = moment().tz(timezone); // Use current date and time if not found
+        }
+
+        // Check if the next renewal date is in the past, if so, use the current date
+        if (nextRenewalDate.isBefore(moment().tz(timezone))) {
+            nextRenewalDate = moment().tz(timezone);
         }
 
         // Add renewal time
-        nextRenewalDate.setDate(nextRenewalDate.getDate() + settings.store.renewals.days);
-        nextRenewalDate.setHours(nextRenewalDate.getHours() + settings.store.renewals.hour);
-        nextRenewalDate.setMinutes(nextRenewalDate.getMinutes() + settings.store.renewals.minute);
+        nextRenewalDate.add(settings.store.renewals.days, 'days');
+        nextRenewalDate.add(settings.store.renewals.hour, 'hours');
+        nextRenewalDate.add(settings.store.renewals.minute, 'minutes');
 
         // Format the new next_renewal date
-        const formattedRenewalDate = formatDate(nextRenewalDate);
+        const formattedRenewalDate = nextRenewalDate.format('DD:MM:YYYY:HH:mm:ss');
 
         // Update the database with the new next_renewal date
         await new Promise((resolve, reject) => {
