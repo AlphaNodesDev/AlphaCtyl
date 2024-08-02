@@ -10,6 +10,20 @@ AlphaCtyl is a powerful and user-friendly web panel designed to streamline the m
 
 - [@Abhiram](https://www.github.com/AlphaNodesDev)
 
+## All features
+
+- Resource Management (Use it to create servers, gift them, etc)
+- Coins (AFK Page earning, Gift them away, Video Rewards )
+- Renewal (Require coins for renewal)
+- Coupons (Gives resources & coins to a user)
+- Servers (create, view, edit servers)
+- Payments (buy via paypal)
+- User System (auth, regen password, etc)
+- Store (buy resources with coins)
+- Dashboard (view resources)
+- Admin (set/add/remove coins & resources, create/revoke coupons)
+- API (for bots & other things)
+
 ## Demo
 
 ### Auth
