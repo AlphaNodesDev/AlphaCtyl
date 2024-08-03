@@ -251,11 +251,11 @@
     },
     "plugins": {
         "migrator": {
-            "enable": true
-        }
-    },
-    "PteroBackup":{
-      "enable": true
-    }
+          "enable": true
+        },
+      "PteroBackup": {
+        "enable": true
+      }
     
-}
+      }
+    }
