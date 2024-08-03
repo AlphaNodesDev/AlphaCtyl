@@ -30,10 +30,7 @@ router.get('/resetptero', async (req, res) => {
         const uuid = req.session.user.pterodactyl_id;
         const coins = await getUserCoins(userId, db);
         return res.redirect('settings?success=your New Password is:'+` ${newPassword}`);
-
-      
     } catch (error) {  
-    logErrorToFile(`Error resetting password in Pterodactyl panel for user:${userId} `);
          return res.redirect('settings?error=Error resetting password.');}
         });
 
@@ -385,7 +382,7 @@ router.post('/createserver', async (req, res) => {
                     const color = 0x00FF00; // Green color in hexadecimal
                     sendDiscordWebhook(webhookUrl, message, 'Resource Purchase Notification', color, 'AlphaCtyl');
                 }
-
+                 logNormalToFile(`User Deleted server :${serverData.attributes.id} username: ${req.user.username} `);
                 return res.redirect('/manage?success=Server created successfully.');
             } else {
                 const errorMessage = await response.text();
@@ -399,16 +396,22 @@ router.post('/createserver', async (req, res) => {
     }
 });
 
-
-// delete ptero server
+// Delete ptero server
 router.get('/delete', async (req, res) => {
     const serverId = req.query.id; 
 
     if (!serverId) {
+        logErrorToFile('Error: No server ID provided.');
         return res.redirect('/manage?error=No server ID provided.');
     }
+
+    logNormalToFile(`Attempting to delete server with ID: ${serverId}`);
+
     try {
-        const response = await fetch(`${settings.pterodactyl.domain}/api/application/servers/${serverId}`, {
+        const url = `${settings.pterodactyl.domain}/api/application/servers/${serverId}`;
+        logNormalToFile(`Fetching URL: ${url}`);
+
+        const response = await fetch(url, {
             method: 'DELETE',
             headers: {
                 'Accept': 'application/json',
@@ -417,49 +420,45 @@ router.get('/delete', async (req, res) => {
             }
         });
 
-        if (response.status === 204) {
-            // Server deleted successfully from Pterodactyl
-            try {
+        logNormalToFile(`Response status: ${response.status}`);
+        const responseBody = await response.text();
+        logNormalToFile(`Response body: ${responseBody}`);
 
+        if (response.status === 204) {
+            try {
                 await db.run(`DELETE FROM renewals WHERE serverId = ?`, [serverId]);
-             
-                return res.redirect('/manage?success=Server  deleted successfully.');
+                logNormalToFile('Success: Server deleted successfully.');
+                return res.redirect('/manage?success=Server deleted successfully.');
             } catch (dbError) {
-                console.error('Error deleting renewal record:', dbError);
+                logErrorToFile(`Error deleting renewal record: ${dbError.message}`);
                 return res.redirect('/manage?error=Server deleted but failed to delete renewal record.');
             }
         } else {
-            // Error deleting server
+            logErrorToFile('Error: Failed to delete server.');
             return res.redirect('/manage?error=Error deleting server.');
         }
 
     } catch (error) {
-        console.error('Error deleting server:', error);
+        logErrorToFile(`Error: Internal server error. ${error.message}`);
         return res.redirect('/manage?error=Internal server error.');
     }
 });
 
-//Update user servers
-
-
-//pending 
-
-
-// Route that handles server build update
+// Update server build
 router.post('/updateserver', async (req, res) => {
     const { serverId, name, cpu, disk, ram, databases, backup, port } = req.body;
 
     if (!serverId) {
+        logErrorToFile('Error: Server ID is required.');
         return res.status(400).send('Server ID is required');
     }
 
-    // Check if any of the resource values are zero
     if (cpu === '0' || ram === '0' || disk === '0' || databases === '0' || backup === '0' || port === '0') {
+        logErrorToFile('Error: Resource values cannot be zero.');
         return res.redirect('/manage?error=Resource values cannot be zero');
     }
 
     try {
-        // Fetch existing server details to get the current allocation ID
         const serverResponse = await fetch(`${settings.pterodactyl.domain}/api/application/servers/${serverId}`, {
             method: 'GET',
             headers: {
@@ -471,27 +470,24 @@ router.post('/updateserver', async (req, res) => {
 
         if (!serverResponse.ok) {
             const errorMessage = await serverResponse.text();
-            console.error(`Error fetching server details: ${errorMessage}`);
+            logErrorToFile(`Error fetching server details: ${errorMessage}`);
             return res.redirect('/manage?error=Failed to fetch server details.');
         }
 
         const serverData = await serverResponse.json();
-
-        // Ensure the allocation ID is present
         if (!serverData.attributes.allocation) {
+            logErrorToFile('Error: No valid allocation ID found for the server');
             return res.status(400).send('No valid allocation ID found for the server');
         }
 
-        const currentAllocationId = serverData.attributes.allocation; // Get the allocation ID
+        const currentAllocationId = serverData.attributes.allocation; 
 
-        // Fetch user details for resource checking
         const userId = req.session.user.pterodactyl_id;
         const uuid = await getUserIdByUUID(userId);
         const userIdentifier = uuid.id;
         const userResources = await getUserResources(userId, db);
         const userServersCount = await getUserServersCount(userIdentifier);
 
-        // Calculate available resources
         const availableCpu = (userResources.row.cpu + packagecpu) - userServersCount.totalCPU;
         const availableRam = (userResources.row.ram + packageram) - userServersCount.totalRAM;
         const availableDisk = (userResources.row.disk + packagedisk) - userServersCount.totalDisk;
@@ -499,29 +495,33 @@ router.post('/updateserver', async (req, res) => {
         const availableBackup = (userResources.row.backup + packagebackup) - userServersCount.totalBackup;
         const availablePorts = (userResources.row.ports + packageport) - userServersCount.totalPorts;
 
-        // Validate resource availability
         if (cpu > availableCpu) {
+            logErrorToFile('Info: Insufficient CPU to update the server.');
             return res.redirect('/manage?info=You don\'t have enough available CPU to update the server.');
         }
         if (ram > availableRam) {
+            logErrorToFile('Info: Insufficient RAM to update the server.');
             return res.redirect('/manage?info=You don\'t have enough available RAM to update the server.');
         }
         if (disk > availableDisk) {
+            logErrorToFile('Info: Insufficient disk space to update the server.');
             return res.redirect('/manage?info=You don\'t have enough available disk space to update the server.');
         }
         if (databases > availableDatabase) {
+            logErrorToFile('Info: Insufficient databases to update the server.');
             return res.redirect('/manage?info=You don\'t have enough available databases to update the server.');
         }
         if (backup > availableBackup) {
+            logErrorToFile('Info: Insufficient backups to update the server.');
             return res.redirect('/manage?info=You don\'t have enough available backups to update the server.');
         }
         if (port > availablePorts) {
+            logErrorToFile('Info: Insufficient ports to update the server.');
             return res.redirect('/manage?info=You don\'t have enough available ports to update the server.');
         }
 
-        // Build the update data
         const updateData = {
-            name: name || serverData.attributes.name, // Update the name if provided, otherwise keep the current name
+            name: name || serverData.attributes.name,
             limits: {
                 memory: ram ? Number(ram) : serverData.attributes.limits.memory,
                 swap: 0,
@@ -534,10 +534,9 @@ router.post('/updateserver', async (req, res) => {
                 allocations: port ? Number(port) : serverData.attributes.feature_limits.allocations,
                 backups: backup ? Number(backup) : serverData.attributes.feature_limits.backups
             },
-            allocation: currentAllocationId // Use the existing allocation ID
+            allocation: currentAllocationId
         };
 
-        // Make the API request to update the server
         const updateResponse = await fetch(`${settings.pterodactyl.domain}/api/application/servers/${serverId}/build`, {
             method: 'PATCH',
             headers: {
@@ -549,16 +548,16 @@ router.post('/updateserver', async (req, res) => {
         });
 
         if (updateResponse.ok) {
+            logNormalToFile('Success: Server build updated successfully.');
             return res.redirect('/manage?success=Server build updated successfully');
         } else {
             const errorMessage = await updateResponse.text();
-            console.error(`Error updating server build: ${errorMessage}`);
+            logErrorToFile(`Error updating server build: ${errorMessage}`);
             return res.redirect('/manage?error=Failed to update server build');
         }
     } catch (error) {
-        console.error('Error updating server build:', error);
+        logErrorToFile(`Error updating server build: ${error.message}`);
         return res.redirect('/manage?error=Failed to update server build');
     }
 });
-
 }

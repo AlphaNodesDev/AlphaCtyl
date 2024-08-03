@@ -3,11 +3,12 @@ const settings = require('../../settings.json');
 const fs = require('fs');
 const path = require('path');
 
-const LOG_FILE_PATH = path.join(__dirname, 'error.log');
-const NORMAL_LOG_FILE_PATH = path.join(__dirname, 'normal.log');
+const ROOT_DIR = path.resolve(__dirname, '../../logs'); 
 
+const LOG_FILE_PATH = path.join(ROOT_DIR, 'error.log');
+const NORMAL_LOG_FILE_PATH = path.join(ROOT_DIR, 'normal.log');
 
-//Log Erro
+// Log Error
 function logErrorToFile(message) {
     const logMessage = `${new Date().toISOString()} - ${message}\n`;
     fs.appendFile(LOG_FILE_PATH, logMessage, (err) => {
@@ -16,6 +17,7 @@ function logErrorToFile(message) {
         }
     });
 }
+
 function logNormalToFile(message) {
     const logMessage = `${new Date().toISOString()} - ${message}\n`;
     fs.appendFile(NORMAL_LOG_FILE_PATH, logMessage, (err) => {
@@ -24,7 +26,6 @@ function logNormalToFile(message) {
         }
     });
 }
-
 
 function parseLogs(data) {
     const logsByDate = {};
@@ -41,6 +42,7 @@ function parseLogs(data) {
     });
     return logsByDate;
 }
+
 function parseNormalLogs(data) {
     const logsByDate = {};
     const logLines = data.split('\n');
@@ -56,6 +58,5 @@ function parseNormalLogs(data) {
     });
     return logsByDate;
 }
-
 
 module.exports = { logErrorToFile, logNormalToFile, parseLogs, parseNormalLogs };

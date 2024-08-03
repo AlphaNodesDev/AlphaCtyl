@@ -1,5 +1,27 @@
 {
-    "allowedRoles": [
-        "1234739121445015656"
-    ]
+    "DiscordBotv1": {
+        "roleid":"Role_id_here"
+    },
+
+    "PteroBackup":{
+        "discord": {
+          "token": "bot_token",
+          "channelId": "Channel_id",
+          "allowedRoleId": "Role_id_here"
+        },
+        "backup": {
+          "backupDir": "./backups",
+          "backupRetentionDays": 7,
+          "pterodactylServerDir": "/var/lib/pterodactyl/volumes"
+        },
+        "database": {
+          "host": "127.0.0.1",
+          "user": "databse_username_of_pterodactyl",
+          "password": "databse_Password_of_pterodactyl",
+          "database": "databse_of_pterodactyl",
+          "port": 3306
+        }
+      }
+      
+
 }

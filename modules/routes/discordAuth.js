@@ -11,6 +11,7 @@ module.exports.load = async function (
     // Function to sanitize the username
     function sanitizeUsername(username) {
         // Remove any leading or trailing non-alphanumeric characters
+        logNormalToFile(`Sanitizing username: ${username}`);
         return username.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
     }
 
@@ -22,31 +23,39 @@ module.exports.load = async function (
         scope: ['identify', 'email', 'guilds.join'],
     }, async (accessToken, refreshToken, profile, done) => {
         try {
+            logNormalToFile(`Attempting to authenticate user: ${profile.username}`);
             db.get('SELECT * FROM users WHERE email = ?', [profile.email], async (err, row) => {
                 if (err) {
+                    logErrorToFile(`Database error: ${err.message}`);
                     return done(err);
                 }
                 if (row) {
+                    logNormalToFile(`User found in database: ${profile.email}`);
                     // Check the user's status
                     if (row.status === 1) {
+                        logNormalToFile(`User status is active: ${profile.email}`);
                         if (settings.discord.bot.joinguild.enabled === true) {
                             try {
                                 const discordUserId = profile.id;
                                 await joinDiscordGuild(discordUserId, accessToken);
+                                logNormalToFile(`User added to Discord guild: ${profile.username}`);
                                 if (settings.discord.bot.giverole.enabled === true) {
                                     assignDiscordRole(discordUserId);
+                                    logNormalToFile(`Role assigned to user: ${profile.username}`);
                                 }
                             } catch (error) {
-                                logErrorToFile('Error adding user to guild:', error.response.data);
+                                logErrorToFile(`Error adding user to guild: ${error.response.data}`);
                                 return done(new Error('Failed to add user to guild.'));
                             }
                         }
                         return done(null, { ...row, accessToken });
                     } else {
+                        logNormalToFile(`User account is restricted: ${profile.email}`);
                         // User is restricted from logging in
                         return done(null, false, { message: 'Your account is restricted or timed out by admin.' });
                     }
                 }
+                logNormalToFile(`User not found in database, registering new user: ${profile.email}`);
                 const firstName = profile.username.split('#')[0];
                 const lastName = profile.username.split('#')[0];
                 const password = randomstring.generate({
@@ -65,27 +74,32 @@ module.exports.load = async function (
                     const message = `User logged in: ${profile.username}`;
                     const webhookUrl = settings.discord.logging.webhook;
                     const color = 0x00FF00;
-                    sendDiscordWebhook(webhookUrl, 'User Logined', message, color, 'AlphaCtyl');
+                    sendDiscordWebhook(webhookUrl, 'User Logged In', message, color, 'AlphaCtyl');
+                    logNormalToFile(`Discord webhook sent for user login: ${profile.username}`);
                 }
                 if (settings.discord.bot.joinguild.enabled === true) {
                     try {
                         const discordUserId = profile.id;
                         await joinDiscordGuild(discordUserId, accessToken);
-                        if (settings.discord.bot.giverole.enabled === false) {
+                        logNormalToFile(`User added to Discord guild: ${profile.username}`);
+                        if (settings.discord.bot.giverole.enabled === true) {
                             assignDiscordRole(discordUserId);
+                            logNormalToFile(`Role assigned to user: ${profile.username}`);
                         }
                     } catch (error) {
-                        logErrorToFile('Error adding user to guild:', error.response.data);
+                        logErrorToFile(`Error adding user to guild: ${error.response.data}`);
                         return done(new Error('Failed to add user to guild.'));
                     }
                 }
 
                 await db.run('INSERT INTO users (id, discord_id, username, email, password, first_name, last_name, pterodactyl_id, avatar, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                     [profile.id, profile.id, sanitizedUsername, profile.email, password, firstName, lastName, userId, profile.avatar, 1]); // Set default status to 1
+                logNormalToFile(`New user registered: ${profile.email}`);
 
                 return done(null, { ...profile, accessToken });
             });
         } catch (error) {
+            logErrorToFile(`Authentication error: ${error.message}`);
             return done(error);
         }
     }));
@@ -99,31 +113,36 @@ module.exports.load = async function (
     });
 
     // Discord login process
-    app.get('/discord', passport.authenticate('discord'));
+    app.get('/discord', (req, res) => {
+        logNormalToFile('Initiating Discord authentication.');
+        passport.authenticate('discord')(req, res);
+    });
 
     app.get('/discord/callback', (req, res, next) => {
         passport.authenticate('discord', async (err, user, info) => {
             if (err) {
-                logErrorToFile('OAuth callback error:', err);
+                logErrorToFile(`OAuth callback error: ${err.message}`);
                 return res.redirect('/?error=auth_failed');
             }
             if (!user) {
+                logNormalToFile('No user returned from Discord OAuth.');
                 return res.redirect('/?error=auth_failed');
             }
 
             req.logIn(user, async (loginErr) => {
                 if (loginErr) {
-                    logErrorToFile('Login error:', loginErr);
+                    logErrorToFile(`Login error: ${loginErr.message}`);
                     return res.redirect('/?error=auth_failed');
                 }
 
                 const { email } = user;
+                logNormalToFile(`User logged in successfully: ${email}`);
 
                 const db = new sqlite3.Database(DB_FILE_PATH);
 
                 db.get('SELECT * FROM users WHERE email = ?', [email], async (dbErr, row) => {
                     if (dbErr) {
-                        logErrorToFile('Error retrieving user details:', dbErr);
+                        logErrorToFile(`Error retrieving user details: ${dbErr.message}`);
                         // Render the homepage with an error message
                         return res.render('index', { error: 'An error occurred while retrieving user details.' }); // Ensure the view name is 'index'
                     }
@@ -131,8 +150,10 @@ module.exports.load = async function (
                     // Check the user's status
                     if (row && row.status === 1) {
                         req.session.user = row;
+                        logNormalToFile(`User session started: ${email}`);
                         res.redirect('/dashboard');
                     } else {
+                        logNormalToFile(`User account is restricted: ${email}`);
                         // Render the homepage with an error message
                         res.render('index', { error: 'Your account is restricted or timed out by admin.' }); // Ensure the view name is 'index'
                     }
@@ -146,9 +167,10 @@ module.exports.load = async function (
     // Error handling middleware
     app.use((err, req, res, next) => {
         if (err.name === 'TokenError') {
-            logErrorToFile('TokenError:', err);
+            logErrorToFile(`TokenError: ${err.message}`);
             res.redirect('/?error=auth_failed');
         } else {
+            logErrorToFile(`General error: ${err.message}`);
             next(err);
         }
     });

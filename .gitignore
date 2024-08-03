@@ -12,5 +12,7 @@ database.db
 /olddb.sqlite
 /pending.txt
 database.sqlite
-
+/themes/Redcode
 /olddb.sqlite
+/backups
+/logs
