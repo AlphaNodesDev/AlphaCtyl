@@ -397,6 +397,7 @@ router.post('/createserver', async (req, res) => {
 });
 
 // Delete ptero server
+/*
 router.get('/delete', async (req, res) => {
     const serverId = req.query.id; 
 
@@ -443,7 +444,7 @@ router.get('/delete', async (req, res) => {
         return res.redirect('/manage?error=Internal server error.');
     }
 });
-
+*/
 // Update server build
 router.post('/updateserver', async (req, res) => {
     const { serverId, name, cpu, disk, ram, databases, backup, port } = req.body;
