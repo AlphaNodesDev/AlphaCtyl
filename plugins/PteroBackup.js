@@ -4,17 +4,24 @@ const path = require('path');
 const { exec } = require('child_process');
 const schedule = require('node-schedule');
 const mysql = require('mysql2/promise');
+const configPath = './plugins/configs/Discordbot.json';
+// Load settings from settings.json
+const settingsPath = './settings.json';
+if (!fs.existsSync(settingsPath)) {
+  console.error('Settings file not found.');
+  process.exit(1);
+}
+const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
 
-// Load configuration from config.json
-const config = JSON.parse(fs.readFileSync('./plugins/configs/Discordbot.json', 'utf8'));
 
-// Extract configuration values
-const token = config.PteroBackup.discord.token;
+const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+
+// Extract configuration values from config
+const token = settings.discord.bot.token; // Extracted from settings
 const channelId = config.PteroBackup.discord.channelId;
 const backupDir = path.resolve(config.PteroBackup.backup.backupDir);
 const backupRetentionDays = config.PteroBackup.backup.backupRetentionDays;
 const allowedRoleId = config.PteroBackup.discord.allowedRoleId;
-
 const pterodactylServerDir = config.PteroBackup.backup.pterodactylServerDir;
 
 const mysqlConfig = {
@@ -102,7 +109,7 @@ const backupDatabase = async (dbBackupFile, serverBackupFile) => {
     });
 
   } catch (err) {
-    console.error('Database connection error:', err.message);
+    sendLogToDiscord(`Database connection error: ${err.message}`);
   } finally {
     if (connection) {
       await connection.end();
@@ -120,7 +127,7 @@ const removeOldBackups = async () => {
     dbBackups.sort((a, b) => fs.statSync(path.join(backupDir, b)).mtimeMs - fs.statSync(path.join(backupDir, a)).mtimeMs);
 
     serverBackups.forEach((file, index) => {
-      if (index >= 5) { 
+      if (index >= 5) {
         const filePath = path.join(backupDir, file);
         fs.remove(filePath, err => {
           if (err) {
@@ -133,7 +140,7 @@ const removeOldBackups = async () => {
     });
 
     dbBackups.forEach((file, index) => {
-      if (index >= 5) { 
+      if (index >= 5) {
         const filePath = path.join(backupDir, file);
         fs.remove(filePath, err => {
           if (err) {
@@ -164,4 +171,24 @@ client.on('messageCreate', async message => {
 });
 
 
-client.login(token);
+
+const startClient = async () => {
+  try {
+    await client.login(token);
+  } catch (error) {
+    console.error('Failed to login to Discord:', error.message);
+    process.exit(1);
+  }
+};
+
+if (!settings.plugins.PteroBackup.enabled) {
+
+if (!fs.existsSync(configPath)) {
+  console.error('Configuration file not found.');
+  process.exit(1);
+}
+startClient();
+
+}
+
+

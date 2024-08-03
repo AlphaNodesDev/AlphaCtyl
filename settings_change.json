@@ -253,5 +253,9 @@
         "migrator": {
             "enable": true
         }
+    },
+    "PteroBackup":{
+      "enable": true
     }
+    
 }
