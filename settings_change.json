@@ -254,7 +254,7 @@
           "enable": true
         },
       "PteroBackup": {
-        "enable": true
+        "enable": false
       }
     
       }
