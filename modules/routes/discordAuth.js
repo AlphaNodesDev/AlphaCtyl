@@ -30,10 +30,8 @@ module.exports.load = async function (
                     return done(err);
                 }
                 if (row) {
-                    logNormalToFile(`User found in database: ${profile.email}`);
                     // Check the user's status
                     if (row.status === 1) {
-                        logNormalToFile(`User status is active: ${profile.email}`);
                         if (settings.discord.bot.joinguild.enabled === true) {
                             try {
                                 const discordUserId = profile.id;
@@ -51,7 +49,6 @@ module.exports.load = async function (
                         return done(null, { ...row, accessToken });
                     } else {
                         logNormalToFile(`User account is restricted: ${profile.email}`);
-                        // User is restricted from logging in
                         return done(null, false, { message: 'Your account is restricted or timed out by admin.' });
                     }
                 }
@@ -81,7 +78,6 @@ module.exports.load = async function (
                     try {
                         const discordUserId = profile.id;
                         await joinDiscordGuild(discordUserId, accessToken);
-                        logNormalToFile(`User added to Discord guild: ${profile.username}`);
                         if (settings.discord.bot.giverole.enabled === true) {
                             assignDiscordRole(discordUserId);
                             logNormalToFile(`Role assigned to user: ${profile.username}`);
@@ -114,7 +110,6 @@ module.exports.load = async function (
 
     // Discord login process
     app.get('/discord', (req, res) => {
-        logNormalToFile('Initiating Discord authentication.');
         passport.authenticate('discord')(req, res);
     });
 
@@ -125,7 +120,6 @@ module.exports.load = async function (
                 return res.redirect('/?error=auth_failed');
             }
             if (!user) {
-                logNormalToFile('No user returned from Discord OAuth.');
                 return res.redirect('/?error=auth_failed');
             }
 
@@ -136,7 +130,7 @@ module.exports.load = async function (
                 }
 
                 const { email } = user;
-                logNormalToFile(`User logged in successfully: ${email}`);
+                
 
                 const db = new sqlite3.Database(DB_FILE_PATH);
 
@@ -150,7 +144,6 @@ module.exports.load = async function (
                     // Check the user's status
                     if (row && row.status === 1) {
                         req.session.user = row;
-                        logNormalToFile(`User session started: ${email}`);
                         res.redirect('/dashboard');
                     } else {
                         logNormalToFile(`User account is restricted: ${email}`);

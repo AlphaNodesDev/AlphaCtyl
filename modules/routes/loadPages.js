@@ -21,7 +21,6 @@ module.exports.load = async function (express, session, passport, version, Disco
         });
     });
 
-    // Load admin pages and values
     Object.keys(adminPages).forEach(page => {
         app.get(`/${page}`, async (req, res) => {
             try {
@@ -46,10 +45,15 @@ module.exports.load = async function (express, session, passport, version, Disco
                                     normalLogsData = 'Could not load normal logs.';
                                 }
                                 const normalLogsByDate = parseNormalLogs(normalLogsData);
-                                db.all('SELECT * FROM Users', (err, users) => {
+                                db.all('SELECT * FROM Users', async (err, users) => {
                                     if (err) {
                                         logErrorToFile(`Error fetching users from database: ${err.message}`);
                                         users = [];
+                                    } else {
+                                        // Fetch additional details for each user
+                                        for (let i = 0; i < users.length; i++) {
+                                            users[i].pterodactylDetails = await getUserIdByUUID(users[i].pterodactyl_id);
+                                        }
                                     }
                                     res.render(adminPages[page], {
                                         user: req.session.user,
@@ -72,7 +76,7 @@ module.exports.load = async function (express, session, passport, version, Disco
                         });
                     });
                 } else {
-                    return res.redirect('dashboard?alert=Accesss denied!');
+                    return res.redirect('dashboard?alert=Access denied!');
                 }
             } catch (error) {
                 logErrorToFile(`Error: ${error.message}`);
@@ -80,6 +84,7 @@ module.exports.load = async function (express, session, passport, version, Disco
             }
         });
     });
+    
 
     function parseCustomDateFormat(dateString) {
         // Date format: DD:MM:YYYY:HH:MM:SS
@@ -172,7 +177,7 @@ userServersCount.userServers.forEach(server => {
                     afktimer,
                     pterodactyldomain,
                     settings,
-                    notifications  // Pass the notifications array
+                    notifications 
                 });
             } catch (error) {
                 console.error('Error fetching data:', error);

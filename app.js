@@ -39,8 +39,8 @@ const packageport = settings.packages.list.default.ports;
 const packagedatabase = settings.packages.list.default.database;
 const packagebackup = settings.packages.list.default.backups;
 const pterodactyldomain = settings.pterodactyl.domain;
-const LOG_FILE_PATH = path.join(__dirname, 'error.log');
-const NORMAL_LOG_FILE_PATH = path.join(__dirname, 'normal.log');
+const LOG_FILE_PATH = path.join(__dirname, 'logs/error.log');
+const NORMAL_LOG_FILE_PATH = path.join(__dirname, 'logs/normal.log');
 const webhookUrl = settings.discord.logging.webhook;
 const {ActivityType , Client, GatewayIntentBits, MessageActionRow, MessageButton} = require('discord.js');
 
