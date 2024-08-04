@@ -16,7 +16,8 @@
         "afk": "afk.ejs",
         "extra": "extra.ejs",
         "youtube": "youtube.ejs",
-        "player": "player.ejs"
+        "player": "player.ejs",
+        "editserver": "editserver.ejs"
 
 
     },

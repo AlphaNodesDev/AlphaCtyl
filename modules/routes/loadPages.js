@@ -53,12 +53,14 @@ module.exports.load = async function (express, session, passport, version, Disco
                                     }
                                     res.render(adminPages[page], {
                                         user: req.session.user,
+                                        userIdentifier,
                                         AppName: AppName,
                                         AppLogo: AppImg,
                                         settings: settings,
                                         errorLogs: errorLogsByDate,
                                         normalLogs: normalLogsByDate,
-                                        users: users
+                                        users: users,
+                                        version
                                     });
                                     db.close((err) => {
                                         if (err) {

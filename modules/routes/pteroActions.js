@@ -447,26 +447,29 @@ router.get('/delete', async (req, res) => {
 */
 // Update server build
 router.post('/updateserver', async (req, res) => {
-    const { serverId, name, cpu, disk, ram, databases, backup, port } = req.body;
+    const { name, cpu, disk, ram, databases, backup, port } = req.body;
+    const serverId = req.query.id;
 
     if (!serverId) {
         logErrorToFile('Error: Server ID is required.');
         return res.status(400).send('Server ID is required');
     }
 
-    if (cpu === '0' || ram === '0' || disk === '0' || databases === '0' || backup === '0' || port === '0') {
+    if (cpu === '0' || ram === '0' || disk === '0') {
         logErrorToFile('Error: Resource values cannot be zero.');
         return res.redirect('/manage?error=Resource values cannot be zero');
     }
 
     try {
+        // Fetch server details
         const serverResponse = await fetch(`${settings.pterodactyl.domain}/api/application/servers/${serverId}`, {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${settings.pterodactyl.key}`
-            }
+            },
+            credentials: 'include' // Ensure cookies (like session cookies) are sent
         });
 
         if (!serverResponse.ok) {
@@ -476,13 +479,38 @@ router.post('/updateserver', async (req, res) => {
         }
 
         const serverData = await serverResponse.json();
-        if (!serverData.attributes.allocation) {
-            logErrorToFile('Error: No valid allocation ID found for the server');
-            return res.status(400).send('No valid allocation ID found for the server');
+        const eggId = serverData.attributes.egg; // Get the egg ID from server details
+
+        // Log the retrieved egg ID for debugging
+        logNormalToFile(`Retrieved egg ID: ${eggId}`);
+
+        // Fetch egg configuration
+        const eggConfig = Object.values(settings.eggs).find(config => config.info.egg === eggId);
+        if (!eggConfig) {
+            // Log available egg IDs for debugging
+            logNormalToFile(`Available egg configurations: ${Object.keys(settings.eggs).join(', ')}`);
+            return res.redirect('/manage?info=Invalid egg configuration.');
         }
 
-        const currentAllocationId = serverData.attributes.allocation; 
+        // Log the retrieved egg configuration for debugging
+        logNormalToFile(`Egg configuration: ${JSON.stringify(eggConfig)}`);
 
+        // Minimum resource values from egg configuration
+        const minCpu = eggConfig.minimum.cpu;
+        const minRam = eggConfig.minimum.ram;
+        const minDisk = eggConfig.minimum.disk;
+
+        if (cpu < minCpu) {
+            return res.redirect(`/manage?info=CPU should be at least ${minCpu} cores.`);
+        }
+        if (ram < minRam) {
+            return res.redirect(`/manage?info=RAM should be at least ${minRam} MB.`);
+        }
+        if (disk < minDisk) {
+            return res.redirect(`/manage?info=Disk space should be at least ${minDisk} MB.`);
+        }
+
+        // Fetch user resources and server count
         const userId = req.session.user.pterodactyl_id;
         const uuid = await getUserIdByUUID(userId);
         const userIdentifier = uuid.id;
@@ -496,6 +524,7 @@ router.post('/updateserver', async (req, res) => {
         const availableBackup = (userResources.row.backup + packagebackup) - userServersCount.totalBackup;
         const availablePorts = (userResources.row.ports + packageport) - userServersCount.totalPorts;
 
+        // Validate resources
         if (cpu > availableCpu) {
             logErrorToFile('Info: Insufficient CPU to update the server.');
             return res.redirect('/manage?info=You don\'t have enough available CPU to update the server.');
@@ -535,9 +564,10 @@ router.post('/updateserver', async (req, res) => {
                 allocations: port ? Number(port) : serverData.attributes.feature_limits.allocations,
                 backups: backup ? Number(backup) : serverData.attributes.feature_limits.backups
             },
-            allocation: currentAllocationId
+            allocation: serverData.attributes.allocation // Use the current allocation ID
         };
 
+        // Update server build
         const updateResponse = await fetch(`${settings.pterodactyl.domain}/api/application/servers/${serverId}/build`, {
             method: 'PATCH',
             headers: {
@@ -545,7 +575,8 @@ router.post('/updateserver', async (req, res) => {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${settings.pterodactyl.key}`
             },
-            body: JSON.stringify(updateData)
+            body: JSON.stringify(updateData),
+            credentials: 'include' // Ensure cookies (like session cookies) are sent
         });
 
         if (updateResponse.ok) {
@@ -561,4 +592,5 @@ router.post('/updateserver', async (req, res) => {
         return res.redirect('/manage?error=Failed to update server build');
     }
 });
+
 }
