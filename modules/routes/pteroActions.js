@@ -1,4 +1,8 @@
-
+const express = require('express');
+const axios = require('axios');
+const { pipeline } = require('stream/promises');
+const { createReadStream } = require('fs');
+const { PassThrough } = require('stream');
 
 module.exports.load = async function (express, session, passport ,version, DiscordStrategy,bodyParser, figlet
     ,sqlite3,fs,chalk,path,app,router,settings,DB_FILE_PATH,PORT,theme,randomstring,
@@ -382,7 +386,7 @@ router.post('/createserver', async (req, res) => {
                     const color = 0x00FF00; // Green color in hexadecimal
                     sendDiscordWebhook(webhookUrl, message, 'Resource Purchase Notification', color, 'AlphaCtyl');
                 }
-                 logNormalToFile(`User Deleted server :${serverData.attributes.id} username: ${req.user.username} `);
+                 logNormalToFile(`User Created server :${serverData.attributes.id} username: ${req.user.username} `);
                 return res.redirect('/manage?success=Server created successfully.');
             } else {
                 const errorMessage = await response.text();
@@ -576,7 +580,7 @@ router.post('/updateserver', async (req, res) => {
                 'Authorization': `Bearer ${settings.pterodactyl.key}`
             },
             body: JSON.stringify(updateData),
-            credentials: 'include' // Ensure cookies (like session cookies) are sent
+            credentials: 'include' 
         });
 
         if (updateResponse.ok) {
@@ -592,5 +596,51 @@ router.post('/updateserver', async (req, res) => {
         return res.redirect('/manage?error=Failed to update server build');
     }
 });
+
+
+app.post('/installplugin', async (req, res) => {
+    console.log('Request body:', req.body);
+
+    const { pluginId, serverId } = req.body;
+    const appKey = "ptlc_QKEZKAnhEdxi0DwWxJsnCWO1EsS3ux0Rk9jQu7ZLVUt";
+
+    if (!pluginId || !serverId) {
+        return res.status(400).json({ success: false, message: 'Missing pluginId or serverId' });
+    }
+
+    try {
+        const signedUrlResponse = await axios.get(`${settings.pterodactyl.domain}/api/client/servers/${serverId}/files/upload`, {
+            headers: {
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${appKey}`,
+            }
+        });
+
+        if (signedUrlResponse.status !== 200) {
+            throw new Error('Failed to get signed URL');
+        }
+
+        const uploadUrl = signedUrlResponse.data.attributes.url;
+
+        const downloadUrl = `https://api.spiget.org/v2/resources/${pluginId}/download`;
+        const response = await axios.get(downloadUrl, { responseType: 'stream' });
+
+        const uploadResponse = await axios.put(uploadUrl, response.data, {
+            headers: {
+                'Content-Type': response.headers['content-type'],
+                'Authorization': `Bearer ${appKey}`,
+            }
+        });
+
+        if (uploadResponse.status === 200) {
+            res.json({ success: true, message: 'Plugin installed successfully' });
+        } else {
+            throw new Error('Failed to upload file');
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error installing plugin', error: error.message });
+    }
+});
+
 
 }

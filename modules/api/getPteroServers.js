@@ -166,4 +166,6 @@ async function getUserServers(userIdentifier) {
     }
 }
 
+
+
 module.exports = { getUserIdByUUID, getUserServersCount, getUserServers, calculateTimeRemaining };

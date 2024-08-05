@@ -107,5 +107,98 @@ router.post('/addresources', (req, res) => {
     });
 });
 
+router.post('/redeem', (req, res) => {
+    const { couponcode } = req.body;
+
+    if (!couponcode) {
+        return res.status(400).send('Coupon code is required.');
+    }
+
+    db.get(`SELECT * FROM coupons WHERE code = ?`, [couponcode], (err, coupon) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).send('Error retrieving coupon.');
+        }
+
+        if (!coupon) {
+            return res.redirect('/redeem?success=Coupon not found.');
+
+        }
+
+
+        const userId = req.session.user.pterodactyl_id;
+
+        if (!userId) {
+            return res.status(401).send('User not authenticated.');
+        }
+
+        db.get(`SELECT * FROM users WHERE pterodactyl_id = ?`, [userId], (err, user) => {
+            if (err) {
+                console.error('Database error:', err);
+                return res.status(500).send('Error retrieving user.');
+            }
+
+            if (!user) {
+                return res.status(404).send('User not found.');
+            }
+
+            const updatedValues = {
+                coins: (user.coins || 0) + (coupon.coins || 0),
+                servers: (user.servers || 0) + (coupon.servers || 0),
+                cpu: (user.cpu || 0) + (coupon.cpu || 0),
+                ram: (user.ram || 0) + (coupon.ram || 0),
+                disk: (user.disk || 0) + (coupon.disk || 0),
+                backup: (user.backup || 0) + (coupon.backup || 0),
+                ports: (user.ports || 0) + (coupon.ports || 0),
+                database: (user.database || 0) + (coupon.database || 0)
+            };
+
+
+            db.run(`UPDATE users SET coins = ?, servers = ?, cpu = ?, ram = ?, disk = ?, backup = ?, ports = ?, database = ? WHERE pterodactyl_id = ?`,
+                [updatedValues.coins, updatedValues.servers, updatedValues.cpu, updatedValues.ram, updatedValues.disk, updatedValues.backup, updatedValues.ports, updatedValues.database, userId],
+                (err) => {
+                    if (err) {
+                        console.error('Database error:', err);
+                        return res.status(500).send('Error updating user data.');
+                    }
+
+                    db.run(`DELETE FROM coupons WHERE code = ?`, [couponcode], (err) => {
+                        if (err) {
+                            console.error('Database error:', err);
+                            return res.status(500).send('Error deleting coupon.');
+                        }
+                        res.redirect('/redeem?success=coupon-redeemed');
+                    });
+                }
+            );
+        });
+    });
+});
+
+const cache = new Map();
+
+router.get('/api/plugins', async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const size = parseInt(req.query.size) || 100;
+    const cacheKey = `${page}-${size}`;
+
+    if (cache.has(cacheKey)) {
+        return res.json(cache.get(cacheKey));
+    }
+
+    try {
+        const response = await axios.get('https://api.spiget.org/v2/resources', {
+            params: { size, page }
+        });
+
+        cache.set(cacheKey, response.data);
+        setTimeout(() => cache.delete(cacheKey), 60 * 60 * 1000); // Clear cache after 1 hour
+
+        res.json(response.data);
+    } catch (error) {
+        console.error('Error fetching plugins:', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
 
 }

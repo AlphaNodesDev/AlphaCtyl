@@ -133,7 +133,6 @@ module.exports.load = async function (express, session, passport, version, Disco
                 const userId = req.session.user.pterodactyl_id;
                 const db = new sqlite3.Database(DB_FILE_PATH);
 
-                // Use Promise.all to handle multiple asynchronous operations
                 const [userIdentifier, userresources, coins, notifications] = await Promise.all([
                     getUserIdByUUID(userId),
                     getUserResources(userId, db),
@@ -141,13 +140,12 @@ module.exports.load = async function (express, session, passport, version, Disco
                     getNotification(userId, db)
                 ]);
 
-// Use Promise.all to handle multiple asynchronous operations
 const [userServersCount, userServers] = await Promise.all([
     getUserServersCount(userIdentifier, db),
-    getUserServers(userIdentifier)
+    getUserServers(userIdentifier),
+    
 ]);
 
-// Calculate time remaining for each server's next renewal
 userServersCount.userServers.forEach(server => {
     const nextRenewal = server.attributes.next_renewal;
     server.attributes.timeRemaining = calculateTimeRemaining(nextRenewal);
@@ -177,7 +175,8 @@ userServersCount.userServers.forEach(server => {
                     afktimer,
                     pterodactyldomain,
                     settings,
-                    notifications 
+                    notifications
+                      
                 });
             } catch (error) {
                 console.error('Error fetching data:', error);
