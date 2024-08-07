@@ -258,7 +258,6 @@ router.post('/createserver', async (req, res) => {
     } else {
         try {
             const userId = req.session.user.pterodactyl_id;
-            const uuid = await getUserIdByUUID(userId);
             const userIdentifier = await getUserIdByUUID(userId);
             const userResources = await getUserResources(userId, db);
             const userServersCount = await getUserServersCount(userIdentifier);
@@ -330,10 +329,11 @@ router.post('/createserver', async (req, res) => {
                 }
                 return res.redirect('/manage?error=Error fetching allocations.');
             }
+            console.log(userIdentifier.id);
 
             const serverConfig = {
                 name: name,
-                user: uuid.id,
+                user: userIdentifier.id,
                 egg: eggConfig.info.egg,
                 docker_image: eggConfig.info.docker_image,
                 startup: eggConfig.info.startup,
@@ -382,9 +382,9 @@ router.post('/createserver', async (req, res) => {
                 );
             }
                 if (settings.discord.logging.status === true && settings.discord.logging.actions.user.create_server === true) {
-                    const message = `User Created Server:\nName: ${name}\nCPU: ${cpu} cores\nRAM: ${ram} MB\nDisk: ${disk} MB\nDatabases: ${database}\nBackups: ${backup}\nPorts: ${port}`;
+                    const message = `User Created Server:\nUser: ${userIdentifier.username}\nName: ${name}\nCPU: ${cpu} cores\nRAM: ${ram} MB\nDisk: ${disk} MB\nDatabases: ${database}\nBackups: ${backup}\nPorts: ${port}`;
                     const color = 0x00FF00; // Green color in hexadecimal
-                    sendDiscordWebhook(webhookUrl, message, 'Resource Purchase Notification', color, 'AlphaCtyl');
+                    sendDiscordWebhook(webhookUrl, message, 'Server Creation', color, 'AlphaCtyl');
                 }
                  logNormalToFile(`User Created server :${serverData.attributes.id} username: ${req.user.username} `);
                 return res.redirect('/manage?success=Server created successfully.');

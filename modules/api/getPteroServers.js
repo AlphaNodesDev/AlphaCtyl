@@ -21,6 +21,7 @@ async function getUserIdByUUID(userId) {
             console.error('User not found with userId:', userId);
             return null;
         }
+
         return {
             id: userData.attributes.id,
             uuid: userData.attributes.uuid,
@@ -29,12 +30,14 @@ async function getUserIdByUUID(userId) {
             admin: userData.attributes.root_admin,
             createdAt: userData.attributes.created_at,
         };
-        
+
     } catch (error) {
         console.error('Error fetching user ID:', error.message);
         console.error('Error communicating with panel');
+        return null;
     }
 }
+
 
 function calculateTimeRemaining(nextRenewal) {
     if (!nextRenewal) {
@@ -58,20 +61,33 @@ function calculateTimeRemaining(nextRenewal) {
 
 async function getUserServersCount(userIdentifier, db) {
     try {
-        const response = await axios.get(`${settings.pterodactyl.domain}/api/application/servers`, {
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${settings.pterodactyl.key}`
-            }
-        });
+        const userServers = [];
+        let page = 1;
+        let totalPages = 1;
 
-        if (response.status !== 200) {
-            console.error('Failed to fetch servers:', response.status);
-            return null;
+        while (page <= totalPages) {
+            const response = await axios.get(`${settings.pterodactyl.domain}/api/application/servers?page=${page}`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${settings.pterodactyl.key}`
+                }
+            });
+
+            if (response.status !== 200) {
+                console.error('Failed to fetch servers:', response.status);
+                return null;
+            }
+
+            // Process servers
+            const pterouserid = userIdentifier.id;
+            const servers = response.data.data.filter(server => server.attributes.user === pterouserid);
+            userServers.push(...servers);
+
+            // Handle pagination
+            totalPages = response.data.meta.pagination.total_pages;
+            page++;
         }
-        const pterouserid = userIdentifier.id;
-        const userServers = response.data.data.filter(server => server.attributes.user === pterouserid);
 
         // Calculate total RAM, disk space, ports, and CPU usage
         let totalRAM = 0;
@@ -82,7 +98,23 @@ async function getUserServersCount(userIdentifier, db) {
         let totalBackup = 0;
 
         // Add next renewal time to the server details
-        for (const server of userServers) {
+        const renewalQueries = userServers.map(server => {
+            return new Promise((resolve, reject) => {
+                db.get(`SELECT next_renewal, status FROM renewals WHERE serverId = ?`, [server.attributes.id], (err, row) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(row);
+                    }
+                });
+            });
+        });
+
+        const renewals = await Promise.all(renewalQueries);
+
+        userServers.forEach((server, index) => {
+            const renewalInfo = renewals[index];
+
             totalRAM += server.attributes.limits.memory;
             totalDisk += server.attributes.limits.disk;
             totalPorts += server.attributes.feature_limits.allocations;
@@ -94,23 +126,10 @@ async function getUserServersCount(userIdentifier, db) {
                 server.attributes.next_renewal = '00:00:00:00:00:00';
                 server.attributes.status = 1;
             } else {
-                // Fetch next renewal time for each server
-                const renewalInfo = await new Promise((resolve, reject) => {
-                    db.get(`SELECT next_renewal, status FROM renewals WHERE serverId = ?`, [server.attributes.id], (err, row) => {
-                        if (err) {
-                            reject(err);
-                        } else {
-                            console.log(row);
-
-                            resolve(row);
-                        }
-                    });
-                });
-
                 server.attributes.next_renewal = renewalInfo ? renewalInfo.next_renewal : null;
                 server.attributes.status = renewalInfo ? renewalInfo.status : null;
             }
-        }
+        });
 
         return {
             count: userServers.length,
@@ -128,23 +147,34 @@ async function getUserServersCount(userIdentifier, db) {
     }
 }
 
+
 async function getUserServers(userIdentifier) {
     try {
-        const response = await axios.get(`${settings.pterodactyl.domain}/api/application/servers`, {
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${settings.pterodactyl.key}`
-            }
-        });
-
-        if (response.status !== 200) {
-            console.error('Failed to fetch servers:', response.status);
-            return null;
-        }
         const pterouserid = userIdentifier.id;
+        const userServers = [];
+        let page = 1;
+        let totalPages = 1;
 
-        const userServers = response.data.data.filter(server => server.attributes.user === pterouserid);
+        while (page <= totalPages) {
+            const response = await axios.get(`${settings.pterodactyl.domain}/api/application/servers?page=${page}`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${settings.pterodactyl.key}`
+                }
+            });
+
+            if (response.status !== 200) {
+                console.error('Failed to fetch servers:', response.status);
+                return null;
+            }
+
+            const servers = response.data.data.filter(server => server.attributes.user === pterouserid);
+            userServers.push(...servers);
+
+            totalPages = response.data.meta.pagination.total_pages || 1; 
+            page++;
+        }
 
         const serverDetails = userServers.map(server => ({
             id: server.attributes.id,
@@ -165,6 +195,7 @@ async function getUserServers(userIdentifier) {
         throw error;
     }
 }
+
 
 
 

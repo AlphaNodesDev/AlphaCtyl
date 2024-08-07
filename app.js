@@ -145,6 +145,9 @@ const { logErrorToFile, logNormalToFile, parseLogs, parseNormalLogs } = require(
 const { joinDiscordGuild, sendDiscordWebhook, assignDiscordRole ,addNotification} = require('./modules/functions/discordFunctions.js'); 
 const { updateUserCoins } = require('./modules/functions/updateUserCoins.js'); 
 const { fetchAllocations } = require('./modules/functions/fetchAllocations.js'); 
+const { getUserDetailsByUUID } = require('./modules/api/adminApi.js'); 
+
+
 
 app.use('/', router);
 
@@ -175,7 +178,7 @@ const loadRouteModules = routesFiles.map(file => {
                     packageram, packagedisk, packageport, packagedatabase, packagebackup, pterodactyldomain, LOG_FILE_PATH, NORMAL_LOG_FILE_PATH,
                     webhookUrl, db, WebSocket, wss, activeConnections, pagesConfig, pages, oauthPages, adminPages, logErrorToFile, logNormalToFile, parseLogs, parseNormalLogs,
                     joinDiscordGuild, sendDiscordWebhook, assignDiscordRole, registerPteroUser, getUserIdByUUID, getUserServersCount, getUserServers, getUserCoins, getUserResources, updatePasswordInPanel,
-                    updateUserCoins, fetchAllocations, getNotification,addNotification,calculateTimeRemaining).then(() => {
+                    updateUserCoins, fetchAllocations, getNotification,addNotification,calculateTimeRemaining, getUserDetailsByUUID).then(() => {
                         console.log(chalk.blue.bgGreen(`Loaded module: ${file}`));
                         resolve();
                     }).catch(error => {

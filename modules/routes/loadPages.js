@@ -4,7 +4,7 @@ module.exports.load = async function (express, session, passport, version, Disco
     packageram, packagedisk, packageport, packagedatabase, packagebackup, pterodactyldomain, LOG_FILE_PATH, NORMAL_LOG_FILE_PATH,
     webhookUrl, db, WebSocket, wss, activeConnections, pagesConfig, pages, oauthPages, adminPages, logErrorToFile, logNormalToFile, parseLogs, parseNormalLogs,
     joinDiscordGuild, sendDiscordWebhook, assignDiscordRole, registerPteroUser, getUserIdByUUID, getUserServersCount, getUserServers, getUserCoins, getUserResources, updatePasswordInPanel,
-    updateUserCoins, fetchAllocations, getNotification) {
+    updateUserCoins, fetchAllocations, getNotification, getUserDetailsByUUID) {
 
     // Render appname and logo to OAuth pages only
     Object.keys(oauthPages).forEach(page => {
@@ -21,62 +21,90 @@ module.exports.load = async function (express, session, passport, version, Disco
         });
     });
 
+
+    
+
     Object.keys(adminPages).forEach(page => {
-        app.get(`/${page}`, async (req, res) => {
+        router.get(`/${page}`, async (req, res) => {
             try {
                 if (!req.session.user || !req.session.user.pterodactyl_id) {
                     return res.redirect('/?error=Please Login Again.');
                 }
-                const userId = req.session.user.pterodactyl_id;
+    
+                const userId = req.session.user.pterodactyl_id;    
                 const userIdentifier = await getUserIdByUUID(userId);
-                if (userIdentifier.admin === true) {
-                    const db = new sqlite3.Database(DB_FILE_PATH, (err) => {
+    
+                if (!userIdentifier) {
+                    throw new Error('User identifier not found');
+                }
+    
+                if (!userIdentifier.admin) {
+                    return res.redirect('dashboard?alert=Access denied!');
+                }
+    
+                const db = new sqlite3.Database(DB_FILE_PATH, sqlite3.OPEN_READONLY, (err) => {
+                    if (err) {
+                        logErrorToFile(`Error opening database: ${err.message}`);
+                        return res.status(500).send('Database connection error');
+                    }
+                });
+    
+                try {
+                    const [errorLogsData, normalLogsData] = await Promise.all([
+                        fs.promises.readFile(LOG_FILE_PATH, 'utf8').catch((err) => {
+                            logErrorToFile(`Error reading error log file: ${err.message}`);
+                            return 'Could not load error logs.';
+                        }),
+                        fs.promises.readFile(NORMAL_LOG_FILE_PATH, 'utf8').catch((err) => {
+                            logErrorToFile(`Error reading normal log file: ${err.message}`);
+                            return 'Could not load normal logs.';
+                        })
+                    ]);
+    
+                    const errorLogsByDate = parseLogs(errorLogsData);
+                    const normalLogsByDate = parseNormalLogs(normalLogsData);
+    
+                    db.all('SELECT * FROM Users', async (err, users) => {
                         if (err) {
-                            logErrorToFile(`Error opening database: ${err.message}`);
-                            return res.status(500).send('Database connection error');
-                        }
-                        fs.readFile(LOG_FILE_PATH, 'utf8', (err, errorLogsData) => {
-                            if (err) {
-                                errorLogsData = 'Could not load error logs.';
-                            }
-                            const errorLogsByDate = parseLogs(errorLogsData);
-                            fs.readFile(NORMAL_LOG_FILE_PATH, 'utf8', (err, normalLogsData) => {
-                                if (err) {
-                                    normalLogsData = 'Could not load normal logs.';
-                                }
-                                const normalLogsByDate = parseNormalLogs(normalLogsData);
-                                db.all('SELECT * FROM Users', async (err, users) => {
-                                    if (err) {
-                                        logErrorToFile(`Error fetching users from database: ${err.message}`);
-                                        users = [];
-                                    } else {
-                                        // Fetch additional details for each user
-                                        for (let i = 0; i < users.length; i++) {
-                                            users[i].pterodactylDetails = await getUserIdByUUID(users[i].pterodactyl_id);
-                                        }
+                            logErrorToFile(`Error fetching users from database: ${err.message}`);
+                            users = [];
+                        } else {
+                            // Fetch additional details for each user
+                            for (let i = 0; i < users.length; i++) {
+                                if (users[i].pterodactyl_id !== userId) {
+                                    try {
+                                        const userDetails = await getUserDetailsByUUID(users[i].pterodactyl_id);
+                                        console.log(`Fetched details for user ${users[i].pterodactyl_id}:`, userDetails);
+                                        users[i].pterodactylDetails = userDetails;
+                                    } catch (error) {
+                                        logErrorToFile(`Error fetching user details for user ${users[i].pterodactyl_id}: ${error.message}`);
+                                        users[i].pterodactylDetails = null;
                                     }
-                                    res.render(adminPages[page], {
-                                        user: req.session.user,
-                                        userIdentifier,
-                                        AppName: AppName,
-                                        AppLogo: AppImg,
-                                        settings: settings,
-                                        errorLogs: errorLogsByDate,
-                                        normalLogs: normalLogsByDate,
-                                        users: users,
-                                        version
-                                    });
-                                    db.close((err) => {
-                                        if (err) {
-                                            logErrorToFile(`Error closing database: ${err.message}`);
-                                        }
-                                    });
-                                });
-                            });
+                                }
+                            }
+                        }
+    
+                        res.render(adminPages[page], {
+                            user: req.session.user,
+                            userIdentifier,
+                            AppName: AppName,
+                            AppLogo: AppImg,
+                            settings: settings,
+                            errorLogs: errorLogsByDate,
+                            normalLogs: normalLogsByDate,
+                            users: users,
+                            version
+                        });
+    
+                        db.close((err) => {
+                            if (err) {
+                                logErrorToFile(`Error closing database: ${err.message}`);
+                            }
                         });
                     });
-                } else {
-                    return res.redirect('dashboard?alert=Access denied!');
+                } catch (err) {
+                    db.close();
+                    throw err;
                 }
             } catch (error) {
                 logErrorToFile(`Error: ${error.message}`);
@@ -84,6 +112,11 @@ module.exports.load = async function (express, session, passport, version, Disco
             }
         });
     });
+    
+
+    
+
+
     
 
     function parseCustomDateFormat(dateString) {

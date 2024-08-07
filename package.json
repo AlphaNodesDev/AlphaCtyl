@@ -1,6 +1,6 @@
 {
   "name": "Alphactyl",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "A Custom Dashboard For Pterodactyl Panel",
   "main": "app.js",
   "scripts": {
