@@ -108,10 +108,32 @@ module.exports.load = async function (
         done(null, user);
     });
 
-    // Discord login process
-    app.get('/discord', (req, res) => {
-        passport.authenticate('discord')(req, res);
-    });
+
+    const getClientIp = (req) => {
+        return (req.headers['x-forwarded-for'] || req.socket.remoteAddress).split(',')[0].trim();
+    };
+    const checkWhitelist = (req, res, next) => {
+    const clientIp = getClientIp(req);
+    const whitelist = settings.discord.whitelist;
+    const isMaintenanceMode = settings.webserver.Maintainance;
+
+    if (isMaintenanceMode) {
+        if (whitelist.includes(clientIp)) {
+            next(); // Allow access
+        } else {
+            console.log(`IP ${clientIp} is not whitelisted, access denied.`);
+            res.status(403).send('Access denied: Your IP is not whitelisted.');
+        }
+    } else {
+        next(); 
+    }
+};
+
+// Discord login process with whitelist check
+app.get('/discord', checkWhitelist, (req, res) => {
+    passport.authenticate('discord')(req, res);
+});
+
 
     app.get('/discord/callback', (req, res, next) => {
         passport.authenticate('discord', async (err, user, info) => {

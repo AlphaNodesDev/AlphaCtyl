@@ -6,20 +6,36 @@ module.exports.load = async function (express, session, passport, version, Disco
     joinDiscordGuild, sendDiscordWebhook, assignDiscordRole, registerPteroUser, getUserIdByUUID, getUserServersCount, getUserServers, getUserCoins, getUserResources, updatePasswordInPanel,
     updateUserCoins, fetchAllocations, getNotification, getUserDetailsByUUID) {
 
-    // Render appname and logo to OAuth pages only
-    Object.keys(oauthPages).forEach(page => {
-        app.get(`/${page}`, (req, res) => {
-            if (settings.webserver.Maintainance === true) {
-                res.send('Sorry, the site is currently under maintenance. Please try again later.');
-            } else {
-                res.render(oauthPages[page], {
-                    AppName: AppName,
-                    AppLogo: AppImg,
-                    settings: settings
-                });
-            }
+const getClientIp = (req) => {
+    return (req.headers['x-forwarded-for'] || req.socket.remoteAddress).split(',')[0].trim();
+};
+const checkWhitelist = (req, res, next) => {
+    const clientIp = getClientIp(req);
+    const whitelist = settings.discord.whitelist;
+    const isMaintenanceMode = settings.webserver.Maintainance;
+
+    if (isMaintenanceMode) {
+        if (whitelist.includes(clientIp)) {
+            next();
+        } else {
+            console.log(`IP ${clientIp} is not whitelisted, access denied.`);
+            res.status(403).send('Access denied: Your IP is not whitelisted.');
+        }
+    } else {
+        next(); 
+    }
+};
+Object.keys(oauthPages).forEach(page => {
+    app.get(`/${page}`, checkWhitelist, (req, res) => {
+        res.render(oauthPages[page], {
+            AppName: AppName,
+            AppLogo: AppImg,
+            settings: settings
         });
     });
+});
+
+
 
 
     

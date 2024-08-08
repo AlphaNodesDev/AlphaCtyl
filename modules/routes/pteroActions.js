@@ -568,7 +568,7 @@ router.post('/updateserver', async (req, res) => {
                 allocations: port ? Number(port) : serverData.attributes.feature_limits.allocations,
                 backups: backup ? Number(backup) : serverData.attributes.feature_limits.backups
             },
-            allocation: serverData.attributes.allocation // Use the current allocation ID
+            allocation: serverData.attributes.allocation 
         };
 
         // Update server build
@@ -597,50 +597,387 @@ router.post('/updateserver', async (req, res) => {
     }
 });
 
-
 app.post('/installplugin', async (req, res) => {
-    console.log('Request body:', req.body);
-
     const { pluginId, serverId } = req.body;
-    const appKey = "ptlc_QKEZKAnhEdxi0DwWxJsnCWO1EsS3ux0Rk9jQu7ZLVUt";
+    const userId = req.session.user.pterodactyl_id;
 
     if (!pluginId || !serverId) {
         return res.status(400).json({ success: false, message: 'Missing pluginId or serverId' });
     }
 
     try {
+        // Get API key from database
+        const clientApiKey = await getApiKeyFromDb(userId);
+        if (!clientApiKey) {
+            console.error('API key is missing or invalid.');
+            return res.status(401).json({ success: false, message: 'API key is missing or invalid. Please update your API key.' });
+        }
+
+        // Fetch signed URL for file upload
         const signedUrlResponse = await axios.get(`${settings.pterodactyl.domain}/api/client/servers/${serverId}/files/upload`, {
             headers: {
                 'Accept': 'application/json',
-                'Authorization': `Bearer ${appKey}`,
+                'Authorization': `Bearer ${clientApiKey}`,
             }
         });
 
         if (signedUrlResponse.status !== 200) {
-            throw new Error('Failed to get signed URL');
+            console.error('Failed to get signed URL:', signedUrlResponse.status, signedUrlResponse.data);
+            throw new Error(`Failed to get signed URL. Status: ${signedUrlResponse.status}, Response: ${JSON.stringify(signedUrlResponse.data)}`);
         }
 
         const uploadUrl = signedUrlResponse.data.attributes.url;
 
+        // Download plugin .jar file from Spiget
         const downloadUrl = `https://api.spiget.org/v2/resources/${pluginId}/download`;
         const response = await axios.get(downloadUrl, { responseType: 'stream' });
 
+        // Ensure the response data is a valid stream
+        if (!response.data || !response.data.pipe) {
+            throw new Error('Failed to download plugin. The response is not a valid stream.');
+        }
+
+        // Upload the .jar file to the signed URL
         const uploadResponse = await axios.put(uploadUrl, response.data, {
             headers: {
-                'Content-Type': response.headers['content-type'],
-                'Authorization': `Bearer ${appKey}`,
+                'Content-Type': 'application/java-archive',
+                'Authorization': `Bearer ${clientApiKey}`
             }
         });
 
         if (uploadResponse.status === 200) {
             res.json({ success: true, message: 'Plugin installed successfully' });
         } else {
-            throw new Error('Failed to upload file');
+            console.error('Failed to upload file:', uploadResponse.status, uploadResponse.data);
+            throw new Error(`Failed to upload file. Status: ${uploadResponse.status}, Response: ${JSON.stringify(uploadResponse.data)}`);
         }
     } catch (error) {
+        console.error('Error installing plugin:', error.message);
         res.status(500).json({ success: false, message: 'Error installing plugin', error: error.message });
     }
 });
+
+
+
+
+//actions
+
+app.use(express.json());
+const getApiKeyFromDb = (userId) => {
+    return new Promise((resolve, reject) => {
+        db.get("SELECT api_key FROM users WHERE pterodactyl_id = ?", [userId], (err, row) => {
+            if (err) {
+                return reject(err);
+            }
+            resolve(row ? row.api_key : null);
+        });
+    });
+};
+app.post('/update-api-key', async (req, res) => {
+    const { apiKey } = req.body;
+    const userId = req.session.user.pterodactyl_id;
+
+    if (!apiKey || typeof apiKey !== 'string') {
+        return res.status(400).json({ error: 'Invalid API key' });
+    }
+
+    try {
+        const changes = await updateApiKeyInDb(userId, apiKey);
+
+        if (changes === 0) {
+            return res.status(400).json({ error: 'Failed to update API key' });
+        }
+
+        res.json({ success: 'API key updated successfully' });
+    } catch (error) {
+        console.error('Error updating API key:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Function to update the API key in the database
+const updateApiKeyInDb = (userId, apiKey) => {
+    return new Promise((resolve, reject) => {
+        db.run("UPDATE users SET api_key = ? WHERE pterodactyl_id = ?", [apiKey, userId], function(err) {
+            if (err) {
+                return reject(err);
+            }
+            resolve(this.changes);
+        });
+    });
+};
+
+// Endpoint to fetch server details
+app.post('/server', async (req, res) => {
+    const { serverId } = req.body;
+    const userId = req.session.user.pterodactyl_id;
+
+    if (!serverId || typeof serverId !== 'string') {
+        return res.status(400).json({ error: 'Invalid server ID' });
+    }
+
+    try {
+        let clientApiKey = await getApiKeyFromDb(userId);
+
+        if (!clientApiKey) {
+            return res.status(401).json({ error: 'No API key found for user. Please provide a valid API key.' });
+        }
+
+        let resourceUsageResponse;
+        try {
+            resourceUsageResponse = await axios.get(`${settings.pterodactyl.domain}/api/client/servers/${serverId}/resources`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${clientApiKey}`
+                }
+            });
+        } catch (err) {
+            if (err.response && err.response.status === 401) {
+                clientApiKey = null;
+            } else {
+                throw err;
+            }
+        }
+
+        if (!clientApiKey) {
+            return res.status(401).json({ error: 'API key is invalid or expired. Please update your API key.' });
+        }
+
+        const resources = resourceUsageResponse.data.attributes.resources;
+        const attributes = resourceUsageResponse.data.attributes;
+        const websocketResponse = await axios.get(`${settings.pterodactyl.domain}/api/client/servers/${serverId}/websocket`, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${clientApiKey}`
+            }
+        });
+
+        const websocketData = websocketResponse.data;
+        const socketUrl = websocketData.data.socket;
+        const token = websocketData.data.token;
+
+        res.json({
+            resources: {
+                state: attributes.current_state,
+                memoryBytes: resources.memory_bytes,
+                cpuAbsolute: resources.cpu_absolute,
+                diskBytes: resources.disk_bytes,
+                networkRxBytes: resources.network_rx_bytes,
+                networkTxBytes: resources.network_tx_bytes
+            },
+            websocket: {
+                socketUrl,
+                token
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching server details:', error.response ? error.response.data : error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/server/command', async (req, res) => {
+    const { serverId, command } = req.body;
+    
+    const userId = req.session.user.pterodactyl_id;
+
+    if (!serverId || !command) {
+        return res.status(400).json({ error: 'Server ID and command are required' });
+    }
+
+    try {
+        let clientApiKey = await getApiKeyFromDb(userId);
+
+        const response = await axios.post(`${settings.pterodactyl.domain}/api/client/servers/${serverId}/command`, { command }, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${clientApiKey}`
+            }
+        });
+
+        if (response.status === 204) {
+            return res.status(200).json({ message: 'Command sent successfully' });
+        } else {
+            return res.status(response.status).json(response.data);
+        }
+    } catch (error) {
+        console.error('Error sending command to Pterodactyl API:', error.response ? error.response.data : error.message);
+        return res.status(error.response ? error.response.status : 500).json({
+            error: 'An error occurred while sending the command'
+        });
+    }
+});
+
+// Endpoint to start the server
+app.post('/server/start', async (req, res) => {
+    const { serverId } = req.body;
+    const userId = req.session.user.pterodactyl_id;
+
+    if (!serverId || typeof serverId !== 'string') {
+        return res.status(400).json({ error: 'Invalid server ID' });
+    }
+
+    try {
+        const clientApiKey = await getApiKeyFromDb(userId);
+        if (!clientApiKey) {
+            return res.status(401).json({ error: 'No API key found for user. Please provide a valid API key.' });
+        }
+
+        await axios.post(`${settings.pterodactyl.domain}/api/client/servers/${serverId}/power`, {
+            signal: 'start'
+        }, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${clientApiKey}`
+            }
+        });
+
+        res.json({ success: 'Server started successfully' });
+    } catch (error) {
+        console.error('Error starting server:', error.response ? error.response.data : error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+// Endpoint to stop the server
+app.post('/server/stop', async (req, res) => {
+    const { serverId } = req.body;
+    const userId = req.session.user.pterodactyl_id;
+
+    if (!serverId || typeof serverId !== 'string') {
+        return res.status(400).json({ error: 'Invalid server ID' });
+    }
+
+    try {
+        const clientApiKey = await getApiKeyFromDb(userId);
+        if (!clientApiKey) {
+            return res.status(401).json({ error: 'No API key found for user. Please provide a valid API key.' });
+        }
+
+        await axios.post(`${settings.pterodactyl.domain}/api/client/servers/${serverId}/power`, {
+            signal: 'stop'
+        }, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${clientApiKey}`
+            }
+        });
+
+        res.json({ success: 'Server stopped successfully' });
+    } catch (error) {
+        console.error('Error stopping server:', error.response ? error.response.data : error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Endpoint to restart the server
+app.post('/server/restart', async (req, res) => {
+    const { serverId } = req.body;
+    const userId = req.session.user.pterodactyl_id;
+
+    if (!serverId || typeof serverId !== 'string') {
+        return res.status(400).json({ error: 'Invalid server ID' });
+    }
+
+    try {
+        const clientApiKey = await getApiKeyFromDb(userId);
+        if (!clientApiKey) {
+            return res.status(401).json({ error: 'No API key found for user. Please provide a valid API key.' });
+        }
+
+        await axios.post(`${settings.pterodactyl.domain}/api/client/servers/${serverId}/power`, {
+            signal: 'restart'
+        }, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${clientApiKey}`
+            }
+        });
+
+        res.json({ success: 'Server restarted successfully' });
+    } catch (error) {
+        console.error('Error restarting server:', error.response ? error.response.data : error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+// Endpoint to kill the server
+app.post('/server/kill', async (req, res) => {
+    const { serverId } = req.body;
+    const userId = req.session.user.pterodactyl_id;
+
+    if (!serverId || typeof serverId !== 'string') {
+        return res.status(400).json({ error: 'Invalid server ID' });
+    }
+
+    try {
+        const clientApiKey = await getApiKeyFromDb(userId);
+        if (!clientApiKey) {
+            return res.status(401).json({ error: 'No API key found for user. Please provide a valid API key.' });
+        }
+
+        await axios.post(`${settings.pterodactyl.domain}/api/client/servers/${serverId}/power`, {
+            signal: 'kill'
+        }, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${clientApiKey}`
+            }
+        });
+
+        res.json({ success: 'Server killed successfully' });
+    } catch (error) {
+        console.error('Error killing server:', error.response ? error.response.data : error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+// Endpoint to fetch server status
+app.post('/server/status', async (req, res) => {
+    const { serverId } = req.body;
+    const userId = req.session.user.pterodactyl_id;
+
+    if (!serverId || typeof serverId !== 'string') {
+        return res.status(400).json({ error: 'Invalid server ID' });
+    }
+
+    try {
+        const clientApiKey = await getApiKeyFromDb(userId);
+        if (!clientApiKey) {
+            return res.status(401).json({ error: 'No API key found for user. Please provide a valid API key.' });
+        }
+
+        const response = await axios.get(`${settings.pterodactyl.domain}/api/client/servers/${serverId}`, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${clientApiKey}`
+            }
+        });
+
+        const serverData = response.data.attributes;
+        res.json({
+            name: serverData.name,
+        });
+    } catch (error) {
+        console.error('Error fetching server status:', error.response ? error.response.data : error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
+
+
+
+
 
 
 }
