@@ -8,10 +8,8 @@ module.exports.load = async function (
     joinDiscordGuild, sendDiscordWebhook, assignDiscordRole, registerPteroUser, getUserIdByUUID, getUserServersCount, getUserServers, getUserCoins, getUserResources, updatePasswordInPanel,
     updateUserCoins, fetchAllocations
 ) {
-    // Create tables if they do not exist
     await db.run(`CREATE TABLE IF NOT EXISTS dailylinkpays (user_id TEXT PRIMARY KEY, total INTEGER)`);
     await db.run(`CREATE TABLE IF NOT EXISTS lvlimitdate (user_id TEXT PRIMARY KEY, timestamp INTEGER)`);
-
     const lpcodes = {};
     const cooldowns = {};
 
@@ -24,7 +22,6 @@ module.exports.load = async function (
         return code;
     }
 
-    // Extract the domain from the callback URL
     const callbackUrl = settings.discord.oauth2.callbackpath;
     const parsedUrl = new URL(callbackUrl);
     const domain = `${parsedUrl.protocol}//${parsedUrl.host}`; 
