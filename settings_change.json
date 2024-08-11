@@ -43,24 +43,53 @@
         "ad2": "code for ad 2"
     },
     "youtube": {
-        "enable": false,
+        "enabled": true,
         "coins": "50",
-        "_Note_":"Youtube Video code after v= (https://www.youtube.com/watch?v=xTBDsVl9fQQ) ",
+        "_Note_": "Youtube Video code after v= (https://www.youtube.com/watch?v=xTBDsVl9fQQ) ",
         "links": [
-            "FAyKDaXEAgc",
-            "tCDvOQI3pco",
-            "FUKmyRLOlAA"
+          "FAyKDaXEAgc",
+          "tCDvOQI3pco",
+          "FUKmyRLOlAA"
         ]
-    },
-    "linkpays": {
-        "enabled": false,
+      },
+      "linkpays": {
+        "enabled": true,
         "apiKey": "Linkpays api key here",
         "coins": 25,
-        "dailyLimit": "null",
+        "dailyLimit": "2",
         "minTimeToComplete": "null",
         "timeToExpire": "null",
         "cooldown": "1"
-    },
+      },
+      "linkvertise": {
+        "enabled": false,
+        "apiKey": "Linkpays api key here",
+        "coins": 25,
+        "dailyLimit": "2",
+        "minTimeToComplete": "null",
+        "timeToExpire": "null",
+        "cooldown": "1"
+      },
+      
+        "j4r": {
+          "enabled": true,
+          "ads": [
+            {
+              "name": "AlphaNodes Free Minecraft Hosting",
+              "logo": "https://i.ibb.co/CzMQ4QV/Alpha-Ctyl-1-removebg-preview.png",
+              "invite": "https://discord.gg/h3ADFfYX7D",
+              "id": "1234739121428234264",
+              "coins": 100
+            },
+            {
+              "name": "AlphaCtyl Development Server",
+              "logo": "https://i.ibb.co/CzMQ4QV/Alpha-Ctyl-1-removebg-preview.png",
+              "invite": "https://discord.gg/sGmmwJaNe9",
+              "id": "1265999146549248101",
+              "coins": 200
+            }
+          ]
+        },
     "discord": {
         "oauth2": {
             "_Note_": "Oath2 clientID And clientSecret",

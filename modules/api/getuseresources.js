@@ -1,15 +1,23 @@
 async function getUserResources(userId, db) {
     return new Promise((resolve, reject) => {
-        db.get('SELECT * FROM users WHERE pterodactyl_id = ?', [userId], (err, row) => {
+        db.get('SELECT servers FROM users WHERE pterodactyl_id = ?', [userId], (err, row) => {
             if (err) {
-                console.error(err.message);
+                console.error('Error fetching user resources:', err.message);
                 reject(err);
             } else {
                 const userResources = {
-                    row: row,
-
+                    row: row,  
                 };
-                resolve(userResources);
+
+                db.all('SELECT server_id FROM j4r_joins WHERE user_id = ?', [userId], (err, rows) => {
+                    if (err) {
+                        console.error('Error fetching joined servers:', err.message);
+                        reject(err);
+                    } else {
+                        const joinedServers = rows.map(row => row.server_id);
+                        resolve({ userResources, joinedServers });
+                    }
+                });
             }
         });
     });

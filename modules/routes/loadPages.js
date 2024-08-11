@@ -171,68 +171,62 @@ Object.keys(oauthPages).forEach(page => {
     
         return `${days}d ${hours}h ${minutes}m`;
     }
-    // Render values to all pages
-    Object.keys(pages).forEach((page) => {
-        router.get(`/${page}`, async (req, res) => {
-            if (!req.session.user || !req.session.user.id) {
-                return res.redirect('/?error=Please Login Again.');
-            }
 
-            try {
-                const userId = req.session.user.pterodactyl_id;
-                const db = new sqlite3.Database(DB_FILE_PATH);
-
-                const [userIdentifier, userresources, coins, notifications] = await Promise.all([
-                    getUserIdByUUID(userId),
-                    getUserResources(userId, db),
-                    getUserCoins(userId, db),
-                    getNotification(userId, db)
-                ]);
-
-const [userServersCount, userServers] = await Promise.all([
-    getUserServersCount(userIdentifier, db),
-    getUserServers(userIdentifier),
     
-]);
-
-userServersCount.userServers.forEach(server => {
-    const nextRenewal = server.attributes.next_renewal;
-    server.attributes.timeRemaining = calculateTimeRemaining(nextRenewal);
-});
-
-
-
-                db.close();
-
-                res.render(pages[page], {
-                    user: req.session.user,
-                    userresources,
-                    userServersCount,
-                    userServers,
-                    userIdentifier,
-                    AppName,
-                    AppLogo: AppImg,
-                    packageserver,
-                    packagecpu,
-                    packageram,
-                    packagedisk,
-                    packageport,
-                    packagedatabase,
-                    packagebackup,
-                    ads,
-                    coins,
-                    afktimer,
-                    pterodactyldomain,
-                    settings,
-                    notifications
-                      
-                });
-            } catch (error) {
-                console.error('Error fetching data:', error);
-                return res.redirect('/?error=Please Login Again.');
-            }
-        });
+    // Render values to all pages
+Object.keys(pages).forEach((page) => {
+    router.get(`/${page}`, async (req, res) => {
+        if (!req.session.user || !req.session.user.id) {
+            return res.redirect('/?error=Please Login Again.');
+        }
+        const db = new sqlite3.Database(DB_FILE_PATH);
+        try {
+            const userId = req.session.user.pterodactyl_id;
+            const [userIdentifier, { userResources, joinedServers }, coins, notifications] = await Promise.all([
+                getUserIdByUUID(userId),
+                getUserResources(userId, db),
+                getUserCoins(userId, db),
+                getNotification(userId, db)
+            ]);
+            const [userServersCount, userServers] = await Promise.all([
+                getUserServersCount(userIdentifier, db),
+                getUserServers(userIdentifier),
+            ]);
+            userServersCount.userServers.forEach(server => {
+                const nextRenewal = server.attributes.next_renewal;
+                server.attributes.timeRemaining = calculateTimeRemaining(nextRenewal);
+            });
+            res.render(pages[page], {
+                user: req.session.user,
+                userresources: userResources,
+                userServersCount,
+                userServers,
+                userIdentifier,
+                AppName,
+                AppLogo: AppImg,
+                packageserver,
+                packagecpu,
+                packageram,
+                packagedisk,
+                packageport,
+                packagedatabase,
+                packagebackup,
+                ads,
+                coins,
+                afktimer,
+                pterodactyldomain,
+                settings,
+                notifications,
+                joinedServers
+            });
+        } catch (error) {
+            console.error('Error fetching data:', error);
+            return res.redirect('/?error=Please Login Again.');
+        } finally {
+            db.close();
+        }
     });
+});
 
     
 };

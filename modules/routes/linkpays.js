@@ -120,7 +120,6 @@ module.exports.load = async function (
             getDailyLinkPaysStmt.finalize();
         });
 
-        const coins = await getUserCoins(userId, db);
         const newCoins = settings.linkpays.coins;
         await updateUserCoins(userId, newCoins, db);
 

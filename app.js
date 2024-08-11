@@ -2,7 +2,7 @@ const express = require('express');
 const session = require('express-session');
 const flash = require('connect-flash');
 const passport = require('passport');
-const version = "1.2";
+const version = "1.2.1";
 const DiscordStrategy = require('passport-discord').Strategy;
 const bodyParser = require('body-parser');
 const figlet = require('figlet');
@@ -124,6 +124,7 @@ db.serialize(() => {
     db.run(`CREATE TABLE IF NOT EXISTS coupons (id INTEGER PRIMARY KEY AUTOINCREMENT,code TEXT UNIQUE NOT NULL,coins INTEGER NOT NULL,servers INTEGER DEFAULT 0,cpu INTEGER DEFAULT 0,ram INTEGER DEFAULT 0,disk INTEGER DEFAULT 0,backup INTEGER DEFAULT 0,ports INTEGER DEFAULT 0,database INTEGER DEFAULT 0,created_at DATETIME DEFAULT CURRENT_TIMESTAMP,updated_at DATETIME DEFAULT CURRENT_TIMESTAMP)`);
     db.run("CREATE TABLE IF NOT EXISTS youtube (id INTEGER, yt_link TEXT)");
     db.run(`CREATE TABLE IF NOT EXISTS renewals (id INTEGER PRIMARY KEY AUTOINCREMENT, serverId TEXT NOT NULL, next_renewal DATETIME NOT NULL, status TEXT DEFAULT 'active')`);
+
    db.all("PRAGMA table_info(users)", (err, columns) => {
     if (err) {
         return console.error("Error fetching table info:", err.message);

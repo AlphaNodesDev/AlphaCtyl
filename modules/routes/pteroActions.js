@@ -31,10 +31,10 @@ router.get('/resetptero', async (req, res) => {
             charset: 'alphanumeric'
         });
         await updatePasswordInPanel(userIdentifier, newPassword, req.session.user.email, req.session.user.username, req.session.user.first_name, req.session.user.last_name);
-        const uuid = req.session.user.pterodactyl_id;
-        const coins = await getUserCoins(userId, db);
+    
         return res.redirect('settings?success=your New Password is:'+` ${newPassword}`);
     } catch (error) {  
+        console.log(error);
          return res.redirect('settings?error=Error resetting password.');}
         });
 
@@ -597,6 +597,20 @@ router.post('/updateserver', async (req, res) => {
     }
 });
 
+app.get('/proxy-image', async (req, res) => {
+    const imageUrl = req.query.url;
+    try {
+        const response = await axios({
+            url: imageUrl,
+            responseType: 'arraybuffer',
+        });
+        res.set('Content-Type', response.headers['content-type']);
+        res.send(response.data);
+    } catch (error) {
+        res.status(500).send('Error fetching the image');
+    }
+});
+
 app.post('/installplugin', async (req, res) => {
     const { pluginId, serverId } = req.body;
     const userId = req.session.user.pterodactyl_id;
@@ -604,47 +618,34 @@ app.post('/installplugin', async (req, res) => {
     if (!pluginId || !serverId) {
         return res.status(400).json({ success: false, message: 'Missing pluginId or serverId' });
     }
-
     try {
-        // Get API key from database
         const clientApiKey = await getApiKeyFromDb(userId);
         if (!clientApiKey) {
             console.error('API key is missing or invalid.');
             return res.status(401).json({ success: false, message: 'API key is missing or invalid. Please update your API key.' });
         }
-
-        // Fetch signed URL for file upload
         const signedUrlResponse = await axios.get(`${settings.pterodactyl.domain}/api/client/servers/${serverId}/files/upload`, {
             headers: {
                 'Accept': 'application/json',
                 'Authorization': `Bearer ${clientApiKey}`,
             }
         });
-
         if (signedUrlResponse.status !== 200) {
             console.error('Failed to get signed URL:', signedUrlResponse.status, signedUrlResponse.data);
             throw new Error(`Failed to get signed URL. Status: ${signedUrlResponse.status}, Response: ${JSON.stringify(signedUrlResponse.data)}`);
         }
-
         const uploadUrl = signedUrlResponse.data.attributes.url;
-
-        // Download plugin .jar file from Spiget
         const downloadUrl = `https://api.spiget.org/v2/resources/${pluginId}/download`;
         const response = await axios.get(downloadUrl, { responseType: 'stream' });
-
-        // Ensure the response data is a valid stream
         if (!response.data || !response.data.pipe) {
             throw new Error('Failed to download plugin. The response is not a valid stream.');
         }
-
-        // Upload the .jar file to the signed URL
         const uploadResponse = await axios.put(uploadUrl, response.data, {
             headers: {
-                'Content-Type': 'application/java-archive',
+                'Content-Type': 'application/json',
                 'Authorization': `Bearer ${clientApiKey}`
             }
         });
-
         if (uploadResponse.status === 200) {
             res.json({ success: true, message: 'Plugin installed successfully' });
         } else {
