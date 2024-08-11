@@ -1,6 +1,6 @@
 async function getUserResources(userId, db) {
     return new Promise((resolve, reject) => {
-        db.get('SELECT servers FROM users WHERE pterodactyl_id = ?', [userId], (err, row) => {
+        db.get('SELECT * FROM users WHERE pterodactyl_id = ?', [userId], (err, row) => {
             if (err) {
                 console.error('Error fetching user resources:', err.message);
                 reject(err);
