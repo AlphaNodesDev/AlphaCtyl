@@ -258,8 +258,11 @@ router.post('/createserver', async (req, res) => {
     } else {
         try {
             const userId = req.session.user.pterodactyl_id;
-            const userIdentifier = await getUserIdByUUID(userId);
-            const userResources = await getUserResources(userId, db);
+            const [userIdentifier, { userResources, joinedServers }] = await Promise.all([
+                getUserIdByUUID(userId),
+                getUserResources(userId, db)
+
+            ]);
             const userServersCount = await getUserServersCount(userIdentifier);
 
             const availableServers = (userResources.row.servers + packageserver) - userServersCount.count;
@@ -503,6 +506,7 @@ router.post('/updateserver', async (req, res) => {
         const minCpu = eggConfig.minimum.cpu;
         const minRam = eggConfig.minimum.ram;
         const minDisk = eggConfig.minimum.disk;
+ 
 
         if (cpu < minCpu) {
             return res.redirect(`/manage?info=CPU should be at least ${minCpu} cores.`);
@@ -518,15 +522,22 @@ router.post('/updateserver', async (req, res) => {
         const userId = req.session.user.pterodactyl_id;
         const uuid = await getUserIdByUUID(userId);
         const userIdentifier = uuid.id;
-        const userResources = await getUserResources(userId, db);
-        const userServersCount = await getUserServersCount(userIdentifier);
+        const [{ userResources, joinedServers }] = await Promise.all([
+            getUserResources(userId, db)
+        ]);
+        const userServersCount = await getUserServersCount(userIdentifier, db);
 
+        
+
+        const availableServers = (userResources.row.servers + packageserver) - userServersCount.count;
         const availableCpu = (userResources.row.cpu + packagecpu) - userServersCount.totalCPU;
         const availableRam = (userResources.row.ram + packageram) - userServersCount.totalRAM;
         const availableDisk = (userResources.row.disk + packagedisk) - userServersCount.totalDisk;
         const availableDatabase = (userResources.row.database + packagedatabase) - userServersCount.totalDatabase;
         const availableBackup = (userResources.row.backup + packagebackup) - userServersCount.totalBackup;
         const availablePorts = (userResources.row.ports + packageport) - userServersCount.totalPorts;
+
+ 
 
         // Validate resources
         if (cpu > availableCpu) {
