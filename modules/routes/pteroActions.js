@@ -252,6 +252,7 @@ function parseCustomDateFormat(dateString) {
 // Function to create server
 router.post('/createserver', async (req, res) => {
     const settings = JSON.parse(fs.readFileSync('settings.json', 'utf8'));
+    const db = new sqlite3.Database(DB_FILE_PATH);
 
     if (settings.webserver.server_creation === false) {
         return res.redirect('/manage?alert=Sorry, Server Creation Not Enabled');
@@ -263,7 +264,7 @@ router.post('/createserver', async (req, res) => {
                 getUserResources(userId, db)
 
             ]);
-            const userServersCount = await getUserServersCount(userIdentifier);
+            const userServersCount = await getUserServersCount(userIdentifier, db);
 
             const availableServers = (userResources.row.servers + packageserver) - userServersCount.count;
             const availableCpu = (userResources.row.cpu + packagecpu) - userServersCount.totalCPU;
