@@ -169,7 +169,7 @@ app.get('/discord', checkWhitelist, (req, res) => {
                 db.get('SELECT * FROM users WHERE email = ?', [email], async (dbErr, row) => {
                     if (dbErr) {
                         logErrorToFile(`Error retrieving user details: ${dbErr.message}`);
-                        return res.render('index', { error: 'An error occurred while retrieving user details.' });
+                        return res.redirect('/?error=An error occurred while retrieving user details.');
                     }
 
                     if (row && row.status === 1) {
@@ -178,8 +178,8 @@ app.get('/discord', checkWhitelist, (req, res) => {
                         req.session.user = row;
                         res.redirect('/dashboard');
                     } else {
+                        res.redirect('/?error=Your account is restricted or timed out by admin.');
                         logNormalToFile(`User account is restricted: ${email}`);
-                        res.render('index', { error: 'Your account is restricted or timed out by admin.' });
                     }
                 });
 
