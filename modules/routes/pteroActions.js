@@ -112,6 +112,97 @@ const pad = (num, size) => {
 
 setInterval(checkAndSuspendExpiredServers, 60000);
 
+/*
+const checkAndKillInactiveServers = async () => {
+    try {
+        const domain = settings.pterodactyl.domain;
+        const apiKey = settings.pterodactyl.key;
+
+        let page = 1;
+        let totalPages = 1;
+
+        do {
+            const serversResponse = await axios.get(`${domain}/api/application/servers`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                params: {
+                    'page': page,
+                }
+            });
+
+            const servers = serversResponse.data.data;
+            totalPages = serversResponse.data.meta.pagination.total_pages;
+
+            for (const server of servers) {
+                const serverId = server.attributes.id;
+                const userId = server.attributes.user;
+                const serverUuid = server.attributes.identifier;
+
+
+                const userResponse = await axios.get(`${domain}/api/application/users/${userId}`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    }
+                });
+
+                const userUuid = userResponse.data.attributes.uuid;
+                console.log(`Processing Server: ${serverUuid} name: ${server.attributes.name} for User: ${userUuid}`);
+
+                db.get('SELECT last_login FROM users WHERE pterodactyl_id = ?', [userUuid], (err, row) => {
+                    if (err) {
+                        console.error(`Database error: ${err.message}`);
+                        return;
+                    }
+
+                    if (!row) {
+                        console.log(`No matching user found in database for pterodactyl_id: ${userUuid}. Skipping...`);
+                        return;
+                    }
+
+                    const lastLogin = new Date(row.last_login);
+                    const now = new Date();
+                    const cliessntkey = "ptlc_OHssOkfY0rvuTVlNdnHmU2Jkn9zTIhED6o6SOD0xlKi";
+
+                    if ((now - lastLogin) > 5 * 60 * 1000) {
+                        axios.post(`${domain}/api/client/servers/${serverUuid}/power`, {
+                            signal: 'kill'
+                        }, {
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${cliessntkey}`
+                            }
+                        })
+
+
+                        .then(() => {
+                            console.log(`Server ${serverUuid} killed due to inactivity.`);
+                        })
+                        .catch((err) => {
+                            console.error(`Failed to kill server ${serverUuid}: ${err.response ? JSON.stringify(err.response.data) : err.message}`);
+                        });
+                    }
+                    
+                });
+            }
+
+            page++;
+        } while (page <= totalPages);
+
+    } catch (error) {
+        console.error(`Error in checkAndKillInactiveServers: ${error.message}`);
+    }
+};
+
+setInterval(checkAndKillInactiveServers, 60000);
+
+
+*/
 
 const moment = require('moment-timezone'); 
 

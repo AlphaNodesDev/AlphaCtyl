@@ -16,3 +16,6 @@ database.sqlite
 /olddb.sqlite
 /backups
 /logs
+/versions
+/plugins/configs/Discordbot.json
+.gitignore

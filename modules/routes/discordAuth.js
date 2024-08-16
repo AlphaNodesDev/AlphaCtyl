@@ -10,9 +10,13 @@ module.exports.load = async function (
 
     // Function to sanitize the username
     function sanitizeUsername(username) {
-        // Remove any leading or trailing non-alphanumeric characters
         logNormalToFile(`Sanitizing username: ${username}`);
         return username.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    }
+
+    // Function to get the current time
+    function getCurrentTime() {
+        return new Date().toISOString();
     }
 
     // Discord Login Strategy
@@ -32,6 +36,10 @@ module.exports.load = async function (
                 if (row) {
                     // Check the user's status
                     if (row.status === 1) {
+                        // Update the last login time
+                        const currentTime = getCurrentTime();
+                        db.run('UPDATE users SET last_login = ? WHERE email = ?', [currentTime, profile.email]);
+
                         if (settings.discord.bot.joinguild.enabled === true) {
                             try {
                                 const discordUserId = profile.id;
@@ -67,6 +75,8 @@ module.exports.load = async function (
                     return done(new Error('Failed to register user in panel.'));
                 }
                 const userId = pteroUser.attributes ? pteroUser.attributes.uuid : pteroUser.uuid;
+                const currentTime = getCurrentTime();  // Get current time for registration
+
                 if (settings.discord.logging.status === true && settings.discord.logging.actions.user.signup === true) {
                     const message = `User logged in: ${profile.username}`;
                     const webhookUrl = settings.discord.logging.webhook;
@@ -88,8 +98,8 @@ module.exports.load = async function (
                     }
                 }
 
-                await db.run('INSERT INTO users (id, discord_id, username, email, password, first_name, last_name, pterodactyl_id, avatar, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                    [profile.id, profile.id, sanitizedUsername, profile.email, password, firstName, lastName, userId, profile.avatar, 1]); // Set default status to 1
+                await db.run('INSERT INTO users (id, discord_id, username, email, password, first_name, last_name, pterodactyl_id, avatar, last_login, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                    [profile.id, profile.id, sanitizedUsername, profile.email, password, firstName, lastName, userId, profile.avatar, currentTime , 1]); // Set default status to 1
                 logNormalToFile(`New user registered: ${profile.email}`);
 
                 return done(null, { ...profile, accessToken });
@@ -152,25 +162,24 @@ app.get('/discord', checkWhitelist, (req, res) => {
                 }
 
                 const { email } = user;
-                
+                const currentTime = getCurrentTime();  // Get current time for login
 
                 const db = new sqlite3.Database(DB_FILE_PATH);
 
                 db.get('SELECT * FROM users WHERE email = ?', [email], async (dbErr, row) => {
                     if (dbErr) {
                         logErrorToFile(`Error retrieving user details: ${dbErr.message}`);
-                        // Render the homepage with an error message
-                        return res.render('index', { error: 'An error occurred while retrieving user details.' }); // Ensure the view name is 'index'
+                        return res.render('index', { error: 'An error occurred while retrieving user details.' });
                     }
 
-                    // Check the user's status
                     if (row && row.status === 1) {
+                        db.run('UPDATE users SET last_login = ? WHERE email = ?', [currentTime, email]);
+                        
                         req.session.user = row;
                         res.redirect('/dashboard');
                     } else {
                         logNormalToFile(`User account is restricted: ${email}`);
-                        // Render the homepage with an error message
-                        res.render('index', { error: 'Your account is restricted or timed out by admin.' }); // Ensure the view name is 'index'
+                        res.render('index', { error: 'Your account is restricted or timed out by admin.' });
                     }
                 });
 
@@ -179,7 +188,6 @@ app.get('/discord', checkWhitelist, (req, res) => {
         })(req, res, next);
     });
 
-    // Error handling middleware
     app.use((err, req, res, next) => {
         if (err.name === 'TokenError') {
             logErrorToFile(`TokenError: ${err.message}`);
