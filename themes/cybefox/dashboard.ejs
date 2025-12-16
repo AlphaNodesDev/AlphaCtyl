@@ -1,0 +1,141 @@
+<%- include('./includes/header') %>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Animated -->
+            <div class="animated fadeIn">
+                <!-- Resource Status Cards -->
+                <div class="row">
+                    <%- include('./includes/status') %>
+                </div>
+
+                <!-- Server List & Help Section -->
+                <div class="row">
+                    <!-- User Servers Table -->
+                    <div class="col-lg-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fa fa-server text-cyan"></i>
+                                <strong>Your Servers</strong>
+                            </div>
+                            <div class="card-body">
+                                <% if (userServersCount.userServers.length > 0) { %>
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">NAME</th>
+                                                <th scope="col">CPU</th>
+                                                <th scope="col">RAM</th>
+                                                <th scope="col">DISK</th>
+                                                <th scope="col">ACTIONS</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% userServersCount.userServers.forEach(server => { %>
+                                            <tr>
+                                                <td>
+                                                    <i class="fa fa-circle <%= server.attributes.status !== 'suspended' ? 'text-green' : 'text-red' %>" style="font-size: 8px;"></i>
+                                                    <%= server.attributes.name %>
+                                                </td>
+                                                <td><span class="text-cyan"><%= server.attributes.limits.cpu %>%</span></td>
+                                                <td><span class="text-magenta"><%= server.attributes.limits.memory %>MB</span></td>
+                                                <td><span class="text-yellow"><%= server.attributes.limits.disk %>MB</span></td>
+                                                <td>
+                                                    <% if (server.attributes.status !== 'suspended') { %>
+                                                        <button onclick="window.location.href='./editserver?id=<%= server.attributes.id %>'" type="button" class="btn btn-success btn-sm">
+                                                            <i class="fa fa-cogs"></i> Manage
+                                                        </button>
+                                                        <% if (settings.store.renewals.status === true) { %>
+                                                            <button onclick="window.location.href='./dashboard?job=Renew Server&&message=Are You Sure to Renew Server for <%= settings.store.renewals.days %> Days <%= settings.store.renewals.hour %> Hour <%= settings.store.renewals.minute %> Minutes&&id=<%= server.attributes.id %>'" type="button" class="btn btn-warning btn-sm">
+                                                                <i class="fa fa-clock"></i> <%= server.attributes.timeRemaining %>
+                                                            </button>
+                                                        <% } %>
+                                                    <% } else { %>
+                                                        <% if (settings.store.renewals.status === true) { %>
+                                                            <button onclick="window.location.href='./dashboard?job=Renew Server&&message=Are You Sure to Renew Server for <%= settings.store.renewals.days %> Days <%= settings.store.renewals.hour %> Hour <%= settings.store.renewals.minute %> Minutes&&id=<%= server.attributes.id %>'" type="button" class="btn btn-danger btn-sm">
+                                                                <i class="fa fa-ban"></i> Suspended
+                                                            </button>
+                                                        <% } %>
+                                                    <% } %>
+                                                </td>
+                                            </tr>
+                                            <% }); %>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <% } else { %>
+                                <div class="text-center py-5">
+                                    <i class="fa fa-server fa-3x text-muted mb-3"></i>
+                                    <h5 class="text-muted">No Servers Yet</h5>
+                                    <p class="text-muted">Create your first server to get started!</p>
+                                    <a href="manage" class="btn btn-primary">
+                                        <i class="fa fa-plus"></i> Create Server
+                                    </a>
+                                </div>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Links & Help -->
+                    <div class="col-lg-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fa fa-bolt text-cyan"></i>
+                                <strong>Quick Actions</strong>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-grid gap-2">
+                                    <a href="manage" class="btn btn-primary btn-block mb-2">
+                                        <i class="fa fa-plus-circle"></i> Create New Server
+                                    </a>
+                                    <a href="store" class="btn btn-outline-success btn-block mb-2">
+                                        <i class="fa fa-shopping-cart"></i> Buy Resources
+                                    </a>
+                                    <a href="<%= settings.pterodactyl.domain %>" target="_blank" class="btn btn-outline-danger btn-block mb-2">
+                                        <i class="fa fa-external-link-alt"></i> Open Panel
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Info Card -->
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fa fa-info-circle text-cyan"></i>
+                                <strong>System Info</strong>
+                            </div>
+                            <div class="card-body">
+                                <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                                    <a class="nav-item nav-link active" id="custom-nav-home-tab" data-toggle="tab" href="#custom-nav-home" role="tab">Dashboard</a>
+                                    <a class="nav-item nav-link" id="custom-nav-profile-tab" data-toggle="tab" href="#custom-nav-profile" role="tab">Panel</a>
+                                </div>
+                                <div class="tab-content pt-3" id="nav-tabContent">
+                                    <div class="tab-pane fade show active" id="custom-nav-home" role="tabpanel">
+                                        <p class="text-muted small">
+                                            <i class="fa fa-check-circle text-green"></i> View your resources and manage servers from this dashboard.
+                                        </p>
+                                        <p class="text-muted small">
+                                            <i class="fa fa-check-circle text-green"></i> Earn coins through AFK or watching videos to buy more resources.
+                                        </p>
+                                    </div>
+                                    <div class="tab-pane fade" id="custom-nav-profile" role="tabpanel">
+                                        <p class="text-muted small">
+                                            <i class="fa fa-check-circle text-green"></i> Access the game panel to control your servers.
+                                        </p>
+                                        <p class="text-muted small">
+                                            <i class="fa fa-check-circle text-green"></i> Use the same Discord account to login.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- .animated -->
+        </div>
+        <!-- /.content -->
+
+<%- include('./includes/footer') %>

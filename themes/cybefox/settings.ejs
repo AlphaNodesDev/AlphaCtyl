@@ -1,0 +1,148 @@
+<%- include('./includes/header') %>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="animated fadeIn">
+                <div class="row">
+                    <!-- Panel Access -->
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fa fa-gamepad text-cyan"></i>
+                                <strong>Panel Access</strong>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted mb-4">Access the game panel to control your servers, manage files, and more.</p>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button type="button" onclick="window.location.href='<%= settings.pterodactyl.domain %>'" class="btn btn-primary mr-2 mb-2">
+                                        <i class="fa fa-external-link-alt"></i> Open Panel
+                                    </button>
+                                    <button onclick="passwordreset()" type="button" class="btn btn-warning mr-2 mb-2">
+                                        <i class="fa fa-key"></i> Reset Password
+                                    </button>
+                                    <button onclick="notreleased()" type="button" class="btn btn-danger mb-2">
+                                        <i class="fa fa-trash"></i> Force Delete Servers
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Account Info -->
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fa fa-user text-magenta"></i>
+                                <strong>Account Information</strong>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-4">
+                                    <% if (user.avatar === null || user.avatar === '') { %>
+                                        <img class="rounded-circle mr-3" style="width: 60px; height: 60px; border: 2px solid var(--cf-cyan);" src="https://i.ibb.co/1TQbcJ9/a-high-resolution-logo-transparent.png" alt="Avatar">
+                                    <% } else { %>
+                                        <img class="rounded-circle mr-3" style="width: 60px; height: 60px; border: 2px solid var(--cf-cyan);" src="https://cdn.discordapp.com/avatars/<%= user.discord_id %>/<%= user.avatar %>.png" alt="Avatar">
+                                    <% } %>
+                                    <div>
+                                        <h5 class="text-cyan mb-0"><%= user.username || 'User' %></h5>
+                                        <small class="text-muted">Discord ID: <%= user.discord_id %></small>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="stat-widget-five mb-3">
+                                            <div class="stat-icon dib flat-color-1" style="width: 40px; height: 40px; font-size: 18px;">
+                                                <i class="fa fa-coins"></i>
+                                            </div>
+                                            <div class="stat-content ml-2">
+                                                <div class="stat-text" style="font-size: 18px;"><%= coins %></div>
+                                                <div class="stat-heading">Coins</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="stat-widget-five mb-3">
+                                            <div class="stat-icon dib flat-color-2" style="width: 40px; height: 40px; font-size: 18px;">
+                                                <i class="fa fa-server"></i>
+                                            </div>
+                                            <div class="stat-content ml-2">
+                                                <div class="stat-text" style="font-size: 18px;"><%= userServersCount.count %></div>
+                                                <div class="stat-heading">Servers</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Account Settings Form -->
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fa fa-cog text-cyan"></i>
+                                <strong>Account Settings</strong>
+                            </div>
+                            <div class="card-body">
+                                <form action="#" method="post">
+                                    <div class="form-group">
+                                        <label class="form-control-label">
+                                            <i class="fa fa-user text-cyan"></i> Username
+                                        </label>
+                                        <input type="text" name="username3" class="form-control" placeholder="Enter new username">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-control-label">
+                                            <i class="fa fa-envelope text-magenta"></i> Email
+                                        </label>
+                                        <input type="email" name="email3" class="form-control" placeholder="Enter new email">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-control-label">
+                                            <i class="fa fa-lock text-yellow"></i> Password
+                                        </label>
+                                        <input type="password" name="password3" class="form-control" placeholder="Enter new password">
+                                    </div>
+                                    <button type="button" onclick="notreleased()" class="btn btn-primary btn-block">
+                                        <i class="fa fa-save"></i> Save Changes
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Links -->
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fa fa-link text-green"></i>
+                                <strong>Quick Links</strong>
+                            </div>
+                            <div class="card-body">
+                                <div class="list-group">
+                                    <a href="dashboard" class="list-group-item list-group-item-action" style="background: var(--cf-bg-tertiary); border-color: var(--cf-border); color: var(--cf-text-primary);">
+                                        <i class="fa fa-tachometer-alt text-cyan mr-2"></i> Dashboard
+                                    </a>
+                                    <a href="store" class="list-group-item list-group-item-action" style="background: var(--cf-bg-tertiary); border-color: var(--cf-border); color: var(--cf-text-primary);">
+                                        <i class="fa fa-store text-magenta mr-2"></i> Resource Store
+                                    </a>
+                                    <a href="manage" class="list-group-item list-group-item-action" style="background: var(--cf-bg-tertiary); border-color: var(--cf-border); color: var(--cf-text-primary);">
+                                        <i class="fa fa-server text-green mr-2"></i> Manage Servers
+                                    </a>
+                                    <a href="logout" class="list-group-item list-group-item-action" style="background: var(--cf-bg-tertiary); border-color: var(--cf-border); color: var(--cf-red);">
+                                        <i class="fa fa-sign-out-alt mr-2"></i> Logout
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function passwordreset() {
+                window.location.replace('/resetptero');
+            }
+        </script>
+
+<%- include('./includes/footer') %>

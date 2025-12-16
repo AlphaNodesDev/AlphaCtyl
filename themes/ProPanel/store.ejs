@@ -1,0 +1,253 @@
+<%- include('./includes/header') %>
+              <!-- Content -->
+              <div class="content">
+                <!-- Animated -->
+                <div class="animated fadeIn">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <strong>Buy Servers</strong> 
+                                </div>                     
+                                   <form action="/byresources" method="POST" class="card">
+
+                                <div class="card-body card-block">
+                                    <select name="servers" class="form-control-sm form-control">
+                                        <option value="0">Select</option>
+                                        <option value="1"><%= settings.store.servers.per * 1 %> Server - <%= settings.store.servers.cost * 2 %> coins</option>
+                                        <option value="2"><%= settings.store.servers.per * 2 %> Server - <%= settings.store.servers.cost * 3 %> coins</option>
+                                        <option value="3"><%= settings.store.servers.per * 3 %> Server - <%= settings.store.servers.cost * 4 %> coins</option>
+                                        <option value="4"><%= settings.store.servers.per * 4 %> Server - <%= settings.store.servers.cost * 5 %> coins</option>
+                                    </select>
+    
+                                </div>
+                                <div class="twt-write col-sm-12">
+                                    <button type="submit" class="btn btn-outline-success btn-sm"><i class="fa-solid fa-store"></i>&nbsp; Buy</button>
+                                </div>                                  
+                            </form>
+
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <strong>Buy Cpu</strong> 
+                                </div>                        <form action="/byresources" method="POST" class="card">
+
+                               <div class="card-body card-block">
+                                    <select name="cpu" class="form-control-sm form-control">
+                                        <option value="0">Select CPU</option>
+                  <option value="1"><%= settings.store.cpu.per %>% CPU - <%= settings.store.cpu.cost %> coins</option>
+                  <option value="2"><%= settings.store.cpu.per * 2 %>% CPU - <%= settings.store.cpu.cost * 2 %> coins</option>
+                  <option value="3"><%= settings.store.cpu.per * 3 %>% CPU - <%= settings.store.cpu.cost * 3 %> coins</option>
+                  <option value="4"><%= settings.store.cpu.per * 4 %>% CPU - <%= settings.store.cpu.cost * 4 %> coins</option>
+                  <option value="5"><%= settings.store.cpu.per * 5 %>% CPU - <%= settings.store.cpu.cost * 5 %> coins</option>
+                                    </select>
+                                </div>
+                                <div class="twt-write col-sm-12">
+                                    <button type="submit"class="btn btn-outline-success btn-sm"><i class="fa-solid fa-store"></i>&nbsp; Buy</button>
+                                </div>
+                                                    </form>
+
+                            </div>
+                        </div>
+
+
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <strong>Buy Ram</strong> 
+                                </div>                        <form action="/byresources" method="POST" class="card">
+
+                               <div class="card-body card-block">
+                                    <select name="ram" class="form-control-sm form-control">
+                                        <option value="0">Select RAM</option>
+                  <option value="1"><%= settings.store.ram.per %>MB RAM - <%= settings.store.ram.cost %> coins</option>
+                  <option value="2"><%= settings.store.ram.per * 2 %>MB RAM - <%= settings.store.ram.cost * 2 %> coins</option>
+                  <option value="3"><%= settings.store.ram.per * 3 %>MB RAM - <%= settings.store.ram.cost * 3 %> coins</option>
+                  <option value="4"><%= settings.store.ram.per * 4 %>MB RAM - <%= settings.store.ram.cost * 4 %> coins</option>
+                  <option value="5"><%= settings.store.ram.per * 5 %>MB RAM - <%= settings.store.ram.cost * 5 %> coins</option>
+                                    </select>
+                                </div>                                <div class="twt-write col-sm-12">
+                                    <button type="submit"class="btn btn-outline-success btn-sm"><i class="fa-solid fa-store"></i>&nbsp; Buy</button>
+                                </div>                    </form>
+
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <strong>Buy Disk</strong> Form
+                                </div>                    <form action="/byresources" method="POST" class="card">
+
+                               <div class="card-body card-block">
+                                    <select name="disk" class="form-control-sm form-control">
+                                        <option value="0">Select Disk</option>
+                                        <option value="1"><%= settings.store.disk.per %>MB Disk - <%= settings.store.disk.cost %> coins</option>
+                                        <option value="2"><%= settings.store.disk.per * 2 %>MB Disk - <%= settings.store.disk.cost * 2 %> coins</option>
+                                        <option value="3"><%= settings.store.disk.per * 3 %>MB Disk - <%= settings.store.disk.cost * 3 %> coins</option>
+                                        <option value="4"><%= settings.store.disk.per * 4 %>MB Disk - <%= settings.store.disk.cost * 4 %> coins</option>
+                                        <option value="5"><%= settings.store.disk.per * 5 %>MB Disk - <%= settings.store.disk.cost * 5 %> coins</option>
+                                    </select>
+                                </div>                                <div class="twt-write col-sm-12">
+                                    <button type="submit"class="btn btn-outline-success btn-sm"><i class="fa-solid fa-store"></i>&nbsp; Buy</button>
+                                </div>                    </form>
+
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <strong>Buy Ports</strong> 
+                                </div>                    <form action="/byresources" method="POST" class="card">
+
+                               <div class="card-body card-block">
+                                    <select name="ports" class="form-control-sm form-control">
+                                        <option value="0">Select Port</option>
+                                        <option value="1"><%= settings.store.ports.per %> Port - <%= settings.store.ports.cost %> coins</option>
+                                        <option value="2"><%= settings.store.ports.per * 2 %> Port - <%= settings.store.ports.cost * 2 %> coins</option>
+                                        <option value="3"><%= settings.store.ports.per * 3 %> Port - <%= settings.store.ports.cost * 3 %> coins</option>
+                                        <option value="4"><%= settings.store.ports.per * 4 %> Port - <%= settings.store.ports.cost * 4 %> coins</option>
+                                        <option value="5"><%= settings.store.ports.per * 5 %> Port - <%= settings.store.ports.cost * 5 %> coins</option>
+                                    </select>
+                                </div>                                <div class="twt-write col-sm-12">
+                                    <button type="submit"class="btn btn-outline-success btn-sm"><i class="fa-solid fa-store"></i>&nbsp; Buy</button>
+                                </div>                    </form>
+
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <strong>Buy Database</strong> 
+                                </div>                    <form action="/byresources" method="POST" class="card">
+
+                               <div class="card-body card-block">
+                                    <select name="database" class="form-control-sm form-control">
+                                        <option value="0">Select Database</option>
+                  <option value="1"><%= settings.store.database.per %> Database - <%= settings.store.database.cost %> coins</option>
+                  <option value="2"><%= settings.store.database.per * 2 %> Database - <%= settings.store.database.cost * 2 %> coins</option>
+                  <option value="3"><%= settings.store.database.per * 3 %> Database - <%= settings.store.database.cost * 3 %> coins</option>
+                  <option value="4"><%= settings.store.database.per * 4 %> Database - <%= settings.store.database.cost * 4 %> coins</option>
+                  <option value="5"><%= settings.store.database.per * 5 %> Database - <%= settings.store.database.cost * 5 %> coins</option>
+                                    </select>
+                                </div>                                <div class="twt-write col-sm-12">
+                                    <button type="submit"class="btn btn-outline-success btn-sm"><i class="fa-solid fa-store"></i>&nbsp; Buy</button>
+                                </div>                    </form>
+
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <strong>Buy Backups</strong> 
+                                </div>                    <form action="/byresources" method="POST" class="card">
+
+                               <div class="card-body card-block">
+                                    <select name="backup" class="form-control-sm form-control">
+                                        <option value="0">Select Backup</option>
+                                        <option value="1"><%= settings.store.backup.per %> backup - <%= settings.store.backup.cost %> coins</option>
+                                        <option value="2"><%= settings.store.backup.per * 2 %> backup - <%= settings.store.backup.cost * 2 %> coins</option>
+                                        <option value="3"><%= settings.store.backup.per * 3 %> backup - <%= settings.store.backup.cost * 3 %> coins</option>
+                                        <option value="4"><%= settings.store.backup.per * 4 %> backup - <%= settings.store.backup.cost * 4 %> coins</option>
+                                        <option value="5"><%= settings.store.backup.per * 5 %> backup - <%= settings.store.backup.cost * 5 %> coins</option>
+                                    </select>
+                                </div>      <div class="twt-write col-sm-12">
+                                    <button type="submit" class="btn btn-outline-success btn-sm"><i class="fa-solid fa-store"></i>&nbsp; Buy</button>
+                                </div>                    </form>
+
+                            </div>
+                        </div>
+                       </div>
+
+                              <% Object.keys(settings.paid).forEach(Paidkeys => { %>
+                            
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <section class="card">
+                                        <div class="twt-feed" style="background-image: url('<%= settings.paid[Paidkeys].bgimg %>');">
+                                            <div class="corner-ribon black-ribon">
+                                                <span class="badge badge-danger"><%= settings.paid[Paidkeys].price %>$</span>
+                                            </div>
+            
+                                            <div class="media">
+                                                <a href="#">
+                                                    <img class="align-self-center rounded-circle mr-3" style="width:85px; height:85px;" alt="" src="<%= settings.paid[Paidkeys].img %>">
+                                                </a>
+                                                <div class="media-body">
+                                                    <h2 class=" display-6" style="color: black;"><%= settings.paid[Paidkeys].name %></h2>
+                                                    <p class="text-light"><%= settings.paid[Paidkeys].price %>$</p>
+                                                </div>
+                                            </div>        
+                                        </div>
+                                        <div class="weather-category twt-category">
+                                            <ul>
+                                                <li class="active">
+                                                    <h5><%= settings.paid[Paidkeys].ram %>MB</h5>
+                                                    Ram
+                                                </li>
+                                                <li>
+                                                    <h5><%= settings.paid[Paidkeys].disk %>MB</h5>
+                                                    Disk
+                                                </li>
+                                                <li>
+                                                    <h5><%= settings.paid[Paidkeys].cpu %>%</h5>
+                                                    Cpu
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <div class="twt-write col-sm-12">
+                                            <button type="submit" onclick="notreleased()" class="btn btn-outline-success btn-sm"><i class="fa-solid fa-store"></i>&nbsp; Buy For <%= settings.paid[Paidkeys].price %>$</button>
+                                        </div>
+                                        <footer class="twt-footer">
+                                            <b>Free</b>
+                                            <span class="pull-right">
+                                                Database, backup, Port
+                                            </span>
+                                        </footer>
+                                    </section>
+                                </div>
+                            </div>
+                            <% }); %>
+
+
+
+
+                            <!-- Status -->
+               <!-- .row -->
+                </div>
+        <div class="clearfix"></div>
+        <!-- Footer -->
+        <footer class="site-footer">
+            <div class="footer-inner bg-white">
+                <div class="row">
+                    <div class="col-sm-6">
+                        Copyright &copy; 2024 <%= AppName %>
+                    </div>
+                    <div class="col-sm-6 text-right">
+                        Designed by <a href="https://github.io/AlphaCtyl">Abhiram</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+        <!-- /.site-footer -->
+    </div>
+    <!-- /#right-panel -->
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@2.2.4/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.4/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-match-height@0.7.2/dist/jquery.matchHeight.min.js"></script>
+    <script src="assets/js/main.js"></script>
+    <!--  Chart js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.7.3/dist/Chart.bundle.min.js"></script>
+    <!--Flot Chart-->
+    <script src="https://cdn.jsdelivr.net/npm/jquery.flot@0.8.3/jquery.flot.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flot-spline@0.0.1/js/jquery.flot.spline.min.js"></script>
+    <!-- local -->
+    <script src="assets/js/widgets.js"></script>
+
+
+</body>
+</html>

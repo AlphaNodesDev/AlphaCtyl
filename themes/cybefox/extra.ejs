@@ -1,0 +1,114 @@
+<%- include('./includes/header') %>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="animated fadeIn">
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fa fa-link text-cyan"></i>
+                                <strong>Earn Through LinkPays</strong>
+                            </div>
+                            <div class="card-body">
+                                <div class="text-center mb-4">
+                                    <div class="cyber-circle mb-3">
+                                        <i class="fa fa-hand-holding-usd fa-3x text-green"></i>
+                                    </div>
+                                    <h4 class="text-cyan">Complete Links, Earn Coins</h4>
+                                    <p class="text-muted">Click the button below to generate a link. Complete it to earn coins!</p>
+                                </div>
+
+                                <div class="alert alert-success text-center" role="alert">
+                                    <i class="fa fa-coins text-yellow"></i>
+                                    Earn <strong class="text-yellow"><%= settings.linkpays.coins %> coins</strong> for each completed link!
+                                </div>
+
+                                <div class="text-center">
+                                    <button onclick="generate()" type="button" class="btn btn-primary btn-lg">
+                                        <i class="fa fa-magic"></i> Generate Link
+                                    </button>
+                                </div>
+
+                                <hr style="border-color: var(--cf-border); margin: 30px 0;">
+
+                                <div class="text-center">
+                                    <h5 class="text-cyan mb-3">Your Current Balance</h5>
+                                    <h2 class="text-yellow"><i class="fa fa-coins"></i> <%= coins %></h2>
+                                    <p class="text-muted">coins</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fa fa-info-circle text-magenta"></i>
+                                <strong>How It Works</strong>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-4">
+                                    <h5 class="text-cyan"><i class="fa fa-1 text-green mr-2"></i> Generate</h5>
+                                    <p class="text-muted">Click the "Generate Link" button to create a unique link.</p>
+                                </div>
+                                <div class="mb-4">
+                                    <h5 class="text-cyan"><i class="fa fa-2 text-green mr-2"></i> Complete</h5>
+                                    <p class="text-muted">Follow the link and complete the required actions.</p>
+                                </div>
+                                <div class="mb-4">
+                                    <h5 class="text-cyan"><i class="fa fa-3 text-green mr-2"></i> Earn</h5>
+                                    <p class="text-muted">Receive your coins instantly after completion!</p>
+                                </div>
+                                
+                                <div class="alert alert-warning" role="alert">
+                                    <i class="fa fa-exclamation-triangle"></i>
+                                    <strong>Important:</strong> Make sure to complete the entire link process to receive your coins.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fa fa-chart-bar text-green"></i>
+                                <strong>Other Ways to Earn</strong>
+                            </div>
+                            <div class="card-body">
+                                <div class="list-group">
+                                    <a href="afk" class="list-group-item list-group-item-action" style="background: var(--cf-bg-tertiary); border-color: var(--cf-border); color: var(--cf-text-primary);">
+                                        <i class="fa fa-clock text-cyan mr-2"></i> AFK Rewards
+                                        <span class="badge badge-success float-right">Easy</span>
+                                    </a>
+                                    <a href="youtube" class="list-group-item list-group-item-action" style="background: var(--cf-bg-tertiary); border-color: var(--cf-border); color: var(--cf-text-primary);">
+                                        <i class="fa fa-youtube text-red mr-2"></i> Watch Videos
+                                        <span class="badge badge-primary float-right">Fun</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            function generate() {
+                window.location.replace('/extra/linkpays/generate');
+            }
+        </script>
+
+        <style>
+            .cyber-circle {
+                width: 100px;
+                height: 100px;
+                border: 3px solid var(--cf-green);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto;
+                box-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+            }
+        </style>
+
+<%- include('./includes/footer') %>

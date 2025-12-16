@@ -1,0 +1,191 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title><%= AppName %></title>
+    <meta name="description" content="<%= AppName %> - Game Server Hosting Dashboard">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <link rel="apple-touch-icon" href="<%= AppLogo %>">
+    <link rel="shortcut icon" href="<%= AppLogo %>">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <script src="https://kit.fontawesome.com/062f52da9a.js" crossorigin="anonymous"></script>
+    
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/css/bootstrap.min.css">
+    
+    <!-- PE Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pixeden-stroke-7-icon@1.2.3/pe-icon-7-stroke/dist/pe-icon-7-stroke.min.css">
+    
+    <!-- Theme CSS -->
+    <link rel="stylesheet" href="assets/css/cybefox.css">
+</head>
+
+<body>
+    <!-- Left Panel / Sidebar -->
+    <aside id="left-panel" class="left-panel">
+        <nav class="navbar navbar-expand-sm navbar-default">
+            <div id="main-menu" class="main-menu collapse navbar-collapse show">
+                <ul class="nav navbar-nav">
+                    <li>
+                        <a href="dashboard">
+                            <i class="menu-icon fa fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="store">
+                            <i class="menu-icon fa fa-store"></i>
+                            <span>Resources Store</span>
+                        </a>
+                    </li>
+                    <% if (settings.afk.enabled == true) { %>
+                    <li>
+                        <a href="afk">
+                            <i class="menu-icon fa fa-clock"></i>
+                            <span>AFK Rewards</span>
+                        </a>
+                    </li>
+                    <% } %>
+                    <% if (settings.youtube.enabled == true) { %>
+                    <li>
+                        <a href="youtube">
+                            <i class="menu-icon fa fa-youtube"></i>
+                            <span>Watch & Earn</span>
+                        </a>
+                    </li>
+                    <% } %>
+                    <li>
+                        <a href="manage">
+                            <i class="menu-icon fa fa-server"></i>
+                            <span>Manage Servers</span>
+                        </a>
+                    </li>
+                    <% if (settings.linkpays.enabled == true) { %>
+                    <li>
+                        <a href="extra">
+                            <i class="menu-icon fa fa-coins"></i>
+                            <span>Earn Coins</span>
+                        </a>
+                    </li>
+                    <% } %>
+                    <li>
+                        <a href="settings">
+                            <i class="menu-icon fa fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                    <% if (userIdentifier.admin == true) { %>
+                    <li>
+                        <a onclick="notreleased()">
+                            <i class="menu-icon fa fa-shield-alt"></i>
+                            <span>Admin Panel</span>
+                        </a>
+                    </li>
+                    <% } %>
+                    <li>
+                        <a href="logout">
+                            <i class="menu-icon fa fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </aside>
+    <!-- /#left-panel -->
+
+    <!-- Right Panel -->
+    <div id="right-panel" class="right-panel">
+        <!-- Header -->
+        <header id="header" class="header">
+            <div class="top-left">
+                <div class="navbar-header">
+                    <a href="./">
+                        <img src="<%= AppLogo %>" alt="<%= AppName %>">
+                    </a>
+                    <a id="menuToggle" class="menutoggle">
+                        <i class="fa fa-bars"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="top-right">
+                <div class="header-menu">
+                    <div class="header-left">
+                        <!-- Notifications -->
+                        <div class="dropdown for-notification">
+                            <button class="btn btn-secondary dropdown-toggle" type="button" id="notification" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="fa fa-bell"></i>
+                                <span class="count bg-danger"><%= notifications.length %></span>
+                            </button>
+                            <div class="dropdown-menu" aria-labelledby="notification">
+                                <% if (notifications && notifications.length > 0) { %>
+                                    <% notifications.forEach(function(notification) { %>
+                                        <a class="dropdown-item media" href="#">
+                                            <i class="fa fa-bolt text-cyan"></i>
+                                            <p><%= notification %></p>
+                                        </a>
+                                    <% }) %>
+                                <% } else { %>
+                                    <p class="dropdown-item text-muted">No notifications</p>
+                                <% } %>
+                            </div>
+                        </div>
+
+                        <!-- Coins -->
+                        <div class="dropdown for-message">
+                            <button class="btn btn-secondary dropdown-toggle" type="button" id="message" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="fa fa-coins" style="color: #ffff00;"></i>
+                                <span class="text-yellow"><%= coins %></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- User Avatar -->
+                    <div class="user-area dropdown float-right">
+                        <a href="#" class="dropdown-toggle active" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <% if (user.avatar === null || user.avatar === '') { %>
+                                <img class="user-avatar rounded-circle" src="https://i.ibb.co/1TQbcJ9/a-high-resolution-logo-transparent.png" alt="User Avatar" />
+                            <% } else { %>
+                                <img class="user-avatar rounded-circle" src="https://cdn.discordapp.com/avatars/<%= user.discord_id %>/<%= user.avatar %>.png" alt="User Avatar" />
+                            <% } %>
+                        </a>
+                        <div class="user-menu dropdown-menu">
+                            <a class="nav-link" href="/settings">
+                                <i class="fa fa-cog"></i> Settings
+                            </a>
+                            <a class="nav-link" href="/logout">
+                                <i class="fa fa-power-off"></i> Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <!-- /#header -->
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                // Mobile menu toggle
+                const menuToggle = document.getElementById('menuToggle');
+                const leftPanel = document.getElementById('left-panel');
+                
+                if (menuToggle && leftPanel) {
+                    menuToggle.addEventListener('click', function() {
+                        leftPanel.classList.toggle('open');
+                    });
+                }
+            });
+
+            function notreleased() {
+                window.location.replace('store?error=This Feature Is Not Released Yet');
+            }
+        </script>
+
+        <%- include('./alert') %>

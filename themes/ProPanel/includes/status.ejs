@@ -1,0 +1,133 @@
+<div class="col-lg-3 col-md-6">
+    <div class="card">
+        <div class="card-body">
+            <div class="stat-widget-five">
+                <div class="stat-icon dib flat-color-1">
+                    <i class="pe-7s-joy"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="text-left dib">
+                        <div class="stat-text"><%= userServersCount.count %>/<%= packageserver + userresources.row.servers %></div>
+                        <div class="stat-heading">Servers</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-lg-3 col-md-6">
+    <div class="card">
+        <div class="card-body">
+            <div class="stat-widget-five">
+                <div class="stat-icon dib flat-color-2">
+                    <i class="fa-solid fa-microchip"></i>                                  </div>
+                <div class="stat-content">
+                    <div class="text-left dib">
+                        <div class="stat-text"><%= (userServersCount.totalCPU)  %>/<%= (packagecpu + userresources.row.cpu) %></div>
+                        <div class="stat-heading">CPU</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-lg-3 col-md-6">
+    <div class="card">
+        <div class="card-body">
+            <div class="stat-widget-five">
+                <div class="stat-icon dib flat-color-3">
+                    <i class="fa-solid fa-memory"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="text-left dib">
+                        <div class="stat-text"><%= (userServersCount.totalRAM).toFixed(1) / 1024 %>/<%= ((packageram + userresources.row.ram)/1024).toFixed(1)  %>GB</div>
+                        <div class="stat-heading">Ram</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-lg-3 col-md-6">
+    <div class="card">
+        <div class="card-body">
+            <div class="stat-widget-five">
+                <div class="stat-icon dib flat-color-4">
+                    <i class="pe-7s-disk"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="text-left dib">
+                        <div class="stat-text">
+                            <%= (userServersCount.totalDisk / 1024).toFixed(1) %>/<%= ((packagedisk + userresources.row.disk) / 1024).toFixed(1) %>GB
+                          </div>
+                          <div class="stat-heading">Disk</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-lg-3 col-md-6">
+    <div class="card">
+        <div class="card-body">
+            <div class="stat-widget-five">
+                <div class="stat-icon dib flat-color-4">
+                    <i class="fa-solid fa-route"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="text-left dib">
+                        <div class="stat-text"><%= userServersCount.totalPorts %>/<%= packageport + userresources.row.ports %></div>
+                        <div class="stat-heading">Ports</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-lg-3 col-md-6">
+    <div class="card">
+        <div class="card-body">
+            <div class="stat-widget-five">
+                <div class="stat-icon dib flat-color-4">
+                    <i class="fa-solid fa-database"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="text-left dib">
+                        <div class="stat-text"><%= userServersCount.totalDatabase %>/<%= packagedatabase + userresources.row.database %></div>
+                        <div class="stat-heading">Database</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-lg-3 col-md-6">
+    <div class="card">
+        <div class="card-body">
+            <div class="stat-widget-five">
+                <div class="stat-icon dib flat-color-4">
+                    <i class="fa-solid fa-box-open"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="text-left dib">
+                        <div class="stat-text"><%= userServersCount.totalBackup %>/<%= packagebackup + userresources.row.backup %></div>
+                        <div class="stat-heading">Backup</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+

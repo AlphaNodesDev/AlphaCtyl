@@ -1,0 +1,43 @@
+<%- include('./includes/header') %>
+<div class="content">
+    <div class="animated fadeIn">
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header"><i class="fa fa-edit text-cyan"></i><strong>Edit Server</strong></div>
+                    <div class="card-body">
+                        <form id="edit-server-form" method="post">
+                            <h5 class="text-center text-cyan mb-4"><i class="fa fa-server"></i> Server Configuration</h5>
+                            <hr style="border-color: var(--cf-border);">
+                            <div class="form-group"><label><i class="fa fa-tag text-cyan"></i> Server Name</label><input type="text" name="name" placeholder="Server Name" class="form-control" required></div>
+                            <div class="row">
+                                <div class="col-md-6"><div class="form-group"><label><i class="fa fa-microchip text-magenta"></i> CPU (%)</label><input type="number" name="cpu" placeholder="CPU" class="form-control"></div></div>
+                                <div class="col-md-6"><div class="form-group"><label><i class="fa fa-memory text-green"></i> RAM (MB)</label><input type="number" name="ram" placeholder="RAM" class="form-control"></div></div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6"><div class="form-group"><label><i class="fa fa-hdd text-yellow"></i> Disk (MB)</label><input type="number" name="disk" placeholder="Disk" class="form-control"></div></div>
+                                <div class="col-md-6"><div class="form-group"><label><i class="fa fa-network-wired text-cyan"></i> Ports</label><input type="number" name="port" placeholder="Ports" class="form-control"></div></div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block"><i class="fa fa-save"></i> Save Changes</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header"><i class="fa fa-cogs text-magenta"></i><strong>Quick Actions</strong></div>
+                    <div class="card-body">
+                        <a href="manage" class="btn btn-outline-success btn-block mb-2"><i class="fa fa-arrow-left"></i> Back to Servers</a>
+                        <a href="<%= settings.pterodactyl.domain %>" target="_blank" class="btn btn-outline-danger btn-block"><i class="fa fa-external-link-alt"></i> Open Panel</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const serverId = urlParams.get('id');
+    if (serverId) { document.getElementById('edit-server-form').action = '/editserver?id=' + serverId; }
+</script>
+<%- include('./includes/footer') %>

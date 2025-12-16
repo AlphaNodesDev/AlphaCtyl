@@ -1,0 +1,257 @@
+<%- include('./includes/header') %>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="animated fadeIn">
+                <!-- Resource Store Header -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body text-center py-4">
+                                <h2 class="mb-2">
+                                    <i class="fa fa-store text-cyan"></i> Resource Store
+                                </h2>
+                                <p class="text-muted mb-0">Purchase resources with your coins to upgrade your servers</p>
+                                <div class="mt-3">
+                                    <span class="badge badge-warning" style="font-size: 16px; padding: 10px 20px;">
+                                        <i class="fa fa-coins"></i> Your Balance: <%= coins %> Coins
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resources Grid -->
+                <div class="row">
+                    <!-- Buy Servers -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fa fa-server text-cyan"></i>
+                                <strong>Server Slots</strong>
+                            </div>
+                            <form action="/byresources" method="POST">
+                                <div class="card-body">
+                                    <select name="servers" class="form-control mb-3">
+                                        <option value="0">Select Amount</option>
+                                        <option value="1"><%= settings.store.servers.per * 1 %> Server - <%= settings.store.servers.cost * 2 %> coins</option>
+                                        <option value="2"><%= settings.store.servers.per * 2 %> Servers - <%= settings.store.servers.cost * 3 %> coins</option>
+                                        <option value="3"><%= settings.store.servers.per * 3 %> Servers - <%= settings.store.servers.cost * 4 %> coins</option>
+                                        <option value="4"><%= settings.store.servers.per * 4 %> Servers - <%= settings.store.servers.cost * 5 %> coins</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-primary btn-block">
+                                        <i class="fa fa-shopping-cart"></i> Purchase
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Buy CPU -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fa fa-microchip text-magenta"></i>
+                                <strong>CPU Power</strong>
+                            </div>
+                            <form action="/byresources" method="POST">
+                                <div class="card-body">
+                                    <select name="cpu" class="form-control mb-3">
+                                        <option value="0">Select Amount</option>
+                                        <option value="1"><%= settings.store.cpu.per %>% CPU - <%= settings.store.cpu.cost %> coins</option>
+                                        <option value="2"><%= settings.store.cpu.per * 2 %>% CPU - <%= settings.store.cpu.cost * 2 %> coins</option>
+                                        <option value="3"><%= settings.store.cpu.per * 3 %>% CPU - <%= settings.store.cpu.cost * 3 %> coins</option>
+                                        <option value="4"><%= settings.store.cpu.per * 4 %>% CPU - <%= settings.store.cpu.cost * 4 %> coins</option>
+                                        <option value="5"><%= settings.store.cpu.per * 5 %>% CPU - <%= settings.store.cpu.cost * 5 %> coins</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-primary btn-block">
+                                        <i class="fa fa-shopping-cart"></i> Purchase
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Buy RAM -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fa fa-memory text-green"></i>
+                                <strong>RAM Memory</strong>
+                            </div>
+                            <form action="/byresources" method="POST">
+                                <div class="card-body">
+                                    <select name="ram" class="form-control mb-3">
+                                        <option value="0">Select Amount</option>
+                                        <option value="1"><%= settings.store.ram.per %>MB RAM - <%= settings.store.ram.cost %> coins</option>
+                                        <option value="2"><%= settings.store.ram.per * 2 %>MB RAM - <%= settings.store.ram.cost * 2 %> coins</option>
+                                        <option value="3"><%= settings.store.ram.per * 3 %>MB RAM - <%= settings.store.ram.cost * 3 %> coins</option>
+                                        <option value="4"><%= settings.store.ram.per * 4 %>MB RAM - <%= settings.store.ram.cost * 4 %> coins</option>
+                                        <option value="5"><%= settings.store.ram.per * 5 %>MB RAM - <%= settings.store.ram.cost * 5 %> coins</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-primary btn-block">
+                                        <i class="fa fa-shopping-cart"></i> Purchase
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Buy Disk -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fa fa-hdd text-yellow"></i>
+                                <strong>Disk Storage</strong>
+                            </div>
+                            <form action="/byresources" method="POST">
+                                <div class="card-body">
+                                    <select name="disk" class="form-control mb-3">
+                                        <option value="0">Select Amount</option>
+                                        <option value="1"><%= settings.store.disk.per %>MB Disk - <%= settings.store.disk.cost %> coins</option>
+                                        <option value="2"><%= settings.store.disk.per * 2 %>MB Disk - <%= settings.store.disk.cost * 2 %> coins</option>
+                                        <option value="3"><%= settings.store.disk.per * 3 %>MB Disk - <%= settings.store.disk.cost * 3 %> coins</option>
+                                        <option value="4"><%= settings.store.disk.per * 4 %>MB Disk - <%= settings.store.disk.cost * 4 %> coins</option>
+                                        <option value="5"><%= settings.store.disk.per * 5 %>MB Disk - <%= settings.store.disk.cost * 5 %> coins</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-primary btn-block">
+                                        <i class="fa fa-shopping-cart"></i> Purchase
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Buy Ports -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fa fa-network-wired text-cyan"></i>
+                                <strong>Network Ports</strong>
+                            </div>
+                            <form action="/byresources" method="POST">
+                                <div class="card-body">
+                                    <select name="ports" class="form-control mb-3">
+                                        <option value="0">Select Amount</option>
+                                        <option value="1"><%= settings.store.ports.per %> Port - <%= settings.store.ports.cost %> coins</option>
+                                        <option value="2"><%= settings.store.ports.per * 2 %> Ports - <%= settings.store.ports.cost * 2 %> coins</option>
+                                        <option value="3"><%= settings.store.ports.per * 3 %> Ports - <%= settings.store.ports.cost * 3 %> coins</option>
+                                        <option value="4"><%= settings.store.ports.per * 4 %> Ports - <%= settings.store.ports.cost * 4 %> coins</option>
+                                        <option value="5"><%= settings.store.ports.per * 5 %> Ports - <%= settings.store.ports.cost * 5 %> coins</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-primary btn-block">
+                                        <i class="fa fa-shopping-cart"></i> Purchase
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Buy Database -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fa fa-database text-magenta"></i>
+                                <strong>Databases</strong>
+                            </div>
+                            <form action="/byresources" method="POST">
+                                <div class="card-body">
+                                    <select name="database" class="form-control mb-3">
+                                        <option value="0">Select Amount</option>
+                                        <option value="1"><%= settings.store.database.per %> Database - <%= settings.store.database.cost %> coins</option>
+                                        <option value="2"><%= settings.store.database.per * 2 %> Databases - <%= settings.store.database.cost * 2 %> coins</option>
+                                        <option value="3"><%= settings.store.database.per * 3 %> Databases - <%= settings.store.database.cost * 3 %> coins</option>
+                                        <option value="4"><%= settings.store.database.per * 4 %> Databases - <%= settings.store.database.cost * 4 %> coins</option>
+                                        <option value="5"><%= settings.store.database.per * 5 %> Databases - <%= settings.store.database.cost * 5 %> coins</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-primary btn-block">
+                                        <i class="fa fa-shopping-cart"></i> Purchase
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Buy Backups -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fa fa-cloud-upload-alt text-green"></i>
+                                <strong>Backup Slots</strong>
+                            </div>
+                            <form action="/byresources" method="POST">
+                                <div class="card-body">
+                                    <select name="backup" class="form-control mb-3">
+                                        <option value="0">Select Amount</option>
+                                        <option value="1"><%= settings.store.backup.per %> Backup - <%= settings.store.backup.cost %> coins</option>
+                                        <option value="2"><%= settings.store.backup.per * 2 %> Backups - <%= settings.store.backup.cost * 2 %> coins</option>
+                                        <option value="3"><%= settings.store.backup.per * 3 %> Backups - <%= settings.store.backup.cost * 3 %> coins</option>
+                                        <option value="4"><%= settings.store.backup.per * 4 %> Backups - <%= settings.store.backup.cost * 4 %> coins</option>
+                                        <option value="5"><%= settings.store.backup.per * 5 %> Backups - <%= settings.store.backup.cost * 5 %> coins</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-primary btn-block">
+                                        <i class="fa fa-shopping-cart"></i> Purchase
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Premium Plans -->
+                <% if (Object.keys(settings.paid).length > 0) { %>
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <h3 class="mb-3">
+                            <i class="fa fa-crown text-yellow"></i> Premium Plans
+                        </h3>
+                    </div>
+                    <% Object.keys(settings.paid).forEach(Paidkeys => { %>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="twt-feed" style="background: linear-gradient(135deg, rgba(0, 240, 255, 0.3), rgba(255, 0, 255, 0.3)), url('<%= settings.paid[Paidkeys].bgimg %>'); background-size: cover;">
+                                <div class="corner-ribon">
+                                    <span class="badge badge-danger" style="font-size: 14px;">$<%= settings.paid[Paidkeys].price %></span>
+                                </div>
+                                <div class="media">
+                                    <img class="rounded-circle mr-3" style="width:70px; height:70px; border: 2px solid var(--cf-cyan);" src="<%= settings.paid[Paidkeys].img %>" alt="">
+                                    <div class="media-body">
+                                        <h4 class="text-cyan"><%= settings.paid[Paidkeys].name %></h4>
+                                        <p class="text-muted">Premium Package</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="weather-category">
+                                <ul>
+                                    <li>
+                                        <h5><%= settings.paid[Paidkeys].ram %>MB</h5>
+                                        RAM
+                                    </li>
+                                    <li>
+                                        <h5><%= settings.paid[Paidkeys].disk %>MB</h5>
+                                        Disk
+                                    </li>
+                                    <li>
+                                        <h5><%= settings.paid[Paidkeys].cpu %>%</h5>
+                                        CPU
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="card-body text-center">
+                                <button type="button" onclick="notreleased()" class="btn btn-primary">
+                                    <i class="fa fa-crown"></i> Buy for $<%= settings.paid[Paidkeys].price %>
+                                </button>
+                            </div>
+                            <div class="twt-footer text-center">
+                                <span class="text-muted">Includes: Database, Backup, Ports</span>
+                            </div>
+                        </div>
+                    </div>
+                    <% }); %>
+                </div>
+                <% } %>
+            </div>
+        </div>
+
+<%- include('./includes/footer') %>

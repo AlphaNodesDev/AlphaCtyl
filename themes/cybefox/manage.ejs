@@ -1,0 +1,180 @@
+<%- include('./includes/header') %>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="animated fadeIn">
+                <div class="row">
+                    <!-- Create Server Form -->
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fa fa-plus-circle text-cyan"></i>
+                                <strong>Create New Server</strong>
+                            </div>
+                            <div class="card-body">
+                                <form method="post" action="/createserver">
+                                    <div class="card-title">
+                                        <h5 class="text-center text-cyan">
+                                            <i class="fa fa-terminal"></i> Server Configuration
+                                        </h5>
+                                    </div>
+                                    <hr style="border-color: var(--cf-border);">
+
+                                    <div class="form-group">
+                                        <label class="form-control-label">
+                                            <i class="fa fa-map-marker-alt text-cyan"></i> Location
+                                        </label>
+                                        <select name="locations" id="locations" class="form-control">
+                                            <% Object.keys(settings.locations).forEach(locationKey => { %>
+                                                <option value="<%= locationKey %>"><%= settings.locations[locationKey].name %></option>
+                                            <% }); %>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-control-label">
+                                            <i class="fa fa-egg text-magenta"></i> Server Type
+                                        </label>
+                                        <select name="egg" id="egg" class="form-control">
+                                            <% Object.keys(settings.eggs).forEach(eggKey => { %>
+                                                <option value="<%= eggKey %>"><%= settings.eggs[eggKey].display %></option>
+                                            <% }); %>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-control-label">
+                                            <i class="fa fa-tag text-green"></i> Server Name
+                                        </label>
+                                        <input type="text" placeholder="My Awesome Server" name="name" class="form-control" required>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="form-control-label">
+                                                    <i class="fa fa-microchip text-cyan"></i> CPU (%)
+                                                </label>
+                                                <input type="number" name="cpu" placeholder="100" class="form-control" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="form-control-label">
+                                                    <i class="fa fa-memory text-magenta"></i> RAM (MB)
+                                                </label>
+                                                <input type="number" name="ram" placeholder="1024" class="form-control" required>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="form-control-label">
+                                                    <i class="fa fa-hdd text-yellow"></i> Disk (MB)
+                                                </label>
+                                                <input type="number" name="disk" placeholder="5120" class="form-control" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="form-control-label">
+                                                    <i class="fa fa-network-wired text-green"></i> Ports
+                                                </label>
+                                                <input type="number" name="port" placeholder="1" class="form-control" required>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="form-control-label">
+                                                    <i class="fa fa-database text-cyan"></i> Databases
+                                                </label>
+                                                <input type="number" name="database" placeholder="1" class="form-control" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="form-control-label">
+                                                    <i class="fa fa-cloud-upload-alt text-magenta"></i> Backups
+                                                </label>
+                                                <input type="number" name="backup" placeholder="1" class="form-control" required>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary btn-block">
+                                        <i class="fa fa-rocket"></i> Deploy Server
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Server List -->
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fa fa-server text-cyan"></i>
+                                <strong>Your Servers</strong>
+                            </div>
+                            <div class="card-body">
+                                <% if (userServersCount.userServers.length > 0) { %>
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>NAME</th>
+                                                <th>CPU</th>
+                                                <th>RAM</th>
+                                                <th>DISK</th>
+                                                <th>ACTIONS</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% userServersCount.userServers.forEach(server => { %>
+                                            <tr>
+                                                <td><%= server.attributes.name %></td>
+                                                <td class="text-cyan"><%= server.attributes.limits.cpu %>%</td>
+                                                <td class="text-magenta"><%= server.attributes.limits.memory %>MB</td>
+                                                <td class="text-yellow"><%= server.attributes.limits.disk %>MB</td>
+                                                <td>
+                                                    <% if (server.attributes.status !== 'suspended') { %>
+                                                        <button onclick="window.location.href='./editserver?id=<%= server.attributes.id %>'" type="button" class="btn btn-success btn-sm">
+                                                            <i class="fa fa-cogs"></i>
+                                                        </button>
+                                                        <% if (settings.store.renewals.status === true) { %>
+                                                            <button onclick="window.location.href='./dashboard?job=Renew Server&&message=Are You Sure to Renew Server?&&id=<%= server.attributes.id %>'" type="button" class="btn btn-warning btn-sm">
+                                                                <i class="fa fa-clock"></i>
+                                                            </button>
+                                                        <% } %>
+                                                    <% } else { %>
+                                                        <% if (settings.store.renewals.status === true) { %>
+                                                            <button onclick="window.location.href='./dashboard?job=Renew Server&&message=Renew to unsuspend&&id=<%= server.attributes.id %>'" type="button" class="btn btn-danger btn-sm">
+                                                                <i class="fa fa-ban"></i>
+                                                            </button>
+                                                        <% } %>
+                                                    <% } %>
+                                                </td>
+                                            </tr>
+                                            <% }); %>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <% } else { %>
+                                <div class="text-center py-4">
+                                    <i class="fa fa-inbox fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">No servers created yet. Use the form to create one!</p>
+                                </div>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<%- include('./includes/footer') %>

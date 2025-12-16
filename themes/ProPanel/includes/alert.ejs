@@ -1,0 +1,116 @@
+<div class="popup-container" style="display: none;">
+    <div class="card-body">
+        <div class="sufee-alert alert with-close alert-primary alert-dismissible fade show alert-popup" style="display: none;">
+            <span class="badge badge-pill badge-primary">Alert</span>
+            <span class="alert-message">You successfully read this important alert.</span>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+
+        <div class="sufee-alert alert with-close alert-success alert-dismissible fade show success-popup" style="display: none;">
+            <span class="badge badge-pill badge-success">Success</span>
+            <span class="success-message">You successfully read this important alert.</span>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+
+        <div class="sufee-alert alert with-close alert-danger alert-dismissible fade show error-popup" style="display: none;">
+            <span class="badge badge-pill badge-danger">Error</span>
+            <span class="error-message">You successfully read this important alert.</span>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+
+        <div class="sufee-alert alert with-close alert-warning alert-dismissible fade show info-popup" style="display: none;">
+            <span class="badge badge-pill badge-warning">Info</span>
+            <span class="info-message">You successfully read this important alert.</span>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    </div>
+</div>
+<!-- Static Modal -->
+<div class="modal fade" id="staticModal" tabindex="-1" role="dialog" aria-labelledby="staticModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="staticModalLabel">job</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="modalMessage">message here</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="confirmButton" class="btn btn-primary">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+        function showPopup(type, message) {
+            const popup = document.querySelector(`.${type}-popup`);
+            const popupMessage = popup.querySelector(`.${type}-message`);
+            if (popup && popupMessage) {
+                popupMessage.textContent = message;
+                popup.style.display = 'block';
+                document.querySelector('.popup-container').style.display = 'block'; // Show the popup container
+            }
+        }
+    
+        function removeUrlParameter() {
+            if (history.replaceState) {
+                var cleanUri = location.toString().split("?")[0];
+                window.history.replaceState({}, document.title, cleanUri);
+                document.querySelector('.popup-container').style.display = 'none'; // Hide the popup container
+            }
+        }
+    
+        const urlParams = new URLSearchParams(window.location.search);
+        const errorMessage = urlParams.get('error');
+        const alertMessage = urlParams.get('alert');
+        const successMessage = urlParams.get('success');
+        const infoMessage = urlParams.get('info');
+        const jobParam = urlParams.get('job');
+        const messageParam = urlParams.get('message');
+        const idParam = urlParams.get('id');
+    
+        document.querySelectorAll('.sufee-alert').forEach(popup => {
+            popup.style.display = 'none';
+        });
+    
+        if (errorMessage) {
+            showPopup('error', errorMessage);
+        } else if (alertMessage) {
+            showPopup('alert', alertMessage);
+        } else if (successMessage) {
+            showPopup('success', successMessage);
+        } else if (infoMessage) {
+            showPopup('info', infoMessage);
+        }
+    
+        if (jobParam && messageParam && idParam) {
+            document.getElementById('staticModalLabel').textContent = jobParam;
+            document.getElementById('modalMessage').textContent = messageParam;
+            document.getElementById('confirmButton').onclick = () => {
+                window.location.href = `./renew?id=${idParam}`;
+            };
+            document.getElementById('staticModal').style.display = 'block';
+            document.getElementById('staticModal').classList.add('show');
+        }
+    
+        document.querySelectorAll('.close, #modalCancelBtn').forEach(button => {
+            button.addEventListener('click', () => {
+                document.getElementById('staticModal').style.display = 'none';
+                document.getElementById('staticModal').classList.remove('show');
+                removeUrlParameter();
+            });
+        });
+    });
+    </script>

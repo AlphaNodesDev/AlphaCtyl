@@ -1,0 +1,188 @@
+<%- include('./includes/header') %>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="animated fadeIn">
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fa fa-clock text-cyan"></i>
+                                <strong>AFK Rewards</strong>
+                            </div>
+                            <div class="card-body">
+                                <div class="text-center mb-4">
+                                    <div class="cyber-circle mb-3">
+                                        <i class="fa fa-hourglass-half fa-3x text-cyan"></i>
+                                    </div>
+                                    <h4 class="text-cyan">Earn While You Wait</h4>
+                                    <p class="text-muted">Stay on this page to earn coins automatically!</p>
+                                </div>
+
+                                <div class="row text-center mb-4">
+                                    <div class="col-6">
+                                        <div class="card" style="background: var(--cf-bg-tertiary);">
+                                            <div class="card-body py-3">
+                                                <h3 class="text-green mb-1" id="sessionEarn">0</h3>
+                                                <small class="text-muted">Coins Earned</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="card" style="background: var(--cf-bg-tertiary);">
+                                            <div class="card-body py-3">
+                                                <h3 class="text-magenta mb-1" id="afkDuration">0</h3>
+                                                <small class="text-muted">Seconds Until Reward</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="text-center">
+                                    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.2/socket.io.js"></script>
+                                    <div id="connectionStatus" class="mb-3">
+                                        <button type="button" class="btn btn-outline-danger btn-lg btn-block">
+                                            <i class="fa fa-plug"></i> Connecting...
+                                        </button>
+                                    </div>
+
+                                    <script>
+                                        let totalCoins = 0;
+                                        let afkSeconds = parseInt('<%= afktimer %>', 10);
+                                        const userId = '<%= user.pterodactyl_id %>';
+                                        const afktimer = parseInt('<%= afktimer %>', 10);
+                                        let isDisconnectedDueToAltSession = false;
+
+                                        function connect() {
+                                            const socket = new WebSocket(`${window.location.href.startsWith("https://") ? "wss" : "ws"}://${window.location.host}/afk?userId=${userId}&page=afk`);
+
+                                            socket.onopen = () => {
+                                                console.log("WebSocket connection opened");
+                                                document.getElementById('connectionStatus').innerHTML = '<button type="button" class="btn btn-success btn-lg btn-block"><i class="fa fa-check-circle"></i> Connected - Earning Coins!</button>';
+                                            };
+
+                                            socket.onmessage = (event) => {
+                                                let data = JSON.parse(event.data);
+                                                if (data.type === "coin") {
+                                                    totalCoins += parseInt(data.amount, 10);
+                                                    document.getElementById("sessionEarn").innerText = totalCoins;
+                                                    afkSeconds = afktimer;
+                                                    
+                                                    // Flash effect on coin earn
+                                                    document.getElementById("sessionEarn").style.transform = 'scale(1.2)';
+                                                    setTimeout(() => {
+                                                        document.getElementById("sessionEarn").style.transform = 'scale(1)';
+                                                    }, 200);
+                                                }
+                                            };
+
+                                            socket.onclose = (event) => {
+                                                if (event.code === 4001) {
+                                                    isDisconnectedDueToAltSession = true;
+                                                }
+
+                                                document.getElementById('connectionStatus').innerHTML = '<button type="button" class="btn btn-outline-danger btn-lg btn-block"><i class="fa fa-times-circle"></i> Disconnected - Reconnecting...</button>';
+                                                if (event.wasClean) {
+                                                    console.error(`WebSocket connection closed cleanly, code=${event.code}`);
+                                                } else {
+                                                    console.error('WebSocket connection closed abruptly');
+                                                }
+
+                                                if (!isDisconnectedDueToAltSession) {
+                                                    setTimeout(connect, 5000);
+                                                }
+                                            };
+                                        }
+
+                                        connect();
+
+                                        function updateAfkTimer() {
+                                            if (afkSeconds > 0) {
+                                                afkSeconds--;
+                                            }
+                                            document.getElementById('afkDuration').innerText = afkSeconds;
+                                        }
+
+                                        setInterval(updateAfkTimer, 1000);
+                                    </script>
+                                </div>
+
+                                <div class="alert alert-primary mt-4" role="alert">
+                                    <i class="fa fa-info-circle"></i>
+                                    <strong>Tip:</strong> Keep this tab open to maximize your earnings. You can do other things in different tabs!
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AFK Stats -->
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fa fa-chart-line text-magenta"></i>
+                                <strong>How It Works</strong>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-4">
+                                    <h5 class="text-cyan"><i class="fa fa-check-circle text-green"></i> Step 1</h5>
+                                    <p class="text-muted">Stay on this page with the tab active</p>
+                                </div>
+                                <div class="mb-4">
+                                    <h5 class="text-cyan"><i class="fa fa-check-circle text-green"></i> Step 2</h5>
+                                    <p class="text-muted">Wait for the countdown timer to reach zero</p>
+                                </div>
+                                <div class="mb-4">
+                                    <h5 class="text-cyan"><i class="fa fa-check-circle text-green"></i> Step 3</h5>
+                                    <p class="text-muted">Receive your coins automatically!</p>
+                                </div>
+                                <hr style="border-color: var(--cf-border);">
+                                <p class="text-muted small">
+                                    <i class="fa fa-exclamation-triangle text-yellow"></i>
+                                    Note: Only one AFK session can be active at a time. Opening multiple tabs will disconnect the previous session.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fa fa-coins text-yellow"></i>
+                                <strong>Your Balance</strong>
+                            </div>
+                            <div class="card-body text-center">
+                                <h2 class="text-yellow mb-2"><i class="fa fa-coins"></i> <%= coins %></h2>
+                                <p class="text-muted">Total Coins</p>
+                                <a href="store" class="btn btn-primary">
+                                    <i class="fa fa-shopping-cart"></i> Spend Coins
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            .cyber-circle {
+                width: 100px;
+                height: 100px;
+                border: 3px solid var(--cf-cyan);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto;
+                box-shadow: 0 0 30px var(--cf-cyan-glow);
+                animation: pulse-border 2s ease-in-out infinite;
+            }
+
+            @keyframes pulse-border {
+                0%, 100% { box-shadow: 0 0 30px var(--cf-cyan-glow); }
+                50% { box-shadow: 0 0 50px var(--cf-magenta-glow); }
+            }
+
+            #sessionEarn {
+                transition: transform 0.2s ease;
+            }
+        </style>
+
+<%- include('./includes/footer') %>

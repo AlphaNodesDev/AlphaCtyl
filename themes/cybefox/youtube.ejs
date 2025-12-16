@@ -1,0 +1,116 @@
+<%- include('./includes/header') %>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="animated fadeIn">
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fa fa-youtube text-red"></i>
+                                <strong>Watch & Earn</strong>
+                            </div>
+                            <div class="card-body">
+                                <div class="text-center mb-4">
+                                    <div class="cyber-circle youtube mb-3">
+                                        <i class="fa fa-play fa-3x text-red"></i>
+                                    </div>
+                                    <h4 class="text-cyan">Watch Videos, Earn Coins</h4>
+                                    <p class="text-muted">Watch short video advertisements to earn coins for your servers!</p>
+                                </div>
+
+                                <div class="alert alert-danger text-center" role="alert">
+                                    <i class="fa fa-coins text-yellow"></i>
+                                    Earn coins for each video you watch!
+                                </div>
+
+                                <div class="text-center">
+                                    <a href="/watchvideo">
+                                        <button type="button" class="btn btn-danger btn-lg">
+                                            <i class="fa fa-play-circle"></i> Watch Video Now
+                                        </button>
+                                    </a>
+                                </div>
+
+                                <hr style="border-color: var(--cf-border); margin: 30px 0;">
+
+                                <div class="text-center">
+                                    <h5 class="text-cyan mb-3">Your Current Balance</h5>
+                                    <h2 class="text-yellow"><i class="fa fa-coins"></i> <%= coins %></h2>
+                                    <p class="text-muted">coins</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fa fa-info-circle text-cyan"></i>
+                                <strong>How It Works</strong>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-4">
+                                    <h5 class="text-cyan"><i class="fa fa-mouse-pointer text-green mr-2"></i> Click Watch</h5>
+                                    <p class="text-muted">Click the "Watch Video Now" button to start.</p>
+                                </div>
+                                <div class="mb-4">
+                                    <h5 class="text-cyan"><i class="fa fa-eye text-green mr-2"></i> Watch Complete</h5>
+                                    <p class="text-muted">Watch the entire video advertisement.</p>
+                                </div>
+                                <div class="mb-4">
+                                    <h5 class="text-cyan"><i class="fa fa-coins text-green mr-2"></i> Get Rewarded</h5>
+                                    <p class="text-muted">Receive your coins automatically!</p>
+                                </div>
+
+                                <div class="alert alert-primary" role="alert">
+                                    <i class="fa fa-lightbulb"></i>
+                                    <strong>Tip:</strong> The video must play completely to earn coins. Don't skip or close the tab early!
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fa fa-wallet text-green"></i>
+                                <strong>More Ways to Earn</strong>
+                            </div>
+                            <div class="card-body">
+                                <div class="list-group">
+                                    <a href="afk" class="list-group-item list-group-item-action" style="background: var(--cf-bg-tertiary); border-color: var(--cf-border); color: var(--cf-text-primary);">
+                                        <i class="fa fa-clock text-cyan mr-2"></i> AFK Rewards
+                                        <small class="text-muted d-block">Earn coins while idle</small>
+                                    </a>
+                                    <a href="extra" class="list-group-item list-group-item-action" style="background: var(--cf-bg-tertiary); border-color: var(--cf-border); color: var(--cf-text-primary);">
+                                        <i class="fa fa-link text-magenta mr-2"></i> LinkPays
+                                        <small class="text-muted d-block">Complete links for coins</small>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            .cyber-circle.youtube {
+                width: 100px;
+                height: 100px;
+                border: 3px solid var(--cf-red);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto;
+                box-shadow: 0 0 30px rgba(255, 51, 102, 0.5);
+                transition: var(--cf-transition);
+            }
+
+            .cyber-circle.youtube:hover {
+                transform: scale(1.1);
+                box-shadow: 0 0 50px rgba(255, 51, 102, 0.8);
+            }
+        </style>
+
+<%- include('./includes/footer') %>

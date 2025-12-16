@@ -1,0 +1,120 @@
+<%- include('./includes/header') %>
+
+
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Animated -->
+            <div class="animated fadeIn">
+                   <!-- store -->
+                   <div class="content">
+                    <div class="animated fadeIn">
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <strong class="card-title">Create Server</strong>
+                                    </div>
+                                    <div class="card-body">
+                                        <!-- Create Server -->
+                                        <form  id="edit-server-form" method="post"    >        
+                                                                <div id="pay-invoice">
+                                            <div class="card-body">
+                                                <div class="card-title">
+                                                    <h3 class="text-center">Enter Server Details</h3>
+                                                </div>
+                                                <hr>
+                                                
+                              
+
+                                                <div class="has-success form-group">
+                                                    <label  class=" form-control-label">SERVER NAME</label>
+                                                    <input type="text" placeholder="Server Name" name="name"  class="is-valid form-control-success form-control">
+                                                </div>
+                           <div class="has-success form-group">
+                            <label  class=" form-control-label">CPU</label>
+                            <input type="text" name="cpu" placeholder="Cpu in %" class="is-valid form-control-success form-control">
+                        </div>
+                        <div class="has-success form-group">
+                            <label  class=" form-control-label">DISK</label>
+                            <input type="text" name="disk" placeholder="Disk In mib"  class="is-valid form-control-success form-control">
+                        </div>
+                        <div class="has-success form-group">
+                            <label  class=" form-control-label">RAM</label>
+                            <input type="text" name="ram" placeholder="Ram in Mib" class="is-valid form-control-success form-control">
+                        </div>
+                        <div class="has-success form-group">
+                            <label  class=" form-control-label">DATABASE</label>
+                            <input type="text" name="database" placeholder="Number Of Databases" class="is-valid form-control-success form-control">
+                        </div>
+                        <div class="has-success form-group">
+                            <label  class=" form-control-label">BACKUP</label>
+                            <input type="text" name="backup" placeholder="Number Of Backups" class="is-valid form-control-success form-control">
+                        </div>
+                        <div class="has-success form-group">
+                            <label  class=" form-control-label">PORTS</label>
+                            <input type="text" name="port" placeholder="Number Of Ports" class="is-valid form-control-success form-control">
+                        </div>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fa-solid fa-plus" type="submit"></i>&nbsp; Update
+                        </button>
+
+                                            </div>
+                                        </div>
+                                    </form>
+                                    </div>
+                                </div> <!-- .card -->
+        
+                            </div><!--/.col-->
+                            </div>
+                            </div>
+                            </div>
+                  </div>
+             
+          
+            <!-- .animated -->
+        </div>
+        <!-- /.content -->
+        <div class="clearfix"></div>
+        <!-- Footer -->
+        <footer class="site-footer">
+            <div class="footer-inner bg-white">
+                <div class="row">
+                    <div class="col-sm-6">
+                        Copyright &copy; 2024 <%= AppName %>
+                    </div>
+                    <div class="col-sm-6 text-right">
+                        Designed by <a href="https://github.io/AlphaCtyl">Abhiram</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+        <!-- /.site-footer -->
+    </div>
+    <!-- /#right-panel -->
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@2.2.4/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.4/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-match-height@0.7.2/dist/jquery.matchHeight.min.js"></script>
+    <script src="assets/js/main.js"></script>
+    <!--  Chart js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.7.3/dist/Chart.bundle.min.js"></script>
+    <!--Flot Chart-->
+    <script src="https://cdn.jsdelivr.net/npm/jquery.flot@0.8.3/jquery.flot.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flot-spline@0.0.1/js/jquery.flot.spline.min.js"></script>
+    <!-- local -->
+    <script src="assets/js/widgets.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const serverId = urlParams.get('id');
+            const form = document.getElementById('edit-server-form');
+            if (form && serverId) {
+                form.action = `/updateserver?id=${serverId}`;
+            }
+        });
+    </script>
+</body>
+</html>
